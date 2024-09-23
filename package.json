@@ -2,7 +2,7 @@
   "name": "personal-website-cdk",
   "version": "0.1.0",
   "bin": {
-    "personal-website-cdk": "bin/personal-website-cdk.js"
+    "personal-website-cdk": "bin/personal-website.js"
   },
   "scripts": {
     "build": "tsc",
