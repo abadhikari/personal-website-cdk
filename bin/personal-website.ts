@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { PersonalWebsiteStack } from '../lib/stacks/personal-website-stack';
+import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
+import {
+  ACCOUNT_ID,
+  ACCOUNT_REGION,
+} from '../lib/configuration/account-config';
 
 const app = new cdk.App();
 
-new PersonalWebsiteStack(app, 'PersonalWebsiteStack', {
-  env: { account: '509399600387', region: 'us-east-1' }
+new PhotosPageStack(app, 'PhotosPageStack', {
+  env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
 });
