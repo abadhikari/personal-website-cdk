@@ -1,8 +1,9 @@
 ## Description
 
-This cdk package contains all the AWS infrastructure that's used in my personal website.
+This cdk repo contains all the AWS infrastructure that's used in my personal website.
 
-See github: https://github.com/abadhikari/personal-website
+See Github repo: https://github.com/abadhikari/personal-website
+
 See website: https://www.abhinnaadhikari.com/
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.

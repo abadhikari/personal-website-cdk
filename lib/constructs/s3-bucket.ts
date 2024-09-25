@@ -1,4 +1,4 @@
-import * as cdk from 'aws-cdk-lib';
+import { RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
   BlockPublicAccess,
@@ -9,7 +9,7 @@ import {
 
 export interface S3BucketProps {
   readonly bucketName: string;
-  readonly removalPolicy: cdk.RemovalPolicy;
+  readonly removalPolicy: RemovalPolicy;
   readonly versioned: boolean;
 }
 
