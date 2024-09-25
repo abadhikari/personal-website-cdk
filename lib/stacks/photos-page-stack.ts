@@ -12,11 +12,32 @@ import { DynamoDbTable } from '../constructs/dynamodb-table';
 
 export interface PhotosPageStackProps extends StackProps {}
 
+/**
+ * PhotosPageStack sets up the backend infrastructure for the photo page
+ * of abhinnaadhikari.com.
+ *
+ * Resources include:
+ * - S3 bucket for media storage
+ * - CloudFront distribution for serving media
+ * - DynamoDB tables for metadata management of media and stacks
+ */
 export class PhotosPageStack extends Stack {
+  /**
+   * S3 bucket for storing media assets (photos and videos).
+   */
   private readonly mediaBucket: S3Bucket;
+  /**
+   * CloudFront CDN for efficiently serving media assets from the mediaBucket.
+   */
   private readonly mediaCdn: CloudFrontDistribution;
 
+  /**
+   * DynamoDB table to store metadata about individual media files.
+   */
   private readonly mediaMetadataTable: DynamoDbTable;
+  /**
+   * DynamoDB table to store metadata about media stacks (e.g., albums).
+   */
   private readonly stackMetadataTable: DynamoDbTable;
 
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
