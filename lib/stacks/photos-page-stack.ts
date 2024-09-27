@@ -5,10 +5,16 @@ import {
   BillingMode,
   ProjectionType,
 } from 'aws-cdk-lib/aws-dynamodb';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { CloudFrontDistribution } from '../constructs/cloudfront-distribution';
 import { S3Bucket } from '../constructs/s3-bucket';
 import { ACCOUNT_ID } from '../configuration/account-config';
 import { DynamoDbTable } from '../constructs/dynamodb-table';
+import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
+import { LambdaFunction } from '../constructs/lambda-function';
+import { Cors } from 'aws-cdk-lib/aws-apigateway';
+import { WEBSITE_DOMAIN } from '../configuration/website-config';
+import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 
 export interface PhotosPageStackProps extends StackProps {}
 
@@ -40,6 +46,16 @@ export class PhotosPageStack extends Stack {
    */
   private readonly stackMetadataTable: DynamoDbTable;
 
+  /**
+   * The API Gateway REST API used for handling media-related HTTP requests on the photos page.
+   */
+  private readonly restApi: ApiGatewayRestApi;
+  /**
+   * The Lambda function responsible for reading (retrieving) media from the storage or database.
+   * This function is integrated with a GET method in API Gateway.
+   */
+  private readonly readMediaLambda: LambdaFunction;
+
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
 
@@ -53,33 +69,66 @@ export class PhotosPageStack extends Stack {
       s3Bucket: this.mediaBucket.bucket,
     });
 
-    this.mediaMetadataTable = new DynamoDbTable(this, 'MediaMetadataTable', {
-      tableName: 'MediaMetadataTable',
-      partitionKey: { name: 'mediaId', type: AttributeType.STRING },
-      removalPolicy: RemovalPolicy.RETAIN,
-      billingMode: BillingMode.PAY_PER_REQUEST,
-      gsis: [
-        {
-          indexName: 'StackIdIndex',
-          partitionKey: { name: 'stackId', type: AttributeType.STRING },
-          projectionType: ProjectionType.ALL,
-        },
-      ],
+    this.mediaMetadataTable = new DynamoDbTable(
+      this,
+      PhotosPageDynamoDbTables.MEDIA_METADATA_TABLE,
+      {
+        tableName: PhotosPageDynamoDbTables.MEDIA_METADATA_TABLE,
+        partitionKey: { name: 'mediaId', type: AttributeType.STRING },
+        removalPolicy: RemovalPolicy.RETAIN,
+        billingMode: BillingMode.PAY_PER_REQUEST,
+        gsis: [
+          {
+            indexName: PhotosPageDynamoDbTables.MEDIA_METADATA_GSI,
+            partitionKey: { name: 'stackId', type: AttributeType.STRING },
+            projectionType: ProjectionType.ALL,
+          },
+        ],
+      }
+    );
+
+    this.stackMetadataTable = new DynamoDbTable(
+      this,
+      PhotosPageDynamoDbTables.STACK_METADATA_TABLE,
+      {
+        tableName: PhotosPageDynamoDbTables.STACK_METADATA_TABLE,
+        partitionKey: { name: 'stackId', type: AttributeType.STRING },
+        removalPolicy: RemovalPolicy.RETAIN,
+        billingMode: BillingMode.PAY_PER_REQUEST,
+        gsis: [
+          {
+            indexName: PhotosPageDynamoDbTables.STACK_METADATA_GSI,
+            partitionKey: { name: 'stackId', type: AttributeType.STRING },
+            sortKey: { name: 'uploadTimestamp', type: AttributeType.NUMBER },
+            projectionType: ProjectionType.ALL,
+          },
+        ],
+      }
+    );
+
+    this.readMediaLambda = new LambdaFunction(this, 'ReadMediaLambda', {
+      runtime: Runtime.NODEJS_20_X,
+      codeDirectory: 'lambda/media/read',
+      handler: 'index.handler',
+      environment: {
+        ...PhotosPageDynamoDbTables,
+      },
     });
 
-    this.stackMetadataTable = new DynamoDbTable(this, 'StackMetadataTable', {
-      tableName: 'StackMetadataTable',
-      partitionKey: { name: 'stackId', type: AttributeType.STRING },
-      removalPolicy: RemovalPolicy.RETAIN,
-      billingMode: BillingMode.PAY_PER_REQUEST,
-      gsis: [
-        {
-          indexName: 'UploadTimestampIndex',
-          partitionKey: { name: 'stackId', type: AttributeType.STRING },
-          sortKey: { name: 'uploadTimestamp', type: AttributeType.NUMBER },
-          projectionType: ProjectionType.ALL,
-        },
-      ],
+    this.restApi = new ApiGatewayRestApi(this, 'MediaApi', {
+      restApiName: 'MediaApi',
+      description: 'API for handling media on the photos page',
+      cors: {
+        allowMethods: Cors.ALL_METHODS,
+        allowOrigins: [WEBSITE_DOMAIN],
+      },
     });
+
+    this.restApi.addLambdaIntegration(
+      this.readMediaLambda.function,
+      'v1',
+      'media',
+      'GET'
+    );
   }
 }

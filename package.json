@@ -2,7 +2,7 @@
   "name": "personal-website-cdk",
   "version": "0.1.0",
   "bin": {
-    "personal-website-cdk": "bin/personal-website.js"
+    "personal-website-cdk": "build/bin/personal-website.js"
   },
   "scripts": {
     "build": "tsc",
@@ -10,9 +10,12 @@
     "test": "jest",
     "cdk": "cdk",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "npm run build && npm run cdk diff",
+    "deploy": "npm run format && npm run build && npm run test && npm run cdk synth && npm run cdk deploy"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
     "@types/jest": "^29.5.12",
     "@types/node": "22.5.4",
     "aws-cdk": "2.159.1",
@@ -24,6 +27,7 @@
   },
   "dependencies": {
     "aws-cdk-lib": "2.159.1",
+    "aws-sdk": "^2.1691.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
   }
