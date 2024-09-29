@@ -111,6 +111,7 @@ export class PhotosPageStack extends Stack {
     );
 
     this.readMediaLambda = new LambdaFunction(this, 'ReadMediaLambda', {
+      functionName: 'ReadMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
       codeDirectory: 'lambda/media/read',
       handler: 'index.handler',
@@ -120,6 +121,7 @@ export class PhotosPageStack extends Stack {
     });
 
     this.writeMediaLambda = new LambdaFunction(this, 'WriteMediaLambda', {
+      functionName: 'WriteMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
       codeDirectory: 'lambda/media/write',
       handler: 'index.handler',

@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 
 export interface LambdaFunctionProps {
+  readonly functionName: string;
   /**
    * The runtime of the Lambda function.
    */
@@ -41,6 +42,7 @@ export class LambdaFunction extends Construct {
   constructor(scope: Construct, id: string, props: LambdaFunctionProps) {
     super(scope, id);
     this.function = new Function(this, 'LambdaFunction', {
+      functionName: props.functionName,
       runtime: props.runtime,
       code: Code.fromAsset(props.codeDirectory),
       handler: props.handler,
