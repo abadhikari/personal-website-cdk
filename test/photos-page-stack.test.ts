@@ -91,7 +91,7 @@ describe('PhotosPageStack', () => {
     });
   });
 
-  test('Creates a Lambda function with environment variables', () => {
+  test('Creates a read Lambda function with environment variables', () => {
     template.hasResourceProperties('AWS::Lambda::Function', {
       Handler: 'index.handler',
       Runtime: 'nodejs20.x',
@@ -101,6 +101,19 @@ describe('PhotosPageStack', () => {
           STACK_METADATA_GSI: PhotosPageDynamoDbTables.STACK_METADATA_GSI,
           MEDIA_METADATA_TABLE: PhotosPageDynamoDbTables.MEDIA_METADATA_TABLE,
           MEDIA_METADATA_GSI: PhotosPageDynamoDbTables.MEDIA_METADATA_GSI,
+        },
+      },
+    });
+  });
+
+  test('Creates a write Lambda function with environment variables', () => {
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Handler: 'index.handler',
+      Runtime: 'nodejs20.x',
+      Environment: {
+        Variables: {
+          STACK_METADATA_TABLE: PhotosPageDynamoDbTables.STACK_METADATA_TABLE,
+          MEDIA_METADATA_TABLE: PhotosPageDynamoDbTables.MEDIA_METADATA_TABLE,
         },
       },
     });
@@ -136,6 +149,33 @@ describe('PhotosPageStack', () => {
               ':lambda:path/2015-03-31/functions/',
               {
                 'Fn::GetAtt': ['ReadMediaLambdaLambdaFunction6051A5C0', 'Arn'],
+              },
+              '/invocations',
+            ],
+          ],
+        },
+      },
+    });
+  });
+
+  test('Integrates Write Lambda with API Gateway', () => {
+    template.hasResourceProperties('AWS::ApiGateway::Method', {
+      HttpMethod: 'POST',
+      ResourceId: { Ref: 'MediaApiApiGatewayRestApiv1mediaFA856210' },
+      RestApiId: { Ref: 'MediaApiApiGatewayRestApi0EA395C7' },
+      Integration: {
+        Type: 'AWS_PROXY',
+        Uri: {
+          'Fn::Join': [
+            '',
+            [
+              'arn:',
+              { Ref: 'AWS::Partition' },
+              ':apigateway:',
+              { Ref: 'AWS::Region' },
+              ':lambda:path/2015-03-31/functions/',
+              {
+                'Fn::GetAtt': ['WriteMediaLambdaLambdaFunctionA34F37A0', 'Arn'],
               },
               '/invocations',
             ],

@@ -26,6 +26,8 @@ export interface PhotosPageStackProps extends StackProps {}
  * - S3 bucket for media storage
  * - CloudFront distribution for serving media
  * - DynamoDB tables for metadata management of media and stacks
+ * - API Gateway Rest API
+ * - Lambda Functions that interact with the above resources
  */
 export class PhotosPageStack extends Stack {
   /**
@@ -55,6 +57,8 @@ export class PhotosPageStack extends Stack {
    * This function is integrated with a GET method in API Gateway.
    */
   private readonly readMediaLambda: LambdaFunction;
+
+  private readonly writeMediaLambda: LambdaFunction;
 
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
@@ -115,6 +119,15 @@ export class PhotosPageStack extends Stack {
       },
     });
 
+    this.writeMediaLambda = new LambdaFunction(this, 'WriteMediaLambda', {
+      runtime: Runtime.NODEJS_20_X,
+      codeDirectory: 'lambda/media/write',
+      handler: 'index.handler',
+      environment: {
+        ...PhotosPageDynamoDbTables,
+      },
+    });
+
     this.restApi = new ApiGatewayRestApi(this, 'MediaApi', {
       restApiName: 'MediaApi',
       description: 'API for handling media on the photos page',
@@ -129,6 +142,12 @@ export class PhotosPageStack extends Stack {
       'v1',
       'media',
       'GET'
+    );
+    this.restApi.addLambdaIntegration(
+      this.writeMediaLambda.function,
+      'v1',
+      'media',
+      'POST'
     );
   }
 }
