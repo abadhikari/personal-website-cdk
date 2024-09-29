@@ -1,7 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDB } from 'aws-sdk';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { ValidationError } from '../../common/errors';
+import { requestBodySchema } from './schemas';
 
-const dynamoDbClient = new DynamoDB.DocumentClient();
+const dynamoDbClient = new DocumentClient();
 
 /**
  * The name of the DynamoDB table that stores stack metadata.
@@ -22,6 +24,11 @@ const MEDIA_METADATA_GSI = process.env.MEDIA_METADATA_GSI as string;
 
 /**
  * Interface representing the structure of the parsed request body.
+ *
+ * @interface RequestBody
+ * @property {string} stackLimit - The number of max number of stacks.
+ * @property {number} startTimestamp - The starting timestamp for the time range.
+ * @property {number} endTimestamp - The ending timestamp for the time range.
  */
 interface RequestBody {
   stackLimit: number;
@@ -42,11 +49,6 @@ export const handler = async (
   let requestBody: RequestBody | APIGatewayProxyResult | undefined;
   try {
     requestBody = parseRequestBody(event);
-
-    // Return the error if error occurred while parsing request body
-    if ('statusCode' in requestBody) {
-      return requestBody;
-    }
 
     const { stackLimit, startTimestamp, endTimestamp } = requestBody;
 
@@ -69,14 +71,14 @@ export const handler = async (
       }
       return queryMediaMetadataTable(stack.stackId);
     });
+
     // Resolve all media queries in parallel
     const mediaResponses = await Promise.all(mediaPromises);
 
     // Combine the results from both queries into display ready object
-
     const stackAndMediaData = stacks.map((stack, index) => ({
       stack,
-      media: mediaResponses[index] || [],
+      media: mediaResponses[index].Items,
     }));
 
     // Return the successful response
@@ -87,11 +89,15 @@ export const handler = async (
       }),
     };
   } catch (error) {
+    if (error instanceof ValidationError) {
+      return createErrorResponse(error.statusCode, error.message);
+    }
+
     console.error(
       `Error fetching media data for request ${JSON.stringify(requestBody)} with error:`,
       error
     );
-    return createErrorResponse(500, 'Internal server error');
+    return createErrorResponse(500, 'Internal server error.');
   }
 };
 
@@ -101,40 +107,25 @@ export const handler = async (
  * @param event - The API Gateway event containing the request.
  * @returns The parsed and validated request body, or an error response if the input is invalid.
  */
-function parseRequestBody(
-  event: APIGatewayProxyEvent
-): RequestBody | APIGatewayProxyResult {
+function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
   try {
-    const requestBody = event.body ? JSON.parse(event.body) : {};
-
-    const stackLimit = requestBody.stackLimit || 9;
-    if (typeof stackLimit !== 'number' || stackLimit <= 0) {
-      return createErrorResponse(
-        400,
-        'Invalid stackLimit value. stackLimit must be a positive number.'
-      );
+    if (!event.body) {
+      throw new ValidationError('Request body is missing.');
     }
 
-    const startTimestamp = requestBody.startTimestamp || 0;
-    if (typeof startTimestamp !== 'number' || startTimestamp < 0) {
-      return createErrorResponse(
-        400,
-        'Invalid startTimestamp value. startTimestamp must be a non-negative number'
-      );
+    const requestBody = JSON.parse(event.body);
+    const { error, value } = requestBodySchema.validate(requestBody);
+
+    if (error) {
+      throw new ValidationError('Invalid request: ' + error.details[0].message);
     }
 
-    const endTimestamp = requestBody.endTimestamp || Date.now();
-    if (typeof endTimestamp !== 'number' || endTimestamp < startTimestamp) {
-      return createErrorResponse(
-        400,
-        'Invalid endTimestamp value. endTimestamp must be a number and greater than startTimestamp'
-      );
-    }
-
-    return { stackLimit, startTimestamp, endTimestamp };
+    return value;
   } catch (error) {
-    console.error('Error parsing request body:', error);
-    return createErrorResponse(400, 'Invalid JSON in request body. ' + error);
+    if (error instanceof SyntaxError) {
+      throw new ValidationError('Invalid JSON format.');
+    }
+    throw error;
   }
 }
 
