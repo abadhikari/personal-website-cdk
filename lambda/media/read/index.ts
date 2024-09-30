@@ -44,9 +44,9 @@ interface RequestBody {
  * @returns A Promise that resolves to the API Gateway response with the stack and media metadata.
  */
 export const handler = async (
-  event: APIGatewayProxyEvent
+  event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
-  let requestBody: RequestBody | APIGatewayProxyResult | undefined;
+  let requestBody: RequestBody | undefined;
   try {
     requestBody = parseRequestBody(event);
 
@@ -56,7 +56,7 @@ export const handler = async (
     const stackMetadataResponse = await queryStackMetadataTable(
       stackLimit,
       startTimestamp,
-      endTimestamp
+      endTimestamp,
     );
 
     const stacks = stackMetadataResponse.Items || [];
@@ -95,7 +95,7 @@ export const handler = async (
 
     console.error(
       `Error fetching media data for request ${JSON.stringify(requestBody)} with error:`,
-      error
+      error,
     );
     return createErrorResponse(500, 'Internal server error.');
   }
@@ -106,6 +106,7 @@ export const handler = async (
  *
  * @param event - The API Gateway event containing the request.
  * @returns The parsed and validated request body, or an error response if the input is invalid.
+ * @throws {ValidationError} - Throws validation errors if the request body is invalid.
  */
 function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
   try {
@@ -154,7 +155,7 @@ function createErrorResponse(statusCode: number, message: string) {
 async function queryStackMetadataTable(
   limit: number,
   startTimestamp: number,
-  endTimestamp: number
+  endTimestamp: number,
 ) {
   return dynamoDbClient
     .query({

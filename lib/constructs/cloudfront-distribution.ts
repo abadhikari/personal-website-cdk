@@ -29,7 +29,7 @@ export class CloudFrontDistribution extends Construct {
   constructor(
     scope: Construct,
     id: string,
-    props: CloudFrontDistributionProps
+    props: CloudFrontDistributionProps,
   ) {
     super(scope, id);
 

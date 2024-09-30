@@ -1,5 +1,6 @@
 import { Construct } from 'constructs';
 import {
+  IResource,
   LambdaIntegration,
   RestApi,
   Resource,
@@ -39,13 +40,6 @@ export class ApiGatewayRestApi extends Construct {
    */
   public readonly restApi: RestApi;
 
-  /**
-   * A map that stores references to API Gateway resources.
-   * Each key is a string representing the resource name or path,
-   * and the value is the corresponding AWS API Gateway `Resource` object.
-   */
-  public readonly resourceMap: Record<string, Resource> = {};
-
   constructor(scope: Construct, id: string, props: ApiGatewayRestApiProps) {
     super(scope, id);
     this.restApi = new RestApi(this, 'ApiGatewayRestApi', {
@@ -59,42 +53,19 @@ export class ApiGatewayRestApi extends Construct {
   }
 
   /**
-   * Adds a Lambda integration to a versioned resource in API Gateway.
-   *
-   * This method ensures that the specified version ('v1') and resource ('media')
-   * are created in API Gateway and integrated with the provided Lambda function. If the version or
-   * resource already exists, it will be reused. The resource is associated with the specified HTTP
-   * method (e.g., 'GET', 'POST') and integrated with the Lambda function.
-   *
-   * Example usage:
-   * - For version 'v1' and resource 'media' with the 'GET' method, the resulting API path will be `/v1/media`.
-   * - If `/v1/media` already exists, this method will add the specified method to the existing resource.
+   * Adds a Lambda integration to a resource path in API Gateway.
    *
    * @param lambdaFunction - The Lambda function to integrate with the API Gateway resource.
-   * @param version - The API version (e.g., 'v1', 'v2'). This ensures the version is created in the API path.
-   * @param resource - The name of the resource (e.g., 'media'). This represents the endpoint in the path.
+   * @param resourcePath - The path of the resource (e.g., '/v1/media').
    * @param method - The HTTP method for the API Gateway resource (e.g., 'GET', 'POST').
    */
   addLambdaIntegration(
     lambdaFunction: Function,
-    version: string,
-    resource: string,
-    method: string
+    resourcePath: string,
+    method: string,
   ) {
-    let versionResource = this.resourceMap[version];
-    if (!versionResource) {
-      versionResource = this.restApi.root.addResource(version);
-      this.resourceMap[version] = versionResource;
-    }
-
-    const versionedResource = `${version}/${resource}`;
-    let apiResource = this.resourceMap[versionedResource];
-    if (!apiResource) {
-      apiResource = versionResource.addResource(resource);
-      this.resourceMap[versionedResource] = apiResource;
-    }
-
+    const resource = this.restApi.root.resourceForPath(resourcePath);
     const integration = new LambdaIntegration(lambdaFunction);
-    apiResource.addMethod(method, integration);
+    resource.addMethod(method, integration);
   }
 }

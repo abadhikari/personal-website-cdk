@@ -69,7 +69,7 @@ interface ImageSrc {
  * @returns A Promise that resolves to the API Gateway response indicating success or failure.
  */
 export const handler = async (
-  event: APIGatewayProxyEvent
+  event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   let requestBody: RequestBody | APIGatewayProxyResult | undefined;
   try {
@@ -81,11 +81,11 @@ export const handler = async (
       stackId,
       caption,
       uploadTimestamp,
-      location
+      location,
     );
 
     const mediaMetadataPromises = media.map((mediaItem, index) =>
-      saveMediaMetadata(mediaItem, stackId, index)
+      saveMediaMetadata(mediaItem, stackId, index),
     );
 
     await Promise.all([...mediaMetadataPromises, stackMetadataPromise]);
@@ -105,8 +105,8 @@ export const handler = async (
  * Parses the incoming API Gateway event to extract and validate the request body.
  *
  * @param event - The API Gateway event containing the request.
- * @throws ValidationError - If the request body is missing, invalid, or improperly formatted.
  * @returns The parsed and validated request body, or an error response if the input is invalid.
+ * @throws ValidationError - If the request body is missing, invalid, or improperly formatted.
  */
 function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
   try {
@@ -156,7 +156,7 @@ function createResponse(statusCode: number, message: string) {
  */
 async function putItem(
   params: DocumentClient.PutItemInput,
-  idAttributeName: string
+  idAttributeName: string,
 ): Promise<void> {
   const conditionalParams = {
     ...params,
@@ -168,7 +168,7 @@ async function putItem(
   } catch (error) {
     if ((error as AWSError).code === 'ConditionalCheckFailedException') {
       console.log(
-        `Item with ${idAttributeName} already exists in ${params.TableName}, skipping.`
+        `Item with ${idAttributeName} already exists in ${params.TableName}, skipping.`,
       );
       return;
     }
@@ -190,7 +190,7 @@ function saveStackMetadata(
   stackId: string,
   caption: string,
   uploadTimestamp: number,
-  location: string | undefined
+  location: string | undefined,
 ) {
   const stackMetadataParams = {
     TableName: STACK_METADATA_TABLE,
@@ -215,7 +215,7 @@ function saveStackMetadata(
 function saveMediaMetadata(
   media: Media,
   stackId: string,
-  sequenceNumber: number
+  sequenceNumber: number,
 ) {
   const { mediaId, alternativeText, imageSrc, mediaType } = media;
   const mediaMetadataParams = {

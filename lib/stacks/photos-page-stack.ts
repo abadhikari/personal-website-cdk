@@ -60,19 +60,24 @@ export class PhotosPageStack extends Stack {
 
   private readonly writeMediaLambda: LambdaFunction;
 
+  private readonly generateSignedMediaUrlsLambda: LambdaFunction;
+
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
 
+    // S3 Bucket
     this.mediaBucket = new S3Bucket(this, 'MediaBucket', {
       bucketName: `personal-website-photos-page-media-bucket-${ACCOUNT_ID}`,
       removalPolicy: RemovalPolicy.RETAIN,
       versioned: false,
     });
 
+    // CloudFront Distribution
     this.mediaCdn = new CloudFrontDistribution(this, 'MediaCdn', {
       s3Bucket: this.mediaBucket.bucket,
     });
 
+    // DynamoDb Tables
     this.mediaMetadataTable = new DynamoDbTable(
       this,
       PhotosPageDynamoDbTables.MEDIA_METADATA_TABLE,
@@ -88,7 +93,7 @@ export class PhotosPageStack extends Stack {
             projectionType: ProjectionType.ALL,
           },
         ],
-      }
+      },
     );
 
     this.stackMetadataTable = new DynamoDbTable(
@@ -107,13 +112,14 @@ export class PhotosPageStack extends Stack {
             projectionType: ProjectionType.ALL,
           },
         ],
-      }
+      },
     );
 
+    // Lambdas
     this.readMediaLambda = new LambdaFunction(this, 'ReadMediaLambda', {
       functionName: 'ReadMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
-      codeDirectory: 'lambda/media/read',
+      codeDirectory: 'build/lambda/media/read',
       handler: 'index.handler',
       environment: {
         ...PhotosPageDynamoDbTables,
@@ -123,13 +129,35 @@ export class PhotosPageStack extends Stack {
     this.writeMediaLambda = new LambdaFunction(this, 'WriteMediaLambda', {
       functionName: 'WriteMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
-      codeDirectory: 'lambda/media/write',
+      codeDirectory: 'build/lambda/media/write',
       handler: 'index.handler',
       environment: {
         ...PhotosPageDynamoDbTables,
       },
     });
 
+    this.generateSignedMediaUrlsLambda = new LambdaFunction(
+      this,
+      'GenerateSignedMediaUrlLambda',
+      {
+        functionName: 'GenerateSignedMediaUrlLambdaFunction',
+        runtime: Runtime.NODEJS_20_X,
+        codeDirectory: 'build/lambda/media/generate-signed-urls',
+        handler: 'index.handler',
+        environment: {
+          S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
+          S3_URL_TTL: '300',
+          CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
+        },
+      },
+    );
+
+    // Grant S3 permissions to the Lambda to generate signed URLs
+    this.mediaBucket.bucket.grantPut(
+      this.generateSignedMediaUrlsLambda.function,
+    );
+
+    // API Gateway
     this.restApi = new ApiGatewayRestApi(this, 'MediaApi', {
       restApiName: 'MediaApi',
       description: 'API for handling media on the photos page',
@@ -141,15 +169,20 @@ export class PhotosPageStack extends Stack {
 
     this.restApi.addLambdaIntegration(
       this.readMediaLambda.function,
-      'v1',
-      'media',
-      'GET'
+      '/v1/media',
+      'GET',
     );
+
     this.restApi.addLambdaIntegration(
       this.writeMediaLambda.function,
-      'v1',
-      'media',
-      'POST'
+      '/v1/media',
+      'POST',
+    );
+
+    this.restApi.addLambdaIntegration(
+      this.generateSignedMediaUrlsLambda.function,
+      'v1/media/upload-url',
+      'GET',
     );
   }
 }

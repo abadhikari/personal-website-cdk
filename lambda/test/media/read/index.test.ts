@@ -83,7 +83,7 @@ describe('Read Lambda Function Tests', () => {
         stackLimit: 2,
         startTimestamp: 1609459200000,
         endTimestamp: 1609459300000,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -114,7 +114,7 @@ describe('Read Lambda Function Tests', () => {
         stackLimit: 2,
         startTimestamp: 1609459200000,
         endTimestamp: 1609459300000,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -141,7 +141,7 @@ describe('Read Lambda Function Tests', () => {
         stackLimit: 1,
         startTimestamp: 1609459200000,
         endTimestamp: 1609459300000,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -166,7 +166,7 @@ describe('Read Lambda Function Tests', () => {
         stackLimit: 2,
         startTimestamp: 1609459200000,
         endTimestamp: 1609459300000,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -197,7 +197,7 @@ describe('Read Lambda Function Tests', () => {
         stackLimit: 1,
         startTimestamp: 1609459200000,
         endTimestamp: 1609459300000,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -231,7 +231,7 @@ describe('Read Lambda Function Tests', () => {
     const event: APIGatewayProxyEvent = createMockEvent(
       JSON.stringify({
         stackLimit: 2,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -272,7 +272,7 @@ describe('Read Lambda Function Tests', () => {
         stackLimit: -5,
         startTimestamp: 1609459200000,
         endTimestamp: 1609459300000,
-      })
+      }),
     );
 
     const response = await handler(event);
@@ -280,7 +280,7 @@ describe('Read Lambda Function Tests', () => {
     expect(response.statusCode).toBe(400);
     const responseBody = JSON.parse(response.body);
     expect(responseBody.message).toMatch(
-      /Invalid request: stackLimit must be greater than 0/
+      /Invalid request: stackLimit must be greater than 0/,
     );
   });
 });

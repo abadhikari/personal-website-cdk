@@ -18,7 +18,7 @@ const VALID_INPUT = {
   ],
 };
 
-describe('Lambda Handler Tests', () => {
+describe('Write Lambda Handler Tests', () => {
   let putMock: jest.Mock;
   let promiseMock: jest.Mock;
   let handler: any;
@@ -60,7 +60,7 @@ describe('Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body).message).toBe(
-      'Media metadata saved successfully!'
+      'Media metadata saved successfully!',
     );
     expect(putMock).toHaveBeenCalledTimes(2);
   });
@@ -148,7 +148,7 @@ describe('Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body).message).toBe(
-      'Media metadata saved successfully!'
+      'Media metadata saved successfully!',
     );
     expect(putMock).toHaveBeenCalledTimes(2);
   });
