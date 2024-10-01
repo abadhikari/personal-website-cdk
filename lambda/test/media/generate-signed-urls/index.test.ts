@@ -1,8 +1,9 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
 describe('GenerateSignedUrls Lambda Function Tests', () => {
-  let getSignedUrlPromiseMock: jest.Mock;
-  let promiseMock: jest.Mock;
+  let getSignedUrlMock: jest.Mock;
+  let S3ClientMock: jest.Mock;
+  let PutObjectCommandMock: jest.Mock;
   let handler: any;
 
   beforeEach(() => {
@@ -10,20 +11,24 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
     process.env.S3_BUCKET_NAME = 'personal-website-photos-page-media-bucket';
     process.env.S3_URL_TTL = '300';
-    process.env.CDN_URL = 'random.cloudfront.net';
+    process.env.CDN_DOMAIN_URL = 'random.cloudfront.net';
 
     // Mock the system time to ensure consistent test results
     jest.useFakeTimers().setSystemTime(new Date('2023-01-15T00:00:00Z'));
 
-    jest.mock('aws-sdk', () => {
-      getSignedUrlPromiseMock = jest.fn();
-      promiseMock = jest.fn();
+    // Mock AWS SDK v3 clients and methods
+    S3ClientMock = jest.fn();
+    PutObjectCommandMock = jest.fn((input) => input);
+    getSignedUrlMock = jest.fn();
 
+    jest.mock('@aws-sdk/client-s3', () => ({
+      S3Client: S3ClientMock,
+      PutObjectCommand: PutObjectCommandMock,
+    }));
+
+    jest.mock('@aws-sdk/s3-request-presigner', () => {
       return {
-        S3: jest.fn(() => ({
-          getSignedUrlPromise: getSignedUrlPromiseMock.mockReturnThis(),
-          promise: promiseMock,
-        })),
+        getSignedUrl: getSignedUrlMock,
       };
     });
 
@@ -56,8 +61,8 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       body: JSON.stringify(requestBody),
     } as APIGatewayProxyEvent;
 
-    // Mock the S3 getSignedUrlPromise method to return a signed URL
-    getSignedUrlPromiseMock.mockResolvedValue('https://example.com/signed-url');
+    // Mock the S3 getSignedUrl method to return a signed URL
+    getSignedUrlMock.mockResolvedValue('https://example.com/signed-url');
 
     const response = await handler(event);
 
@@ -71,14 +76,17 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     ]);
     expect(body.cdnDomainUrl).toBe('random.cloudfront.net');
 
-    // Verify that getSignedUrlPromise was called with correct parameters
-    expect(getSignedUrlPromiseMock).toHaveBeenCalledTimes(1);
-    expect(getSignedUrlPromiseMock).toHaveBeenCalledWith('putObject', {
-      Bucket: 'personal-website-photos-page-media-bucket',
-      Key: 'user/user123/2023/01/mock-uuid_testfile.jpg',
-      Expires: 300,
-      ContentType: 'image/jpeg',
-    });
+    // Verify that getSignedUrl was called with correct parameters
+    expect(getSignedUrlMock).toHaveBeenCalledTimes(1);
+    expect(getSignedUrlMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        Bucket: 'personal-website-photos-page-media-bucket',
+        Key: 'user/user123/2023/01/mock-uuid_testfile.jpg',
+        ContentType: 'image/jpeg',
+      }),
+      { expiresIn: 300 },
+    );
   });
 
   test('should return 400 when request body is missing', async () => {
@@ -142,8 +150,8 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       body: JSON.stringify(requestBody),
     } as APIGatewayProxyEvent;
 
-    // Mock the S3 getSignedUrlPromise method to throw an error
-    getSignedUrlPromiseMock.mockRejectedValue(new Error('S3 error'));
+    // Mock the S3 getSignedUrl method to throw an error
+    getSignedUrlMock.mockRejectedValue(new Error('S3 error'));
 
     const response = await handler(event);
 
@@ -183,10 +191,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       }).toThrow('S3_URL_TTL environment variable is not a valid number');
     });
 
-    test('should throw an error when CDN_URL is missing', () => {
+    test('should throw an error when CDN_DOMAIN_URL is missing', () => {
       process.env.S3_BUCKET_NAME = 'personal-website-photos-page-media-bucket';
       process.env.S3_URL_TTL = '300';
-      delete process.env.CDN_URL;
+      delete process.env.CDN_DOMAIN_URL;
 
       expect(() => {
         require('../../../media/generate-signed-urls/index');

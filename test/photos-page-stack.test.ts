@@ -148,7 +148,10 @@ describe('PhotosPageStack', () => {
               { Ref: 'AWS::Region' },
               ':lambda:path/2015-03-31/functions/',
               {
-                'Fn::GetAtt': ['ReadMediaLambdaLambdaFunction6051A5C0', 'Arn'],
+                'Fn::GetAtt': [
+                  'ReadMediaLambdaLambdaNodeFunction1978D939',
+                  'Arn',
+                ],
               },
               '/invocations',
             ],
@@ -175,7 +178,40 @@ describe('PhotosPageStack', () => {
               { Ref: 'AWS::Region' },
               ':lambda:path/2015-03-31/functions/',
               {
-                'Fn::GetAtt': ['WriteMediaLambdaLambdaFunctionA34F37A0', 'Arn'],
+                'Fn::GetAtt': [
+                  'WriteMediaLambdaLambdaNodeFunction9ED779D8',
+                  'Arn',
+                ],
+              },
+              '/invocations',
+            ],
+          ],
+        },
+      },
+    });
+  });
+
+  test('Integrates GetSignedUrls Lambda with API Gateway', () => {
+    template.hasResourceProperties('AWS::ApiGateway::Method', {
+      HttpMethod: 'GET',
+      ResourceId: { Ref: 'MediaApiApiGatewayRestApiv1mediauploadurlD11AAFE3' },
+      RestApiId: { Ref: 'MediaApiApiGatewayRestApi0EA395C7' },
+      Integration: {
+        Type: 'AWS_PROXY',
+        Uri: {
+          'Fn::Join': [
+            '',
+            [
+              'arn:',
+              { Ref: 'AWS::Partition' },
+              ':apigateway:',
+              { Ref: 'AWS::Region' },
+              ':lambda:path/2015-03-31/functions/',
+              {
+                'Fn::GetAtt': [
+                  'GenerateSignedMediaUrlLambdaLambdaNodeFunction1363B525',
+                  'Arn',
+                ],
               },
               '/invocations',
             ],

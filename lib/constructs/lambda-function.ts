@@ -3,6 +3,9 @@ import { Construct } from 'constructs';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 
 export interface LambdaFunctionProps {
+  /**
+   * The name of the Lambda function.
+   */
   readonly functionName: string;
   /**
    * The runtime of the Lambda function.
@@ -31,7 +34,7 @@ export interface LambdaFunctionProps {
 }
 
 /**
- * LambdaFunction is a construct that creates a Lambda function.
+ * LambdaFunction is a construct that creates a Generic Lambda function.
  */
 export class LambdaFunction extends Construct {
   /**

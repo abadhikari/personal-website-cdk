@@ -1,10 +1,14 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { AWSError } from 'aws-sdk';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  PutCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 
-const dynamoDbClient = new DocumentClient();
+const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 /**
  * The name of the DynamoDB table that stores stack metadata.
@@ -14,6 +18,15 @@ const STACK_METADATA_TABLE = process.env.STACK_METADATA_TABLE as string;
  * The name of the DynamoDB table that stores media metadata.
  */
 const MEDIA_METADATA_TABLE = process.env.MEDIA_METADATA_TABLE as string;
+
+// Validate Environment Variables
+if (!STACK_METADATA_TABLE) {
+  throw new Error('STACK_METADATA_TABLE environment variable is missing.');
+}
+
+if (!MEDIA_METADATA_TABLE) {
+  throw new Error('MEDIA_METADATA_TABLE environment variable is missing.');
+}
 
 /**
  * Interface representing the structure of the parsed request body.
@@ -155,7 +168,7 @@ function createResponse(statusCode: number, message: string) {
  * @throws AWSError - the error that occurs during the DynamoDB operation.
  */
 async function putItem(
-  params: DocumentClient.PutItemInput,
+  params: PutCommandInput,
   idAttributeName: string,
 ): Promise<void> {
   const conditionalParams = {
@@ -163,10 +176,12 @@ async function putItem(
     ConditionExpression: `attribute_not_exists(${idAttributeName})`,
   };
 
+  const command = new PutCommand(conditionalParams);
+
   try {
-    await dynamoDbClient.put(conditionalParams).promise();
+    await dynamoDbClient.send(command);
   } catch (error) {
-    if ((error as AWSError).code === 'ConditionalCheckFailedException') {
+    if ((error as Error).name === 'ConditionalCheckFailedException') {
       console.log(
         `Item with ${idAttributeName} already exists in ${params.TableName}, skipping.`,
       );

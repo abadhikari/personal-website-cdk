@@ -19,8 +19,8 @@ const VALID_INPUT = {
 };
 
 describe('Write Lambda Handler Tests', () => {
-  let putMock: jest.Mock;
-  let promiseMock: jest.Mock;
+  let dynamoDbSendMock: jest.Mock;
+  let PutCommandMock: jest.Mock;
   let handler: any;
 
   beforeEach(() => {
@@ -29,14 +29,24 @@ describe('Write Lambda Handler Tests', () => {
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
 
-    jest.mock('aws-sdk/clients/dynamodb', () => {
-      putMock = jest.fn();
-      promiseMock = jest.fn();
+    dynamoDbSendMock = jest.fn();
+    PutCommandMock = jest.fn();
 
+    jest.mock('@aws-sdk/client-dynamodb', () => {
       return {
-        DocumentClient: jest.fn(() => ({
-          put: putMock.mockReturnThis(),
-          promise: promiseMock,
+        DynamoDBClient: jest.fn(),
+      };
+    });
+
+    jest.mock('@aws-sdk/lib-dynamodb', () => {
+      return {
+        DynamoDBDocumentClient: {
+          from: () => ({
+            send: dynamoDbSendMock,
+          }),
+        },
+        PutCommand: PutCommandMock.mockImplementation((params) => ({
+          input: params,
         })),
       };
     });
@@ -50,7 +60,7 @@ describe('Write Lambda Handler Tests', () => {
   });
 
   test('Happy Path - Valid Input returns 200', async () => {
-    promiseMock.mockResolvedValue({});
+    dynamoDbSendMock.mockResolvedValue({});
 
     const event: APIGatewayProxyEvent = {
       body: JSON.stringify(VALID_INPUT),
@@ -62,7 +72,7 @@ describe('Write Lambda Handler Tests', () => {
     expect(JSON.parse(response.body).message).toBe(
       'Media metadata saved successfully!',
     );
-    expect(putMock).toHaveBeenCalledTimes(2);
+    expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);
   });
 
   test('Error - Missing Request Body', async () => {
@@ -72,7 +82,7 @@ describe('Write Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(400);
     expect(JSON.parse(response.body).message).toBe('Request body is missing.');
-    expect(putMock).not.toHaveBeenCalled();
+    expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - Invalid JSON Format', async () => {
@@ -84,7 +94,7 @@ describe('Write Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(400);
     expect(JSON.parse(response.body).message).toBe('Invalid JSON format.');
-    expect(putMock).not.toHaveBeenCalled();
+    expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - Validation Error (Invalid Fields) returns 400', async () => {
@@ -100,7 +110,7 @@ describe('Write Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(400);
     expect(JSON.parse(response.body).message).toContain('Invalid request:');
-    expect(putMock).not.toHaveBeenCalled();
+    expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - Validation Error (Missing Required Fields) returns 400', async () => {
@@ -116,11 +126,11 @@ describe('Write Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(400);
     expect(JSON.parse(response.body).message).toContain('Invalid request:');
-    expect(putMock).not.toHaveBeenCalled();
+    expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - DynamoDB putItem Error returns 500', async () => {
-    promiseMock.mockRejectedValue(new Error('DynamoDB error'));
+    dynamoDbSendMock.mockRejectedValue(new Error('DynamoDB error'));
 
     const event: APIGatewayProxyEvent = {
       body: JSON.stringify(VALID_INPUT),
@@ -130,13 +140,13 @@ describe('Write Lambda Handler Tests', () => {
 
     expect(response.statusCode).toBe(500);
     expect(JSON.parse(response.body).message).toBe('Failed to save metadata.');
-    expect(putMock).toHaveBeenCalled();
+    expect(dynamoDbSendMock).toHaveBeenCalled();
   });
 
   test('ConditionalCheckFailedException is Handled Gracefully and returns 200', async () => {
     const conditionalError = new Error('ConditionalCheckFailedException');
-    (conditionalError as any).code = 'ConditionalCheckFailedException';
-    promiseMock
+    conditionalError.name = 'ConditionalCheckFailedException';
+    dynamoDbSendMock
       .mockRejectedValueOnce(conditionalError) // For stack metadata
       .mockResolvedValueOnce({}); // For media metadata
 
@@ -150,6 +160,29 @@ describe('Write Lambda Handler Tests', () => {
     expect(JSON.parse(response.body).message).toBe(
       'Media metadata saved successfully!',
     );
-    expect(putMock).toHaveBeenCalledTimes(2);
+    expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);
+  });
+
+  describe('Environment variable validation', () => {
+    beforeEach(() => {
+      jest.resetModules();
+    });
+
+    test('should throw an error when STACK_METADATA_TABLE is missing', () => {
+      delete process.env.STACK_METADATA_TABLE;
+
+      expect(() => {
+        require('../../../media/write/index');
+      }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
+    });
+
+    test('should throw an error when MEDIA_METADATA_TABLE is missing', () => {
+      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
+      delete process.env.MEDIA_METADATA_TABLE;
+
+      expect(() => {
+        require('../../../media/write/index');
+      }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
+    });
   });
 });

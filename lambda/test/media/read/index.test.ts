@@ -18,8 +18,8 @@ function createMockEvent(body: any) {
 }
 
 describe('Read Lambda Function Tests', () => {
-  let queryMock: jest.Mock;
-  let promiseMock: jest.Mock;
+  let dynamoDbSendMock: jest.Mock;
+
   let handler: any;
 
   beforeEach(() => {
@@ -30,14 +30,24 @@ describe('Read Lambda Function Tests', () => {
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
     process.env.MEDIA_METADATA_GSI = 'StackIdIndex';
 
-    jest.mock('aws-sdk/clients/dynamodb', () => {
-      queryMock = jest.fn();
-      promiseMock = jest.fn();
+    dynamoDbSendMock = jest.fn();
+    const QueryCommandMock = jest.fn();
 
+    jest.mock('@aws-sdk/client-dynamodb', () => {
       return {
-        DocumentClient: jest.fn(() => ({
-          query: queryMock.mockReturnThis(),
-          promise: promiseMock,
+        DynamoDBClient: jest.fn(),
+      };
+    });
+
+    jest.mock('@aws-sdk/lib-dynamodb', () => {
+      return {
+        DynamoDBDocumentClient: {
+          from: () => ({
+            send: dynamoDbSendMock,
+          }),
+        },
+        QueryCommand: QueryCommandMock.mockImplementation((params) => ({
+          input: params,
         })),
       };
     });
@@ -61,21 +71,17 @@ describe('Read Lambda Function Tests', () => {
       { mediaId: 'media3', stackId: 'stack1' },
     ];
 
-    queryMock.mockImplementation((params) => {
+    dynamoDbSendMock.mockImplementation((command) => {
+      const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
-        return {
-          promise: () => Promise.resolve({ Items: stackItems }),
-        };
+        return Promise.resolve({ Items: stackItems });
       } else if (params.TableName === 'MediaMetadataTable') {
         const stackId = params.ExpressionAttributeValues[':stackId'];
-        return {
-          promise: () =>
-            Promise.resolve({
-              Items: mediaItems.filter((item) => item.stackId === stackId),
-            }),
-        };
+        return Promise.resolve({
+          Items: mediaItems.filter((item) => item.stackId === stackId),
+        });
       }
-      return { promise: () => Promise.resolve({ Items: [] }) };
+      return Promise.resolve({ Items: [] });
     });
 
     const event: APIGatewayProxyEvent = createMockEvent(
@@ -100,7 +106,8 @@ describe('Read Lambda Function Tests', () => {
   });
 
   test('should return 404 error if no stacks are found', async () => {
-    queryMock.mockImplementation((params) => {
+    dynamoDbSendMock.mockImplementation((command) => {
+      const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
         return {
           promise: () => Promise.resolve({ Items: [] }),
@@ -127,13 +134,12 @@ describe('Read Lambda Function Tests', () => {
   test('should return 500 error if stack item is missing stackId', async () => {
     const stackItems = [{ uploadTimestamp: 1609459200000 }];
 
-    queryMock.mockImplementation((params) => {
+    dynamoDbSendMock.mockImplementation((command) => {
+      const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
-        return {
-          promise: () => Promise.resolve({ Items: stackItems }),
-        };
+        return Promise.resolve({ Items: stackItems });
       }
-      return { promise: () => Promise.resolve({ Items: [] }) };
+      return Promise.resolve({ Items: [] });
     });
 
     const event: APIGatewayProxyEvent = createMockEvent(
@@ -152,13 +158,12 @@ describe('Read Lambda Function Tests', () => {
   });
 
   test('should return 500 error if DynamoDB query fails for stack metadata', async () => {
-    queryMock.mockImplementation((params) => {
+    dynamoDbSendMock.mockImplementation((command) => {
+      const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
-        return {
-          promise: () => Promise.reject(new Error('DynamoDB query failed')),
-        };
+        return Promise.reject(new Error('DynamoDB query failed'));
       }
-      return { promise: () => Promise.resolve({ Items: [] }) };
+      return Promise.resolve({ Items: [] });
     });
 
     const event: APIGatewayProxyEvent = createMockEvent(
@@ -179,17 +184,14 @@ describe('Read Lambda Function Tests', () => {
   test('should return 500 error if DynamoDB query fails for media metadata', async () => {
     const stackItems = [{ stackId: 'stack1', uploadTimestamp: 1609459200000 }];
 
-    queryMock.mockImplementation((params) => {
+    dynamoDbSendMock.mockImplementation((command) => {
+      const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
-        return {
-          promise: () => Promise.resolve({ Items: stackItems }),
-        };
+        return Promise.resolve({ Items: stackItems });
       } else if (params.TableName === 'MediaMetadataTable') {
-        return {
-          promise: () => Promise.reject(new Error('DynamoDB query failed')),
-        };
+        return Promise.reject(new Error('DynamoDB query failed'));
       }
-      return { promise: () => Promise.resolve({ Items: [] }) };
+      return Promise.resolve({ Items: [] });
     });
 
     const event: APIGatewayProxyEvent = createMockEvent(
@@ -211,21 +213,17 @@ describe('Read Lambda Function Tests', () => {
     const stackItems = [{ stackId: 'stack1', uploadTimestamp: 1609459200000 }];
     const mediaItems = [{ mediaId: 'media1', stackId: 'stack1' }];
 
-    queryMock.mockImplementation((params) => {
+    dynamoDbSendMock.mockImplementation((command) => {
+      const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
-        return {
-          promise: () => Promise.resolve({ Items: stackItems }),
-        };
+        return Promise.resolve({ Items: stackItems });
       } else if (params.TableName === 'MediaMetadataTable') {
         const stackId = params.ExpressionAttributeValues[':stackId'];
-        return {
-          promise: () =>
-            Promise.resolve({
-              Items: mediaItems.filter((item) => item.stackId === stackId),
-            }),
-        };
+        return Promise.resolve({
+          Items: mediaItems.filter((item) => item.stackId === stackId),
+        });
       }
-      return { promise: () => Promise.resolve({ Items: [] }) };
+      return Promise.resolve({ Items: [] });
     });
 
     const event: APIGatewayProxyEvent = createMockEvent(
@@ -282,5 +280,49 @@ describe('Read Lambda Function Tests', () => {
     expect(responseBody.message).toMatch(
       /Invalid request: stackLimit must be greater than 0/,
     );
+  });
+
+  describe('Environment variable validation', () => {
+    beforeEach(() => {
+      jest.resetModules();
+    });
+
+    test('should throw an error when STACK_METADATA_TABLE is missing', () => {
+      delete process.env.STACK_METADATA_TABLE;
+
+      expect(() => {
+        require('../../../media/read/index');
+      }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
+    });
+
+    test('should throw an error when STACK_METADATA_GSI is missing', () => {
+      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
+      delete process.env.STACK_METADATA_GSI;
+
+      expect(() => {
+        require('../../../media/read/index');
+      }).toThrow('STACK_METADATA_GSI environment variable is missing');
+    });
+
+    test('should throw an error when MEDIA_METADATA_TABLE is missing', () => {
+      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
+      process.env.STACK_METADATA_GSI = 'STACK_METADATA_GSI';
+      delete process.env.MEDIA_METADATA_TABLE;
+
+      expect(() => {
+        require('../../../media/read/index');
+      }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
+    });
+
+    test('should throw an error when MEDIA_METADATA_GSI is missing', () => {
+      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
+      process.env.STACK_METADATA_GSI = 'STACK_METADATA_GSI';
+      process.env.MEDIA_METADATA_TABLE = 'MEDIA_METADATA_TABLE';
+      delete process.env.MEDIA_METADATA_GSI;
+
+      expect(() => {
+        require('../../../media/read/index');
+      }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
+    });
   });
 });

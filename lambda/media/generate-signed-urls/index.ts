@@ -2,9 +2,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
-import { S3 } from 'aws-sdk';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const s3Client = new S3();
+const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
 /**
  * The name of the S3 Bucket to generate signed URLs for.
@@ -17,7 +18,7 @@ const S3_URL_TTL = Number(process.env.S3_URL_TTL);
 /**
  * The CDN domain URL.
  */
-const CDN_DOMAIN_URL = process.env.CDN_URL;
+const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL;
 
 // Validate Environment Variables
 if (!S3_BUCKET_NAME) {
@@ -137,14 +138,16 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
 
   const key = createKey(userId, fileName, contentType);
 
-  const params = {
+  const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,
     Key: key,
-    Expires: S3_URL_TTL,
     ContentType: contentType,
-  };
+  });
 
-  const uploadUrl = await s3Client.getSignedUrlPromise('putObject', params);
+  const uploadUrl = await getSignedUrl(s3Client, command, {
+    expiresIn: S3_URL_TTL,
+  });
+
   return { uploadUrl, key };
 }
 

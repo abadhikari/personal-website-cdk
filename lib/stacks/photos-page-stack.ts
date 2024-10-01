@@ -15,6 +15,7 @@ import { LambdaFunction } from '../constructs/lambda-function';
 import { Cors } from 'aws-cdk-lib/aws-apigateway';
 import { WEBSITE_DOMAIN } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
+import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 
 export interface PhotosPageStackProps extends StackProps {}
 
@@ -56,11 +57,11 @@ export class PhotosPageStack extends Stack {
    * The Lambda function responsible for reading (retrieving) media from the storage or database.
    * This function is integrated with a GET method in API Gateway.
    */
-  private readonly readMediaLambda: LambdaFunction;
+  private readonly readMediaLambda: LambdaNodeFunction;
 
-  private readonly writeMediaLambda: LambdaFunction;
+  private readonly writeMediaLambda: LambdaNodeFunction;
 
-  private readonly generateSignedMediaUrlsLambda: LambdaFunction;
+  private readonly generateSignedMediaUrlsLambda: LambdaNodeFunction;
 
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
@@ -116,40 +117,44 @@ export class PhotosPageStack extends Stack {
     );
 
     // Lambdas
-    this.readMediaLambda = new LambdaFunction(this, 'ReadMediaLambda', {
+    this.readMediaLambda = new LambdaNodeFunction(this, 'ReadMediaLambda', {
       functionName: 'ReadMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
-      codeDirectory: 'build/lambda/media/read',
-      handler: 'index.handler',
+      entry: 'lambda/media/read/index.ts',
+      handler: 'handler',
       environment: {
         ...PhotosPageDynamoDbTables,
       },
     });
 
-    this.writeMediaLambda = new LambdaFunction(this, 'WriteMediaLambda', {
+    this.writeMediaLambda = new LambdaNodeFunction(this, 'WriteMediaLambda', {
       functionName: 'WriteMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
-      codeDirectory: 'build/lambda/media/write',
-      handler: 'index.handler',
+      entry: 'lambda/media/write/index.ts',
+      handler: 'handler',
       environment: {
         ...PhotosPageDynamoDbTables,
       },
     });
 
-    this.generateSignedMediaUrlsLambda = new LambdaFunction(
+    this.generateSignedMediaUrlsLambda = new LambdaNodeFunction(
       this,
       'GenerateSignedMediaUrlLambda',
       {
         functionName: 'GenerateSignedMediaUrlLambdaFunction',
         runtime: Runtime.NODEJS_20_X,
-        codeDirectory: 'build/lambda/media/generate-signed-urls',
-        handler: 'index.handler',
+        entry: 'lambda/media/generate-signed-urls/index.ts',
+        handler: 'handler',
         environment: {
           S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
           S3_URL_TTL: '300',
           CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
         },
       },
+    );
+
+    this.generateSignedMediaUrlsLambda.node.addDependency(
+      this.mediaCdn.distribution,
     );
 
     // Grant S3 permissions to the Lambda to generate signed URLs
