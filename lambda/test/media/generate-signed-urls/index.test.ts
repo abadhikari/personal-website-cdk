@@ -11,7 +11,8 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
     process.env.S3_BUCKET_NAME = 'personal-website-photos-page-media-bucket';
     process.env.S3_URL_TTL = '300';
-    process.env.CDN_DOMAIN_URL = 'random.cloudfront.net';
+    process.env.ORIGIN_ALLOWLIST =
+      'http://localhost:3000,https://abhinnaadhikari.com';
 
     // Mock the system time to ensure consistent test results
     jest.useFakeTimers().setSystemTime(new Date('2023-01-15T00:00:00Z'));
@@ -57,9 +58,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event = {
+    const event: Partial<APIGatewayProxyEvent> = {
       body: JSON.stringify(requestBody),
-    } as APIGatewayProxyEvent;
+      headers: { Origin: 'http://localhost:3000' },
+    };
 
     // Mock the S3 getSignedUrl method to return a signed URL
     getSignedUrlMock.mockResolvedValue('https://example.com/signed-url');
@@ -74,7 +76,6 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
         key: 'user/user123/2023/01/mock-uuid_testfile.jpg',
       },
     ]);
-    expect(body.cdnDomainUrl).toBe('random.cloudfront.net');
 
     // Verify that getSignedUrl was called with correct parameters
     expect(getSignedUrlMock).toHaveBeenCalledTimes(1);
@@ -89,10 +90,34 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     );
   });
 
+  test('should return 403 when origin in request is invalid', async () => {
+    const requestBody = {
+      filesMetadata: [
+        {
+          fileName: 'testfile.jpg',
+          contentType: 'image/jpeg',
+          userId: 'user123',
+        },
+      ],
+    };
+
+    const event: Partial<APIGatewayProxyEvent> = {
+      body: JSON.stringify(requestBody),
+      headers: { Origin: 'https://invalid.com' },
+    };
+
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(403);
+    const body = JSON.parse(response.body);
+    expect(body.message).toBe('Forbidden: Invalid origin');
+  });
+
   test('should return 400 when request body is missing', async () => {
-    const event = {
+    const event: Partial<APIGatewayProxyEvent> = {
       body: null,
-    } as unknown as APIGatewayProxyEvent;
+      headers: { Origin: 'http://localhost:3000' },
+    };
 
     const response = await handler(event);
 
@@ -102,9 +127,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 400 when request body is invalid JSON', async () => {
-    const event = {
+    const event: Partial<APIGatewayProxyEvent> = {
       body: 'Invalid JSON String',
-    } as APIGatewayProxyEvent;
+      headers: { Origin: 'http://localhost:3000' },
+    };
 
     const response = await handler(event);
 
@@ -124,9 +150,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event = {
+    const event: Partial<APIGatewayProxyEvent> = {
       body: JSON.stringify(invalidRequestBody),
-    } as APIGatewayProxyEvent;
+      headers: { Origin: 'http://localhost:3000' },
+    };
 
     const response = await handler(event);
 
@@ -146,9 +173,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event = {
+    const event: Partial<APIGatewayProxyEvent> = {
       body: JSON.stringify(requestBody),
-    } as APIGatewayProxyEvent;
+      headers: { Origin: 'http://localhost:3000' },
+    };
 
     // Mock the S3 getSignedUrl method to throw an error
     getSignedUrlMock.mockRejectedValue(new Error('S3 error'));
@@ -179,7 +207,9 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
       expect(() => {
         require('../../../media/generate-signed-urls/index');
-      }).toThrow('S3_URL_TTL environment variable is not a valid number');
+      }).toThrow(
+        'S3_URL_TTL environment variable is missing or not a valid number',
+      );
     });
 
     test('should throw an error when S3_URL_TTL is not a number', () => {
@@ -188,17 +218,19 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
       expect(() => {
         require('../../../media/generate-signed-urls/index');
-      }).toThrow('S3_URL_TTL environment variable is not a valid number');
+      }).toThrow(
+        'S3_URL_TTL environment variable is missing or not a valid number',
+      );
     });
 
-    test('should throw an error when CDN_DOMAIN_URL is missing', () => {
-      process.env.S3_BUCKET_NAME = 'personal-website-photos-page-media-bucket';
-      process.env.S3_URL_TTL = '300';
-      delete process.env.CDN_DOMAIN_URL;
+    test('should throw an error when ORIGIN_ALLOWLIST is is missing', () => {
+      delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
         require('../../../media/generate-signed-urls/index');
-      }).toThrow('CDN_DOMAIN_URL environment variable is missing.');
+      }).toThrow(
+        'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+      );
     });
   });
 });

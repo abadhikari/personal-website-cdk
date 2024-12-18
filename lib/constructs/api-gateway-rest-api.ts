@@ -19,16 +19,26 @@ export interface ApiGatewayRestApiProps {
   /**
    * configuration that enables CORS (Cross-Origin Resource Sharing) for the API Gateway.
    */
-  readonly cors?: {
-    /**
-     * A list of allowed origins for cross-origin requests.
-     */
-    allowOrigins: Array<string>;
-    /**
-     * A list of allowed HTTP methods for cross-origin requests.
-     */
-    allowMethods: Array<string>;
-  };
+  readonly cors?: Cors;
+}
+
+/**
+ * Configuration for enabling CORS (Cross-Origin Resource Sharing).
+ */
+interface Cors {
+  /**
+   * A list of allowed origins for cross-origin requests.
+   */
+  allowOrigins: Array<string>;
+  /**
+   * A list of allowed HTTP methods for cross-origin requests.
+   */
+  allowMethods: Array<string>;
+
+  /**
+   * A list of allowed HTTP headers for cross-origin requests.
+   */
+  allowHeaders: Array<string>;
 }
 
 /**
@@ -42,12 +52,14 @@ export class ApiGatewayRestApi extends Construct {
 
   constructor(scope: Construct, id: string, props: ApiGatewayRestApiProps) {
     super(scope, id);
+    const { restApiName, description, cors } = props;
     this.restApi = new RestApi(this, 'ApiGatewayRestApi', {
-      restApiName: props.restApiName,
-      description: props.description,
-      defaultCorsPreflightOptions: props.cors && {
-        allowOrigins: props.cors.allowOrigins,
-        allowMethods: props.cors.allowMethods,
+      restApiName,
+      description,
+      defaultCorsPreflightOptions: cors && {
+        allowOrigins: cors.allowOrigins,
+        allowMethods: cors.allowMethods,
+        allowHeaders: cors.allowHeaders,
       },
     });
   }

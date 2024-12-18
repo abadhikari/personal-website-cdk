@@ -9,9 +9,9 @@ const VALID_INPUT = {
     {
       mediaId: 'media123',
       alternativeText: 'An image',
-      imageSrc: {
-        thumbnail: 'https://example.com/thumbnail.jpg',
-        full: 'https://example.com/full.jpg',
+      imagePath: {
+        thumbnail: 'thumbnail.jpg',
+        full: 'full.jpg',
       },
       mediaType: 'image',
     },
@@ -28,6 +28,7 @@ describe('Write Lambda Handler Tests', () => {
 
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
+    process.env.CDN_DOMAIN_URL = 'random.cloudfront.net';
 
     dynamoDbSendMock = jest.fn();
     PutCommandMock = jest.fn();
@@ -183,6 +184,14 @@ describe('Write Lambda Handler Tests', () => {
       expect(() => {
         require('../../../media/write/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
+    });
+
+    test('should throw an error when CDN_DOMAIN_URL is missing', () => {
+      delete process.env.CDN_DOMAIN_URL;
+
+      expect(() => {
+        require('../../../media/write/index');
+      }).toThrow('CDN_DOMAIN_URL environment variable is missing.');
     });
   });
 });

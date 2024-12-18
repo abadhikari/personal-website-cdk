@@ -6,21 +6,15 @@ const mediaSchema = Joi.object({
     'any.required': 'mediaId is required',
   }),
   alternativeText: Joi.string().optional(),
-  imageSrc: Joi.object({
-    thumbnail: Joi.string()
-      .uri({ scheme: ['https'] })
-      .required()
-      .messages({
-        'string.uri': 'thumbnail imageSrc must be a valid HTTPS URL',
-        'any.required': 'thumbnail imageSrc is required',
-      }),
-    full: Joi.string()
-      .uri({ scheme: ['https'] })
-      .required()
-      .messages({
-        'string.uri': 'full imageSrc must be a valid HTTPS URL',
-        'any.required': 'full imageSrc is required',
-      }),
+  imagePath: Joi.object({
+    thumbnail: Joi.string().required().messages({
+      'string.base': 'thumbnail must be a valid S3 Path',
+      'any.required': 'thumbnail is required',
+    }),
+    full: Joi.string().required().messages({
+      'string.base': 'full must be a valid S3 Path',
+      'any.required': 'full is required',
+    }),
   }).required(),
   mediaType: Joi.string().required().messages({
     'string.base': 'mediaType must be a string',

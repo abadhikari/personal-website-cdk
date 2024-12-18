@@ -18,6 +18,10 @@ const STACK_METADATA_TABLE = process.env.STACK_METADATA_TABLE as string;
  * The name of the DynamoDB table that stores media metadata.
  */
 const MEDIA_METADATA_TABLE = process.env.MEDIA_METADATA_TABLE as string;
+/**
+ * The CDN domain URL.
+ */
+const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL;
 
 // Validate Environment Variables
 if (!STACK_METADATA_TABLE) {
@@ -26,6 +30,10 @@ if (!STACK_METADATA_TABLE) {
 
 if (!MEDIA_METADATA_TABLE) {
   throw new Error('MEDIA_METADATA_TABLE environment variable is missing.');
+}
+
+if (!CDN_DOMAIN_URL) {
+  throw new Error('CDN_DOMAIN_URL environment variable is missing.');
 }
 
 /**
@@ -52,24 +60,24 @@ interface RequestBody {
  * @interface Media
  * @property {string} mediaId - The unique identifier for the media item.
  * @property {string} [alternativeText] - The optional alternative text for the media (for accessibility).
- * @property {ImageSrc} imageSrc - The source URLs for the media (thumbnail and full image).
+ * @property {ImagePath} imagePath - The S3 path for the media (thumbnail and full image).
  * @property {string} mediaType - The type of the media (e.g., image, video).
  */
 interface Media {
   mediaId: string;
   alternativeText?: string;
-  imageSrc: ImageSrc;
+  imagePath: ImagePath;
   mediaType: string;
 }
 
 /**
- * Interface representing the structure of image sources in the media of a parsed request body.
+ * Interface representing the structure of image paths in the media of a parsed request body.
  *
- * @interface ImageSrc
- * @property {string} thumbnail - The URL of the thumbnail-sized image.
- * @property {string} full - The URL of the full-sized image.
+ * @interface ImagePath
+ * @property {string} thumbnail - The S3 path of the thumbnail-sized image.
+ * @property {string} full - The S3 path of the full-sized image.
  */
-interface ImageSrc {
+interface ImagePath {
   thumbnail: string;
   full: string;
 }
@@ -232,17 +240,31 @@ function saveMediaMetadata(
   stackId: string,
   sequenceNumber: number,
 ) {
-  const { mediaId, alternativeText, imageSrc, mediaType } = media;
+  const { mediaId, alternativeText, imagePath, mediaType } = media;
+  const imageUrl = constructImageUrl(imagePath);
   const mediaMetadataParams = {
     TableName: MEDIA_METADATA_TABLE,
     Item: {
       mediaId,
       stackId,
       alternativeText,
-      imageSrc,
+      imageUrl,
       sequenceNumber,
       mediaType,
     },
   };
   return putItem(mediaMetadataParams, 'mediaId');
+}
+
+/**
+ * Constructs full CDN URLs for the provided image paths.
+ *
+ * @param {ImagePath} imagePath - The paths to the thumbnail and full images in S3.
+ * @returns {ImagePath} - The constructed full URLs for both thumbnail and full images.
+ */
+function constructImageUrl(imagePath: { thumbnail: string; full: string }) {
+  return {
+    thumbnail: `${CDN_DOMAIN_URL}/${imagePath.thumbnail}`,
+    full: `${CDN_DOMAIN_URL}/${imagePath.full}`,
+  };
 }

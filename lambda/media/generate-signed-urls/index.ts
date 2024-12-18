@@ -16,21 +16,25 @@ const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
  */
 const S3_URL_TTL = Number(process.env.S3_URL_TTL);
 /**
- * The CDN domain URL.
+ * The allowlist for origins for cross-origin requests.
  */
-const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL;
+const ORIGIN_ALLOWLIST = process.env.ORIGIN_ALLOWLIST?.split(',');
 
 // Validate Environment Variables
 if (!S3_BUCKET_NAME) {
   throw new Error('S3_BUCKET_NAME environment variable is missing.');
 }
 
-if (isNaN(S3_URL_TTL)) {
-  throw new Error('S3_URL_TTL environment variable is not a valid number');
+if (!S3_URL_TTL || isNaN(S3_URL_TTL)) {
+  throw new Error(
+    'S3_URL_TTL environment variable is missing or not a valid number.',
+  );
 }
 
-if (!CDN_DOMAIN_URL) {
-  throw new Error('CDN_DOMAIN_URL environment variable is missing.');
+if (!ORIGIN_ALLOWLIST || ORIGIN_ALLOWLIST.length === 0) {
+  throw new Error(
+    'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+  );
 }
 
 /**
@@ -67,6 +71,17 @@ export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   let requestBody: RequestBody | undefined;
+
+  const origin = retrieveOrigin(event);
+  if (!ORIGIN_ALLOWLIST.includes(origin)) {
+    console.warn(`Blocked request from unallowed origin: ${origin}`);
+    return createResponse(
+      403,
+      { message: 'Forbidden: Invalid origin' },
+      origin,
+    );
+  }
+
   try {
     requestBody = parseRequestBody(event);
 
@@ -78,25 +93,28 @@ export const handler = async (
 
     const signedUrlsAndKeys = await Promise.all(signedUrlPromisesAndKeys);
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        signedUrlsAndKeys,
-        cdnDomainUrl: CDN_DOMAIN_URL,
-      }),
-    };
+    return createResponse(200, { signedUrlsAndKeys }, origin);
   } catch (error) {
     if (error instanceof ValidationError) {
-      return createErrorResponse(error.statusCode, error.message);
+      return createResponse(
+        error.statusCode,
+        { message: error.message },
+        origin,
+      );
     }
 
     console.error(
       `Error fetching media data for request ${JSON.stringify(requestBody)} with error:`,
       error,
     );
-    return createErrorResponse(500, 'Internal server error.');
+    return createResponse(500, { message: 'Internal server error.' }, origin);
   }
 };
+
+function retrieveOrigin(event: APIGatewayProxyEvent): string {
+  const origin = event.headers['Origin'] || event.headers['origin'] || '';
+  return origin.trim().toLowerCase();
+}
 
 /**
  * Parses the incoming API Gateway event to extract and validate the request body.
@@ -136,7 +154,7 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
 async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
   const { userId, fileName, contentType } = fileMetadata;
 
-  const key = createKey(userId, fileName, contentType);
+  const key = createKey(userId, fileName);
 
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,
@@ -161,7 +179,7 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
  * @param {string} fileName - The name of the file to be uploaded.
  * @returns {string} - The unique key for the file in the S3 bucket.
  */
-function createKey(userId: string, fileName: string, contentType: string) {
+function createKey(userId: string, fileName: string) {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -170,15 +188,24 @@ function createKey(userId: string, fileName: string, contentType: string) {
 }
 
 /**
- * Creates a standardized error response for the API.
+ * Creates a standardized response for the API.
  *
- * @param statusCode - The HTTP status code for the error.
- * @param message - The error message to be returned in the response body.
+ * @param statusCode - The HTTP status code.
+ * @param body - The body to be returned in the response body.
+ * @param origin - The Origin in the request header.
  * @returns An object representing the API Gateway error response.
  */
-function createErrorResponse(statusCode: number, message: string) {
+function createResponse(statusCode: number, body: object, origin: string) {
+  const headers = {
+    ...(origin && {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Credentials': 'true',
+    }),
+  };
+
   return {
     statusCode: statusCode,
-    body: JSON.stringify({ message }),
+    headers: headers,
+    body: JSON.stringify(body),
   };
 }

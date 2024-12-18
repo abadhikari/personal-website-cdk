@@ -26,9 +26,9 @@ export interface LambdaNodeFunctionProps extends NodejsFunctionProps {
 
 /**
  * LambdaNodeFunction is a construct that creates a Node.js Lambda function using NodejsFunction.
- * 
+ *
  * NodejsFunction handles transpilation of typescript files to javascript, all the bundling
- * of dependencies for the lambda, and even size optimization! 
+ * of dependencies for the lambda, and even size optimization!
  */
 export class LambdaNodeFunction extends Construct {
   /**

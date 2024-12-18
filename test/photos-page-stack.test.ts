@@ -193,7 +193,7 @@ describe('PhotosPageStack', () => {
 
   test('Integrates GetSignedUrls Lambda with API Gateway', () => {
     template.hasResourceProperties('AWS::ApiGateway::Method', {
-      HttpMethod: 'GET',
+      HttpMethod: 'POST',
       ResourceId: { Ref: 'MediaApiApiGatewayRestApiv1mediauploadurlD11AAFE3' },
       RestApiId: { Ref: 'MediaApiApiGatewayRestApi0EA395C7' },
       Integration: {

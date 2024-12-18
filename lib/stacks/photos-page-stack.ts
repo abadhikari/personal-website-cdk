@@ -11,9 +11,12 @@ import { S3Bucket } from '../constructs/s3-bucket';
 import { ACCOUNT_ID } from '../configuration/account-config';
 import { DynamoDbTable } from '../constructs/dynamodb-table';
 import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
-import { LambdaFunction } from '../constructs/lambda-function';
 import { Cors } from 'aws-cdk-lib/aws-apigateway';
-import { WEBSITE_DOMAIN } from '../configuration/website-config';
+import {
+  LOCALHOST_DOMAIN,
+  ORIGIN_ALLOWLIST,
+  WEBSITE_DOMAIN,
+} from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 
@@ -134,6 +137,7 @@ export class PhotosPageStack extends Stack {
       handler: 'handler',
       environment: {
         ...PhotosPageDynamoDbTables,
+        CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
       },
     });
 
@@ -148,7 +152,7 @@ export class PhotosPageStack extends Stack {
         environment: {
           S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
           S3_URL_TTL: '300',
-          CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
+          ORIGIN_ALLOWLIST: ORIGIN_ALLOWLIST.join(','),
         },
       },
     );
@@ -168,7 +172,8 @@ export class PhotosPageStack extends Stack {
       description: 'API for handling media on the photos page',
       cors: {
         allowMethods: Cors.ALL_METHODS,
-        allowOrigins: [WEBSITE_DOMAIN],
+        allowOrigins: ['*'],
+        allowHeaders: ['Content-Type', 'Authorization'],
       },
     });
 
@@ -187,7 +192,7 @@ export class PhotosPageStack extends Stack {
     this.restApi.addLambdaIntegration(
       this.generateSignedMediaUrlsLambda.function,
       'v1/media/upload-url',
-      'GET',
+      'POST',
     );
   }
 }
