@@ -111,6 +111,13 @@ export const handler = async (
   }
 };
 
+/**
+ * Extracts and normalizes the Origin header from an API Gateway event.
+ *
+ * This function retrieves the `Origin` header (case-insensitive) from the incoming
+ * API Gateway event, trims any leading or trailing whitespace, and converts it
+ * to lowercase for consistent processing.
+ */
 function retrieveOrigin(event: APIGatewayProxyEvent): string {
   const origin = event.headers['Origin'] || event.headers['origin'] || '';
   return origin.trim().toLowerCase();

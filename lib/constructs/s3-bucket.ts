@@ -4,6 +4,7 @@ import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
+  CorsRule,
   IBucket,
 } from 'aws-cdk-lib/aws-s3';
 
@@ -21,6 +22,10 @@ export interface S3BucketProps {
    * Specifies whether versioning is enabled for the S3 bucket.
    */
   readonly versioned: boolean;
+  /**
+   * Specifies CORS rules for the S3 bucket.
+   */
+  readonly corsRules?: CorsRule[];
 }
 
 /**
@@ -44,6 +49,7 @@ export class S3Bucket extends Construct {
       versioned: props.versioned,
       removalPolicy: props.removalPolicy,
       publicReadAccess: false,
+      cors: props.corsRules ?? [],
     });
   }
 }

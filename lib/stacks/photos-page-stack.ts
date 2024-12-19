@@ -6,17 +6,14 @@ import {
   ProjectionType,
 } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { CloudFrontDistribution } from '../constructs/cloudfront-distribution';
 import { S3Bucket } from '../constructs/s3-bucket';
 import { ACCOUNT_ID } from '../configuration/account-config';
 import { DynamoDbTable } from '../constructs/dynamodb-table';
 import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
 import { Cors } from 'aws-cdk-lib/aws-apigateway';
-import {
-  LOCALHOST_DOMAIN,
-  ORIGIN_ALLOWLIST,
-  WEBSITE_DOMAIN,
-} from '../configuration/website-config';
+import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 
@@ -74,6 +71,18 @@ export class PhotosPageStack extends Stack {
       bucketName: `personal-website-photos-page-media-bucket-${ACCOUNT_ID}`,
       removalPolicy: RemovalPolicy.RETAIN,
       versioned: false,
+      corsRules: [
+        {
+          allowedOrigins: ORIGIN_ALLOWLIST,
+          allowedMethods: [HttpMethods.PUT],
+          allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'x-amz-security-token',
+            'x-amz-content-sha256',
+          ],
+        },
+      ],
     });
 
     // CloudFront Distribution
