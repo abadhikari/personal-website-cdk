@@ -179,8 +179,6 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
   return { uploadUrl, key };
 }
 
-
-
 /**
  * Creates a unique key (path) for storing the file in the S3 bucket.
  *
