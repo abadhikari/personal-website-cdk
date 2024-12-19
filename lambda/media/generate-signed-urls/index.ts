@@ -4,6 +4,7 @@ import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { sanitizeFileName } from './sanitizeFileName';
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
@@ -161,6 +162,8 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
 async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
   const { userId, fileName, contentType } = fileMetadata;
 
+  const sanitizedFileName = sanitizeFileName(fileName);
+
   const key = createKey(userId, fileName);
 
   const command = new PutObjectCommand({
@@ -176,6 +179,8 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
   return { uploadUrl, key };
 }
 
+
+
 /**
  * Creates a unique key (path) for storing the file in the S3 bucket.
  *
@@ -186,7 +191,7 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
  * @param {string} fileName - The name of the file to be uploaded.
  * @returns {string} - The unique key for the file in the S3 bucket.
  */
-function createKey(userId: string, fileName: string) {
+function createKey(userId: string, fileName: string): string {
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
