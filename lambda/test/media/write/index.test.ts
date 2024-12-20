@@ -1,5 +1,13 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
+function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
+  return {
+    body: body,
+    httpMethod: 'POST',
+    headers: { Origin: 'http://localhost:3000' },
+  };
+}
+
 const VALID_INPUT = {
   stackId: 'stack123',
   caption: 'A sample caption',
@@ -29,6 +37,8 @@ describe('Write Lambda Handler Tests', () => {
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
     process.env.CDN_DOMAIN_URL = 'random.cloudfront.net';
+    process.env.ORIGIN_ALLOWLIST =
+      'http://localhost:3000,https://abhinnaadhikari.com';
 
     dynamoDbSendMock = jest.fn();
     PutCommandMock = jest.fn();
@@ -63,9 +73,9 @@ describe('Write Lambda Handler Tests', () => {
   test('Happy Path - Valid Input returns 200', async () => {
     dynamoDbSendMock.mockResolvedValue({});
 
-    const event: APIGatewayProxyEvent = {
-      body: JSON.stringify(VALID_INPUT),
-    } as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(VALID_INPUT),
+    );
 
     const response = await handler(event);
 
@@ -77,7 +87,7 @@ describe('Write Lambda Handler Tests', () => {
   });
 
   test('Error - Missing Request Body', async () => {
-    const event: APIGatewayProxyEvent = {} as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(undefined);
 
     const response = await handler(event);
 
@@ -87,9 +97,9 @@ describe('Write Lambda Handler Tests', () => {
   });
 
   test('Error - Invalid JSON Format', async () => {
-    const event: APIGatewayProxyEvent = {
-      body: 'Invalid JSON String',
-    } as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      'Invalid JSON String',
+    );
 
     const response = await handler(event);
 
@@ -103,9 +113,9 @@ describe('Write Lambda Handler Tests', () => {
       invalidField: 'This field is not expected',
     };
 
-    const event: APIGatewayProxyEvent = {
-      body: JSON.stringify(invalidInput),
-    } as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(invalidInput),
+    );
 
     const response = await handler(event);
 
@@ -119,9 +129,9 @@ describe('Write Lambda Handler Tests', () => {
       stackId: 'stack123',
     };
 
-    const event: APIGatewayProxyEvent = {
-      body: JSON.stringify(invalidInput),
-    } as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(invalidInput),
+    );
 
     const response = await handler(event);
 
@@ -133,9 +143,9 @@ describe('Write Lambda Handler Tests', () => {
   test('Error - DynamoDB putItem Error returns 500', async () => {
     dynamoDbSendMock.mockRejectedValue(new Error('DynamoDB error'));
 
-    const event: APIGatewayProxyEvent = {
-      body: JSON.stringify(VALID_INPUT),
-    } as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(VALID_INPUT),
+    );
 
     const response = await handler(event);
 
@@ -151,9 +161,9 @@ describe('Write Lambda Handler Tests', () => {
       .mockRejectedValueOnce(conditionalError) // For stack metadata
       .mockResolvedValueOnce({}); // For media metadata
 
-    const event: APIGatewayProxyEvent = {
-      body: JSON.stringify(VALID_INPUT),
-    } as any;
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(VALID_INPUT),
+    );
 
     const response = await handler(event);
 
@@ -178,7 +188,6 @@ describe('Write Lambda Handler Tests', () => {
     });
 
     test('should throw an error when MEDIA_METADATA_TABLE is missing', () => {
-      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
@@ -192,6 +201,16 @@ describe('Write Lambda Handler Tests', () => {
       expect(() => {
         require('../../../media/write/index');
       }).toThrow('CDN_DOMAIN_URL environment variable is missing.');
+    });
+
+    test('should throw an error when ORIGIN_ALLOWLIST is is missing', () => {
+      delete process.env.ORIGIN_ALLOWLIST;
+
+      expect(() => {
+        require('../../../media/write/index');
+      }).toThrow(
+        'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+      );
     });
   });
 });

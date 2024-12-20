@@ -129,6 +129,8 @@ export class PhotosPageStack extends Stack {
     );
 
     // Lambdas
+    const serializedOriginAllowList = ORIGIN_ALLOWLIST.join(',');
+
     this.readMediaLambda = new LambdaNodeFunction(this, 'ReadMediaLambda', {
       functionName: 'ReadMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
@@ -136,6 +138,7 @@ export class PhotosPageStack extends Stack {
       handler: 'handler',
       environment: {
         ...PhotosPageDynamoDbTables,
+        ORIGIN_ALLOWLIST: serializedOriginAllowList,
       },
     });
 
@@ -147,6 +150,7 @@ export class PhotosPageStack extends Stack {
       environment: {
         ...PhotosPageDynamoDbTables,
         CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
+        ORIGIN_ALLOWLIST: serializedOriginAllowList,
       },
     });
 
@@ -161,7 +165,7 @@ export class PhotosPageStack extends Stack {
         environment: {
           S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
           S3_URL_TTL: '300',
-          ORIGIN_ALLOWLIST: ORIGIN_ALLOWLIST.join(','),
+          ORIGIN_ALLOWLIST: serializedOriginAllowList,
         },
       },
     );

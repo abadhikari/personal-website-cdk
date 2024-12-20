@@ -1,19 +1,10 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-function createMockEvent(body: any) {
+function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
   return {
     body: body,
-    httpMethod: 'POST',
-    headers: {},
-    multiValueHeaders: {},
-    isBase64Encoded: false,
-    path: '/',
-    pathParameters: null,
-    queryStringParameters: null,
-    multiValueQueryStringParameters: null,
-    stageVariables: null,
-    requestContext: {} as any,
-    resource: '',
+    httpMethod: 'GET',
+    headers: { Origin: 'http://localhost:3000' },
   };
 }
 
@@ -29,6 +20,8 @@ describe('Read Lambda Function Tests', () => {
     process.env.STACK_METADATA_GSI = 'UploadTimestampIndex';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
     process.env.MEDIA_METADATA_GSI = 'StackIdIndex';
+    process.env.ORIGIN_ALLOWLIST =
+      'http://localhost:3000,https://abhinnaadhikari.com';
 
     dynamoDbSendMock = jest.fn();
     const QueryCommandMock = jest.fn();
@@ -84,7 +77,7 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: 2,
         startTimestamp: 1609459200000,
@@ -116,7 +109,7 @@ describe('Read Lambda Function Tests', () => {
       return { promise: () => Promise.resolve({ Items: [] }) };
     });
 
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: 2,
         startTimestamp: 1609459200000,
@@ -142,7 +135,7 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: 1,
         startTimestamp: 1609459200000,
@@ -166,7 +159,7 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: 2,
         startTimestamp: 1609459200000,
@@ -194,7 +187,7 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: 1,
         startTimestamp: 1609459200000,
@@ -226,7 +219,7 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: 2,
       }),
@@ -245,7 +238,7 @@ describe('Read Lambda Function Tests', () => {
   });
 
   test('should return 400 error if request body is missing', async () => {
-    const event: APIGatewayProxyEvent = createMockEvent(null);
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
 
     const response = await handler(event);
 
@@ -255,7 +248,8 @@ describe('Read Lambda Function Tests', () => {
   });
 
   test('should return 400 error if request body has invalid JSON', async () => {
-    const event: APIGatewayProxyEvent = createMockEvent('invalid-json');
+    const event: Partial<APIGatewayProxyEvent> =
+      createMockEvent('invalid-json');
 
     const response = await handler(event);
 
@@ -265,7 +259,7 @@ describe('Read Lambda Function Tests', () => {
   });
 
   test('should return 400 error if request body fails validation', async () => {
-    const event: APIGatewayProxyEvent = createMockEvent(
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify({
         stackLimit: -5,
         startTimestamp: 1609459200000,
@@ -296,7 +290,6 @@ describe('Read Lambda Function Tests', () => {
     });
 
     test('should throw an error when STACK_METADATA_GSI is missing', () => {
-      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
       delete process.env.STACK_METADATA_GSI;
 
       expect(() => {
@@ -305,8 +298,6 @@ describe('Read Lambda Function Tests', () => {
     });
 
     test('should throw an error when MEDIA_METADATA_TABLE is missing', () => {
-      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
-      process.env.STACK_METADATA_GSI = 'STACK_METADATA_GSI';
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
@@ -315,14 +306,21 @@ describe('Read Lambda Function Tests', () => {
     });
 
     test('should throw an error when MEDIA_METADATA_GSI is missing', () => {
-      process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
-      process.env.STACK_METADATA_GSI = 'STACK_METADATA_GSI';
-      process.env.MEDIA_METADATA_TABLE = 'MEDIA_METADATA_TABLE';
       delete process.env.MEDIA_METADATA_GSI;
 
       expect(() => {
         require('../../../media/read/index');
       }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
+    });
+
+    test('should throw an error when ORIGIN_ALLOWLIST is is missing', () => {
+      delete process.env.ORIGIN_ALLOWLIST;
+
+      expect(() => {
+        require('../../../media/read/index');
+      }).toThrow(
+        'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+      );
     });
   });
 });

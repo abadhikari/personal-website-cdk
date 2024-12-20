@@ -1,5 +1,13 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
+function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
+  return {
+    body: body,
+    httpMethod: 'POST',
+    headers: { Origin: 'http://localhost:3000' },
+  };
+}
+
 describe('GenerateSignedUrls Lambda Function Tests', () => {
   let getSignedUrlMock: jest.Mock;
   let S3ClientMock: jest.Mock;
@@ -60,7 +68,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = {
       body: JSON.stringify(requestBody),
-      headers: { Origin: 'http://localhost:3000' },
+      headers: { origin: 'http://localhost:3000' },
     };
 
     // Mock the S3 getSignedUrl method to return a signed URL
@@ -103,7 +111,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = {
       body: JSON.stringify(requestBody),
-      headers: { Origin: 'https://invalid.com' },
+      headers: { Origin: 'invalid' },
     };
 
     const response = await handler(event);
@@ -114,10 +122,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 400 when request body is missing', async () => {
-    const event: Partial<APIGatewayProxyEvent> = {
-      body: null,
-      headers: { Origin: 'http://localhost:3000' },
-    };
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
 
     const response = await handler(event);
 
@@ -127,10 +132,9 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 400 when request body is invalid JSON', async () => {
-    const event: Partial<APIGatewayProxyEvent> = {
-      body: 'Invalid JSON String',
-      headers: { Origin: 'http://localhost:3000' },
-    };
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      'Invalid JSON String',
+    );
 
     const response = await handler(event);
 
@@ -150,10 +154,9 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event: Partial<APIGatewayProxyEvent> = {
-      body: JSON.stringify(invalidRequestBody),
-      headers: { Origin: 'http://localhost:3000' },
-    };
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(invalidRequestBody),
+    );
 
     const response = await handler(event);
 
@@ -173,10 +176,9 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event: Partial<APIGatewayProxyEvent> = {
-      body: JSON.stringify(requestBody),
-      headers: { Origin: 'http://localhost:3000' },
-    };
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(requestBody),
+    );
 
     // Mock the S3 getSignedUrl method to throw an error
     getSignedUrlMock.mockRejectedValue(new Error('S3 error'));
@@ -202,7 +204,6 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     });
 
     test('should throw an error when S3_URL_TTL is missing', () => {
-      process.env.S3_BUCKET_NAME = 'StackMetadataTable';
       delete process.env.S3_URL_TTL;
 
       expect(() => {
@@ -213,7 +214,6 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     });
 
     test('should throw an error when S3_URL_TTL is not a number', () => {
-      process.env.S3_BUCKET_NAME = 'StackMetadataTable';
       process.env.S3_URL_TTL = 'invalid_number';
 
       expect(() => {

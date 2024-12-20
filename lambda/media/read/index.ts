@@ -1,6 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  handleInvalidOrigin,
+  retrieveOrigin,
+  deserializeOriginAllowlist,
+} from '../../common/cors';
+import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 
@@ -22,6 +28,12 @@ const MEDIA_METADATA_TABLE = process.env.MEDIA_METADATA_TABLE as string;
  * The name of the Global Secondary Index (GSI) used to query media metadata by stack ID.
  */
 const MEDIA_METADATA_GSI = process.env.MEDIA_METADATA_GSI as string;
+/**
+ * The allowlist for origins for cross-origin requests.
+ */
+const ORIGIN_ALLOWLIST = deserializeOriginAllowlist(
+  process.env.ORIGIN_ALLOWLIST,
+);
 
 // Validate Environment Variables
 if (!STACK_METADATA_TABLE) {
@@ -38,6 +50,12 @@ if (!MEDIA_METADATA_TABLE) {
 
 if (!MEDIA_METADATA_GSI) {
   throw new Error('MEDIA_METADATA_GSI environment variable is missing.');
+}
+
+if (!ORIGIN_ALLOWLIST || ORIGIN_ALLOWLIST.length === 0) {
+  throw new Error(
+    'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+  );
 }
 
 /**
@@ -65,6 +83,12 @@ export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   let requestBody: RequestBody | undefined;
+
+  const origin = retrieveOrigin(event);
+  if (!ORIGIN_ALLOWLIST.includes(origin)) {
+    return handleInvalidOrigin(origin);
+  }
+
   try {
     requestBody = parseRequestBody(event);
 
@@ -79,7 +103,7 @@ export const handler = async (
 
     const stacks = stackMetadataResponse.Items || [];
     if (stacks.length === 0) {
-      return createErrorResponse(404, 'No stacks found!');
+      return createResponse(404, { message: 'No stacks found!' }, origin);
     }
 
     // For each stack, query the MediaMetadata table in parallel
@@ -100,22 +124,21 @@ export const handler = async (
     }));
 
     // Return the successful response
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        stackAndMediaData,
-      }),
-    };
+    return createResponse(200, { stackAndMediaData }, origin);
   } catch (error) {
     if (error instanceof ValidationError) {
-      return createErrorResponse(error.statusCode, error.message);
+      return createResponse(
+        error.statusCode,
+        { message: error.message },
+        origin,
+      );
     }
 
     console.error(
       `Error fetching media data for request ${JSON.stringify(requestBody)} with error:`,
       error,
     );
-    return createErrorResponse(500, 'Internal server error.');
+    return createResponse(500, { message: 'Internal server error.' }, origin);
   }
 };
 
@@ -146,20 +169,6 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
     }
     throw error;
   }
-}
-
-/**
- * Creates a standardized error response for the API.
- *
- * @param statusCode - The HTTP status code for the error.
- * @param message - The error message to be returned in the response body.
- * @returns An object representing the API Gateway error response.
- */
-function createErrorResponse(statusCode: number, message: string) {
-  return {
-    statusCode: statusCode,
-    body: JSON.stringify({ message }),
-  };
 }
 
 /**

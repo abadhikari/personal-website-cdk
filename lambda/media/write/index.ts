@@ -5,6 +5,12 @@ import {
   PutCommand,
   PutCommandInput,
 } from '@aws-sdk/lib-dynamodb';
+import {
+  handleInvalidOrigin,
+  retrieveOrigin,
+  deserializeOriginAllowlist,
+} from '../../common/cors';
+import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 
@@ -22,6 +28,12 @@ const MEDIA_METADATA_TABLE = process.env.MEDIA_METADATA_TABLE as string;
  * The CDN domain URL.
  */
 const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL;
+/**
+ * The allowlist for origins for cross-origin requests.
+ */
+const ORIGIN_ALLOWLIST = deserializeOriginAllowlist(
+  process.env.ORIGIN_ALLOWLIST,
+);
 
 // Validate Environment Variables
 if (!STACK_METADATA_TABLE) {
@@ -34,6 +46,12 @@ if (!MEDIA_METADATA_TABLE) {
 
 if (!CDN_DOMAIN_URL) {
   throw new Error('CDN_DOMAIN_URL environment variable is missing.');
+}
+
+if (!ORIGIN_ALLOWLIST || ORIGIN_ALLOWLIST.length === 0) {
+  throw new Error(
+    'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+  );
 }
 
 /**
@@ -93,6 +111,12 @@ export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   let requestBody: RequestBody | APIGatewayProxyResult | undefined;
+
+  const origin = retrieveOrigin(event);
+  if (!ORIGIN_ALLOWLIST.includes(origin)) {
+    return handleInvalidOrigin(origin);
+  }
+
   try {
     requestBody = parseRequestBody(event);
 
@@ -111,14 +135,22 @@ export const handler = async (
 
     await Promise.all([...mediaMetadataPromises, stackMetadataPromise]);
 
-    return createResponse(200, 'Media metadata saved successfully!');
+    return createResponse(
+      200,
+      { message: 'Media metadata saved successfully!' },
+      origin,
+    );
   } catch (error) {
     if (error instanceof ValidationError) {
-      return createResponse(error.statusCode, error.message);
+      return createResponse(
+        error.statusCode,
+        { message: error.message },
+        origin,
+      );
     }
 
     console.error('Error uploading media:', error);
-    return createResponse(500, 'Failed to save metadata.');
+    return createResponse(500, { message: 'Failed to save metadata.' }, origin);
   }
 };
 
@@ -151,20 +183,6 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
     }
     throw error;
   }
-}
-
-/**
- * Creates a standardized response for the API Gateway.
- *
- * @param statusCode - The HTTP status code.
- * @param message - The message to be returned in the response body.
- * @returns An object representing the API Gateway response.
- */
-function createResponse(statusCode: number, message: string) {
-  return {
-    statusCode: statusCode,
-    body: JSON.stringify({ message }),
-  };
 }
 
 /**

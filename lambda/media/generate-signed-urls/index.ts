@@ -1,5 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
+import { createResponse } from '../../common/createResponse';
+import {
+  handleInvalidOrigin,
+  retrieveOrigin,
+  deserializeOriginAllowlist,
+} from '../../common/cors';
 import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
@@ -19,7 +25,9 @@ const S3_URL_TTL = Number(process.env.S3_URL_TTL);
 /**
  * The allowlist for origins for cross-origin requests.
  */
-const ORIGIN_ALLOWLIST = process.env.ORIGIN_ALLOWLIST?.split(',');
+const ORIGIN_ALLOWLIST = deserializeOriginAllowlist(
+  process.env.ORIGIN_ALLOWLIST,
+);
 
 // Validate Environment Variables
 if (!S3_BUCKET_NAME) {
@@ -75,12 +83,7 @@ export const handler = async (
 
   const origin = retrieveOrigin(event);
   if (!ORIGIN_ALLOWLIST.includes(origin)) {
-    console.warn(`Blocked request from unallowed origin: ${origin}`);
-    return createResponse(
-      403,
-      { message: 'Forbidden: Invalid origin' },
-      origin,
-    );
+    return handleInvalidOrigin(origin);
   }
 
   try {
@@ -111,18 +114,6 @@ export const handler = async (
     return createResponse(500, { message: 'Internal server error.' }, origin);
   }
 };
-
-/**
- * Extracts and normalizes the Origin header from an API Gateway event.
- *
- * This function retrieves the `Origin` header (case-insensitive) from the incoming
- * API Gateway event, trims any leading or trailing whitespace, and converts it
- * to lowercase for consistent processing.
- */
-function retrieveOrigin(event: APIGatewayProxyEvent): string {
-  const origin = event.headers['Origin'] || event.headers['origin'] || '';
-  return origin.trim().toLowerCase();
-}
 
 /**
  * Parses the incoming API Gateway event to extract and validate the request body.
@@ -195,27 +186,4 @@ function createKey(userId: string, fileName: string): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const uuid = uuidv4();
   return `user/${userId}/${year}/${month}/${uuid}_${fileName}`;
-}
-
-/**
- * Creates a standardized response for the API.
- *
- * @param statusCode - The HTTP status code.
- * @param body - The body to be returned in the response body.
- * @param origin - The Origin in the request header.
- * @returns An object representing the API Gateway error response.
- */
-function createResponse(statusCode: number, body: object, origin: string) {
-  const headers = {
-    ...(origin && {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Credentials': 'true',
-    }),
-  };
-
-  return {
-    statusCode: statusCode,
-    headers: headers,
-    body: JSON.stringify(body),
-  };
 }
