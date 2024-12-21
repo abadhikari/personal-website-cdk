@@ -120,7 +120,7 @@ export class PhotosPageStack extends Stack {
         gsis: [
           {
             indexName: PhotosPageDynamoDbTables.STACK_METADATA_GSI,
-            partitionKey: { name: 'stackId', type: AttributeType.STRING },
+            partitionKey: { name: 'staticKey', type: AttributeType.STRING },
             sortKey: { name: 'uploadTimestamp', type: AttributeType.NUMBER },
             projectionType: ProjectionType.ALL,
           },
@@ -142,6 +142,10 @@ export class PhotosPageStack extends Stack {
       },
     });
 
+    // Grant the read lambda read permissions to the dynamoDb tables
+    this.stackMetadataTable.table.grantReadData(this.readMediaLambda.function);
+    this.mediaMetadataTable.table.grantReadData(this.readMediaLambda.function);
+
     this.writeMediaLambda = new LambdaNodeFunction(this, 'WriteMediaLambda', {
       functionName: 'WriteMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
@@ -153,6 +157,14 @@ export class PhotosPageStack extends Stack {
         ORIGIN_ALLOWLIST: serializedOriginAllowList,
       },
     });
+
+    // Grant the write lambda write permissions to the dynamoDb tables
+    this.stackMetadataTable.table.grantWriteData(
+      this.writeMediaLambda.function,
+    );
+    this.mediaMetadataTable.table.grantWriteData(
+      this.writeMediaLambda.function,
+    );
 
     this.generateSignedMediaUrlsLambda = new LambdaNodeFunction(
       this,

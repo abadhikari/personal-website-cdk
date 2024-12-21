@@ -1,62 +1,22 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
-import {
-  handleInvalidOrigin,
-  retrieveOrigin,
-  deserializeOriginAllowlist,
-} from '../../common/cors';
+import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
 import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
+import { getConfig } from './config';
 import { queryParametersSchema } from './schemas';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
-/**
- * The name of the DynamoDB table that stores stack metadata.
- */
-const STACK_METADATA_TABLE = process.env.STACK_METADATA_TABLE as string;
-/**
- * The name of the Global Secondary Index (GSI) used to query stack metadata by upload timestamp.
- */
-const STACK_METADATA_GSI = process.env.STACK_METADATA_GSI as string;
-/**
- * The name of the DynamoDB table that stores media metadata.
- */
-const MEDIA_METADATA_TABLE = process.env.MEDIA_METADATA_TABLE as string;
-/**
- * The name of the Global Secondary Index (GSI) used to query media metadata by stack ID.
- */
-const MEDIA_METADATA_GSI = process.env.MEDIA_METADATA_GSI as string;
-/**
- * The allowlist for origins for cross-origin requests.
- */
-const ORIGIN_ALLOWLIST = deserializeOriginAllowlist(
-  process.env.ORIGIN_ALLOWLIST,
-);
-
-// Validate Environment Variables
-if (!STACK_METADATA_TABLE) {
-  throw new Error('STACK_METADATA_TABLE environment variable is missing.');
-}
-
-if (!STACK_METADATA_GSI) {
-  throw new Error('STACK_METADATA_GSI environment variable is missing.');
-}
-
-if (!MEDIA_METADATA_TABLE) {
-  throw new Error('MEDIA_METADATA_TABLE environment variable is missing.');
-}
-
-if (!MEDIA_METADATA_GSI) {
-  throw new Error('MEDIA_METADATA_GSI environment variable is missing.');
-}
-
-if (!ORIGIN_ALLOWLIST || ORIGIN_ALLOWLIST.length === 0) {
-  throw new Error(
-    'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
-  );
-}
+const {
+  STACK_METADATA_TABLE,
+  STACK_METADATA_GSI,
+  MEDIA_METADATA_TABLE,
+  MEDIA_METADATA_GSI,
+  ORIGIN_ALLOWLIST,
+  STACK_METADATA_GSI_PARTITION_KEY,
+} = getConfig();
 
 /**
  * Interface representing the structure of the query parameters.
@@ -183,8 +143,10 @@ async function queryStackMetadataTable(
     IndexName: STACK_METADATA_GSI,
     Limit: limit,
     ScanIndexForward: false, // Sort by most recent (descending order)
-    KeyConditionExpression: 'uploadTimestamp BETWEEN :start AND :end',
+    KeyConditionExpression:
+      'staticKey = :staticKey AND uploadTimestamp BETWEEN :start AND :end',
     ExpressionAttributeValues: {
+      ':staticKey': STACK_METADATA_GSI_PARTITION_KEY,
       ':start': startTimestamp,
       ':end': endTimestamp,
     },

@@ -74,13 +74,14 @@ describe('PhotosPageStack', () => {
       KeySchema: [{ AttributeName: 'stackId', KeyType: 'HASH' }],
       AttributeDefinitions: [
         { AttributeName: 'stackId', AttributeType: 'S' },
+        { AttributeName: 'staticKey', AttributeType: 'S' },
         { AttributeName: 'uploadTimestamp', AttributeType: 'N' },
       ],
       GlobalSecondaryIndexes: [
         {
           IndexName: 'UploadTimestampIndex',
           KeySchema: [
-            { AttributeName: 'stackId', KeyType: 'HASH' },
+            { AttributeName: 'staticKey', KeyType: 'HASH' },
             { AttributeName: 'uploadTimestamp', KeyType: 'RANGE' },
           ],
           Projection: {

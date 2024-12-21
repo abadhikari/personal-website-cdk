@@ -37,7 +37,7 @@ export const requestBodySchema = Joi.object({
     .required()
     .messages({
       'number.base': 'uploadTimestamp must be a number',
-      'number.min': 'uploadTimestamp must be a non-negative number',
+      'number.min': 'uploadTimestamp must be a positive number',
       'number.max': 'uploadTimestamp must be in the past',
       'any.required': 'uploadTimestamp is required',
     }),

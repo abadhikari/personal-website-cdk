@@ -24,6 +24,7 @@ describe('Read Lambda Function Tests', () => {
     process.env.MEDIA_METADATA_GSI = 'StackIdIndex';
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
+    process.env.STACK_METADATA_GSI_PARTITION_KEY = 'ALL_STACKS';
 
     dynamoDbSendMock = jest.fn();
     const QueryCommandMock = jest.fn();
@@ -290,13 +291,23 @@ describe('Read Lambda Function Tests', () => {
       }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
     });
 
-    test('should throw an error when ORIGIN_ALLOWLIST is is missing', () => {
+    test('should throw an error when ORIGIN_ALLOWLIST is missing', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
         require('../../../media/read/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+      );
+    });
+
+    test('should throw an error when STACK_METADATA_GSI_PARTITION_KEY is missing', () => {
+      delete process.env.STACK_METADATA_GSI_PARTITION_KEY;
+
+      expect(() => {
+        require('../../../media/read/index');
+      }).toThrow(
+        'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
       );
     });
   });

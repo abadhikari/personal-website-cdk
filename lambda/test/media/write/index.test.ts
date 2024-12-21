@@ -18,8 +18,8 @@ const VALID_INPUT = {
       mediaId: 'media123',
       alternativeText: 'An image',
       imagePath: {
-        thumbnail: 'thumbnail.jpg',
         full: 'full.jpg',
+        thumbnail: 'thumbnail.jpg',
       },
       mediaType: 'image',
     },
@@ -39,6 +39,7 @@ describe('Write Lambda Handler Tests', () => {
     process.env.CDN_DOMAIN_URL = 'random.cloudfront.net';
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
+    process.env.STACK_METADATA_GSI_PARTITION_KEY = 'ALL_STACKS';
 
     dynamoDbSendMock = jest.fn();
     PutCommandMock = jest.fn();
@@ -210,6 +211,16 @@ describe('Write Lambda Handler Tests', () => {
         require('../../../media/write/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
+      );
+    });
+
+    test('should throw an error when STACK_METADATA_GSI_PARTITION_KEY is missing', () => {
+      delete process.env.STACK_METADATA_GSI_PARTITION_KEY;
+
+      expect(() => {
+        require('../../../media/write/index');
+      }).toThrow(
+        'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
       );
     });
   });
