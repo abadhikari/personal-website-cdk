@@ -1,8 +1,8 @@
 import * as Joi from 'joi';
 
-export const requestBodySchema = Joi.object({
+export const queryParametersSchema = Joi.object({
   stackLimit: Joi.number().greater(0).required().messages({
-    'number.base': 'stackLimit must be a string',
+    'number.base': 'stackLimit must be positive number',
     'number.greater': 'stackLimit must be greater than 0',
     'any.required': 'stackLimit is required',
   }),
@@ -11,7 +11,7 @@ export const requestBodySchema = Joi.object({
     .default(() => 0)
     .optional()
     .messages({
-      'number.min': 'startTimestamp must be a non-negative number',
+      'number.min': 'startTimestamp must be a positive number',
     }),
   endTimestamp: Joi.number()
     .greater(Joi.ref('startTimestamp'))

@@ -1,8 +1,10 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
+function createMockEvent(
+  queryStringParameters: any,
+): Partial<APIGatewayProxyEvent> {
   return {
-    body: body,
+    queryStringParameters,
     httpMethod: 'GET',
     headers: { Origin: 'http://localhost:3000' },
   };
@@ -77,13 +79,11 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: 2,
-        startTimestamp: 1609459200000,
-        endTimestamp: 1609459300000,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '2',
+      startTimestamp: '1609459200000',
+      endTimestamp: '1609459300000',
+    });
 
     const response = await handler(event);
 
@@ -109,13 +109,11 @@ describe('Read Lambda Function Tests', () => {
       return { promise: () => Promise.resolve({ Items: [] }) };
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: 2,
-        startTimestamp: 1609459200000,
-        endTimestamp: 1609459300000,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '2',
+      startTimestamp: '1609459200000',
+      endTimestamp: '1609459300000',
+    });
 
     const response = await handler(event);
 
@@ -135,13 +133,11 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: 1,
-        startTimestamp: 1609459200000,
-        endTimestamp: 1609459300000,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '1',
+      startTimestamp: '1609459200000',
+      endTimestamp: '1609459300000',
+    });
 
     const response = await handler(event);
 
@@ -159,13 +155,11 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: 2,
-        startTimestamp: 1609459200000,
-        endTimestamp: 1609459300000,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '2',
+      startTimestamp: '1609459200000',
+      endTimestamp: '1609459300000',
+    });
 
     const response = await handler(event);
 
@@ -187,13 +181,11 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: 1,
-        startTimestamp: 1609459200000,
-        endTimestamp: 1609459300000,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '1',
+      startTimestamp: '1609459200000',
+      endTimestamp: '1609459300000',
+    });
 
     const response = await handler(event);
 
@@ -219,11 +211,9 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: 2,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '2',
+    });
 
     const response = await handler(event);
 
@@ -237,35 +227,22 @@ describe('Read Lambda Function Tests', () => {
     ]);
   });
 
-  test('should return 400 error if request body is missing', async () => {
+  test('should return 400 error if query parameters are missing', async () => {
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
 
     const response = await handler(event);
 
     expect(response.statusCode).toBe(400);
     const responseBody = JSON.parse(response.body);
-    expect(responseBody.message).toMatch(/Request body is missing/);
-  });
-
-  test('should return 400 error if request body has invalid JSON', async () => {
-    const event: Partial<APIGatewayProxyEvent> =
-      createMockEvent('invalid-json');
-
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    const responseBody = JSON.parse(response.body);
-    expect(responseBody.message).toMatch(/Invalid JSON format/);
+    expect(responseBody.message).toMatch('Query parameters are missing');
   });
 
   test('should return 400 error if request body fails validation', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify({
-        stackLimit: -5,
-        startTimestamp: 1609459200000,
-        endTimestamp: 1609459300000,
-      }),
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
+      stackLimit: '-5',
+      startTimestamp: '1609459200000',
+      endTimestamp: '1609459300000',
+    });
 
     const response = await handler(event);
 

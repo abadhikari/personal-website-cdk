@@ -8,7 +8,7 @@ import {
 } from '../../common/cors';
 import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
-import { requestBodySchema } from './schemas';
+import { queryParametersSchema } from './schemas';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -59,14 +59,14 @@ if (!ORIGIN_ALLOWLIST || ORIGIN_ALLOWLIST.length === 0) {
 }
 
 /**
- * Interface representing the structure of the parsed request body.
+ * Interface representing the structure of the query parameters.
  *
- * @interface RequestBody
+ * @interface QueryParameters
  * @property {string} stackLimit - The number of max number of stacks.
  * @property {number} startTimestamp - The starting timestamp for the time range.
  * @property {number} endTimestamp - The ending timestamp for the time range.
  */
-interface RequestBody {
+interface QueryParameters {
   stackLimit: number;
   startTimestamp: number;
   endTimestamp: number;
@@ -82,7 +82,7 @@ interface RequestBody {
 export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
-  let requestBody: RequestBody | undefined;
+  let queryParameters: QueryParameters | undefined;
 
   const origin = retrieveOrigin(event);
   if (!ORIGIN_ALLOWLIST.includes(origin)) {
@@ -90,9 +90,9 @@ export const handler = async (
   }
 
   try {
-    requestBody = parseRequestBody(event);
+    queryParameters = parseQueryParams(event);
 
-    const { stackLimit, startTimestamp, endTimestamp } = requestBody;
+    const { stackLimit, startTimestamp, endTimestamp } = queryParameters;
 
     // Query StackMetadata table using GSI to get the stackLimit most recent stacks
     const stackMetadataResponse = await queryStackMetadataTable(
@@ -135,7 +135,7 @@ export const handler = async (
     }
 
     console.error(
-      `Error fetching media data for request ${JSON.stringify(requestBody)} with error:`,
+      `Error fetching media data for request with queryParameters: ${queryParameters && JSON.stringify(queryParameters)} with error:`,
       error,
     );
     return createResponse(500, { message: 'Internal server error.' }, origin);
@@ -143,32 +143,26 @@ export const handler = async (
 };
 
 /**
- * Parses the incoming API Gateway event to extract and validate the request body.
+ * Parses the incoming API Gateway event to extract and validate the query parameters.
  *
  * @param event - The API Gateway event containing the request.
- * @returns The parsed and validated request body, or an error response if the input is invalid.
- * @throws {ValidationError} - Throws validation errors if the request body is invalid.
+ * @returns The parsed and validated query parameters, or an error response if the input is invalid.
+ * @throws {ValidationError} - Throws validation errors if the query params are invalid.
  */
-function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
-  try {
-    if (!event.body) {
-      throw new ValidationError('Request body is missing.');
-    }
-
-    const requestBody = JSON.parse(event.body);
-    const { error, value } = requestBodySchema.validate(requestBody);
-
-    if (error) {
-      throw new ValidationError('Invalid request: ' + error.details[0].message);
-    }
-
-    return value;
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new ValidationError('Invalid JSON format.');
-    }
-    throw error;
+function parseQueryParams(event: APIGatewayProxyEvent): QueryParameters {
+  if (!event.queryStringParameters) {
+    throw new ValidationError('Query parameters are missing.');
   }
+
+  const queryParameters = event.queryStringParameters || {};
+
+  const { error, value } = queryParametersSchema.validate(queryParameters);
+
+  if (error) {
+    throw new ValidationError('Invalid request: ' + error.details[0].message);
+  }
+
+  return value;
 }
 
 /**
