@@ -249,8 +249,9 @@ function saveMediaMetadata(
  * @returns {ImagePath} - The constructed full URLs for both thumbnail and full images.
  */
 function constructImageUrl(imagePath: { thumbnail: string; full: string }) {
+  const urlProtocol = 'https';
   return {
-    thumbnail: `${CDN_DOMAIN_URL}/${imagePath.thumbnail}`,
-    full: `${CDN_DOMAIN_URL}/${imagePath.full}`,
+    thumbnail: `${urlProtocol}://${CDN_DOMAIN_URL}/${imagePath.thumbnail}`,
+    full: `${urlProtocol}://${CDN_DOMAIN_URL}/${imagePath.full}`,
   };
 }
