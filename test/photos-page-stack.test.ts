@@ -221,4 +221,18 @@ describe('PhotosPageStack', () => {
       },
     });
   });
+
+  test('Cognito Upload Page User Pool Client is created', () => {
+    template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
+      PreventUserExistenceErrors: 'ENABLED',
+      ExplicitAuthFlows: [
+        'ALLOW_USER_PASSWORD_AUTH',
+        'ALLOW_REFRESH_TOKEN_AUTH',
+      ],
+      SupportedIdentityProviders: ['COGNITO'],
+      TokenValidityUnits: { RefreshToken: 'minutes' },
+      RefreshTokenValidity: 1440,
+      UserPoolId: { Ref: 'UploadPageAuthCognitoUserPoolF14D2CF3' },
+    });
+  });
 });
