@@ -1,17 +1,20 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+import { AuthStack } from '../lib/stacks/auth-stack';
 import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
 import { ACCOUNT_ID } from '../lib/configuration/account-config';
 import { PhotosPageDynamoDbTables } from '../lib/configuration/dynamodb-config';
 
-describe('PhotosPageStack', () => {
+describe('PhotosPageStack Tests', () => {
   let app: cdk.App;
+  let authStack: AuthStack;
   let stack: PhotosPageStack;
   let template: Template;
 
   beforeEach(() => {
     app = new cdk.App();
-    stack = new PhotosPageStack(app, 'TestPhotosPageStack', {});
+    authStack = new AuthStack(app, 'TestAuthStack', {});
+    stack = new PhotosPageStack(app, 'TestPhotosPageStack', { authStack });
     template = Template.fromStack(stack);
   });
 
@@ -219,20 +222,6 @@ describe('PhotosPageStack', () => {
           ],
         },
       },
-    });
-  });
-
-  test('Cognito Upload Page User Pool Client is created', () => {
-    template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
-      PreventUserExistenceErrors: 'ENABLED',
-      ExplicitAuthFlows: [
-        'ALLOW_USER_PASSWORD_AUTH',
-        'ALLOW_REFRESH_TOKEN_AUTH',
-      ],
-      SupportedIdentityProviders: ['COGNITO'],
-      TokenValidityUnits: { RefreshToken: 'minutes' },
-      RefreshTokenValidity: 1440,
-      UserPoolId: { Ref: 'UploadPageAuthCognitoUserPoolF14D2CF3' },
     });
   });
 });

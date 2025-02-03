@@ -64,6 +64,18 @@ export interface CognitoPoolProps {
     custom?: boolean;
     userSrp?: boolean;
   };
+  /**
+   * Defines the cognito domain name.
+   */
+  readonly domainPrefix?: string;
+  /**
+   * List of allowed callback URLs for the Cognito Hosted UI.
+   */
+  readonly callbackUrls: string[];
+  /**
+   * List of allowed logout URLs for the Cognito Hosted UI.
+   */
+  readonly logoutUrls?: string[];
 }
 
 /**
@@ -98,10 +110,24 @@ export class CognitoPool extends Construct {
       preventUserExistenceErrors: true,
       authFlows: props.authFlows ?? { userPassword: true },
       refreshTokenValidity: props.refreshTokenValidity,
+      oAuth: {
+        callbackUrls: props.callbackUrls,
+        logoutUrls: props.logoutUrls ?? [],
+      },
     });
 
-    new CfnOutput(this, 'UserPoolId', { value: this.userPool.userPoolId });
-    new CfnOutput(this, 'UserPoolClientId', {
+    if (props.domainPrefix) {
+      this.userPool.addDomain('CognitoDomain', {
+        cognitoDomain: {
+          domainPrefix: props.domainPrefix,
+        },
+      });
+    }
+
+    new CfnOutput(this, 'CognitoUserPoolId', {
+      value: this.userPool.userPoolId,
+    });
+    new CfnOutput(this, 'CognitoUserPoolClientId', {
       value: this.userPoolClient.userPoolClientId,
     });
     new CfnOutput(this, 'CognitoDomain', {

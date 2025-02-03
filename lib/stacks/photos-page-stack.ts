@@ -1,4 +1,4 @@
-import { Duration, RemovalPolicy, StackProps, Stack } from 'aws-cdk-lib';
+import { RemovalPolicy, StackProps, Stack } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {
   AttributeType,
@@ -16,10 +16,11 @@ import { Cors } from 'aws-cdk-lib/aws-apigateway';
 import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
-import { CognitoPool } from '../constructs/cognito';
-import { AccountRecovery } from 'aws-cdk-lib/aws-cognito';
+import { AuthStack } from './auth-stack';
 
-export interface PhotosPageStackProps extends StackProps {}
+export interface PhotosPageStackProps extends StackProps {
+  authStack: AuthStack;
+}
 
 /**
  * PhotosPageStack sets up the backend infrastructure for the photo page
@@ -64,8 +65,6 @@ export class PhotosPageStack extends Stack {
   private readonly writeMediaLambda: LambdaNodeFunction;
 
   private readonly generateSignedMediaUrlsLambda: LambdaNodeFunction;
-
-  private readonly cognitoPool: CognitoPool;
 
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
@@ -223,23 +222,5 @@ export class PhotosPageStack extends Stack {
       'v1/media/upload-url',
       'POST',
     );
-
-    // Cognito
-    this.cognitoPool = new CognitoPool(this, 'UploadPageAuth', {
-      userPoolName: 'abhinnaadhikari-uploadpage-admin-user-pool',
-      refreshTokenValidity: Duration.days(1),
-      accountRecovery: AccountRecovery.EMAIL_ONLY,
-      selfSignUpEnabled: false,
-      signInAliases: {
-        email: true,
-        username: true,
-      },
-      standardAttributes: {
-        email: { required: true, mutable: true },
-      },
-      authFlows: {
-        userPassword: true,
-      },
-    });
   }
 }
