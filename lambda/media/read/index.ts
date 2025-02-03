@@ -6,6 +6,7 @@ import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
 import { getConfig } from './config';
 import { queryParametersSchema } from './schemas';
+import { decode, encode } from '../../common/string';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -30,6 +31,7 @@ interface QueryParameters {
   stackLimit: number;
   startTimestamp: number;
   endTimestamp: number;
+  lastEvaluatedKey?: string;
 }
 
 /**
@@ -52,13 +54,15 @@ export const handler = async (
   try {
     queryParameters = parseQueryParams(event);
 
-    const { stackLimit, startTimestamp, endTimestamp } = queryParameters;
+    const { stackLimit, startTimestamp, endTimestamp, lastEvaluatedKey } =
+      queryParameters;
 
     // Query StackMetadata table using GSI to get the stackLimit most recent stacks
     const stackMetadataResponse = await queryStackMetadataTable(
       stackLimit,
       startTimestamp,
       endTimestamp,
+      lastEvaluatedKey,
     );
 
     const stacks = stackMetadataResponse.Items || [];
@@ -84,7 +88,16 @@ export const handler = async (
     }));
 
     // Return the successful response
-    return createResponse(200, { stackAndMediaData }, origin);
+    return createResponse(
+      200,
+      {
+        stackAndMediaData,
+        lastEvaluatedKey: stackMetadataResponse.LastEvaluatedKey
+          ? encode(stackMetadataResponse.LastEvaluatedKey)
+          : null,
+      },
+      origin,
+    );
   } catch (error) {
     if (error instanceof ValidationError) {
       return createResponse(
@@ -137,11 +150,13 @@ async function queryStackMetadataTable(
   limit: number,
   startTimestamp: number,
   endTimestamp: number,
+  lastEvaluatedKey?: string,
 ) {
   const params = {
     TableName: STACK_METADATA_TABLE,
     IndexName: STACK_METADATA_GSI,
     Limit: limit,
+    ExclusiveStartKey: lastEvaluatedKey ? decode(lastEvaluatedKey) : undefined,
     ScanIndexForward: false, // Sort by most recent (descending order)
     KeyConditionExpression:
       'staticKey = :staticKey AND uploadTimestamp BETWEEN :start AND :end',

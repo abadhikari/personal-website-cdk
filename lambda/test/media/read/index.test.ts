@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
+import { decode, encode } from '../../../common/string';
 
 function createMockEvent(
   queryStringParameters: any,
@@ -67,10 +68,16 @@ describe('Read Lambda Function Tests', () => {
       { mediaId: 'media3', stackId: 'stack1' },
     ];
 
+    const rawLastEvaluatedKey = { id: '123' };
+    const lastEvaluatedKey = encode(rawLastEvaluatedKey);
+
     dynamoDbSendMock.mockImplementation((command) => {
       const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
-        return Promise.resolve({ Items: stackItems });
+        return Promise.resolve({
+          Items: stackItems,
+          LastEvaluatedKey: rawLastEvaluatedKey,
+        });
       } else if (params.TableName === 'MediaMetadataTable') {
         const stackId = params.ExpressionAttributeValues[':stackId'];
         return Promise.resolve({
@@ -84,6 +91,7 @@ describe('Read Lambda Function Tests', () => {
       stackLimit: '2',
       startTimestamp: '1609459200000',
       endTimestamp: '1609459300000',
+      lastEvaluatedKey,
     });
 
     const response = await handler(event);
@@ -97,6 +105,7 @@ describe('Read Lambda Function Tests', () => {
       { mediaId: 'media1', stackId: 'stack1' },
       { mediaId: 'media3', stackId: 'stack1' },
     ]);
+    expect(responseBody.lastEvaluatedKey).toEqual(lastEvaluatedKey);
   });
 
   test('should return 404 error if no stacks are found', async () => {

@@ -20,4 +20,7 @@ export const queryParametersSchema = Joi.object({
     .messages({
       'number.greater': 'endTimestamp must be greater than startTimestamp',
     }),
+  lastEvaluatedKey: Joi.string().base64().optional().messages({
+    'string.base': 'lastEvaluatedKey must be a valid base64-encoded string',
+  }),
 });
