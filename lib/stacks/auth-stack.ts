@@ -29,7 +29,7 @@ export class AuthStack extends Stack {
     // Cognito
     this.adminPool = new CognitoPool(this, 'AdminAuth', {
       userPoolName: 'abhinnaadhikari-admin-user-pool',
-      refreshTokenValidity: Duration.days(1),
+      refreshTokenValidity: Duration.hours(1),
       accountRecovery: AccountRecovery.EMAIL_ONLY,
       selfSignUpEnabled: false,
       signInAliases: {
@@ -40,7 +40,7 @@ export class AuthStack extends Stack {
         email: { required: true, mutable: true },
       },
       authFlows: {
-        userPassword: true,
+        userSrp: true,
       },
       domainPrefix: 'abhinnaadhikari-admin',
       callbackUrls: [

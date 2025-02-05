@@ -2,16 +2,22 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 import { createResponse } from '../../common/createResponse';
 import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
-import { ValidationError } from '../../common/errors';
+import { UnauthorizedError, ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getConfig } from './config';
 import { sanitizeFileName } from './sanitizeFileName';
+import { authenticateToken } from '../../common/auth';
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
-const { S3_BUCKET_NAME, S3_URL_TTL, ORIGIN_ALLOWLIST } = getConfig();
+const {
+  S3_BUCKET_NAME,
+  S3_URL_TTL,
+  ORIGIN_ALLOWLIST,
+  ADMIN_COGNITO_POOL_DOMAIN,
+} = getConfig();
 
 /**
  * Interface representing the metadata for each file that will be uploaded.
@@ -54,6 +60,18 @@ export const handler = async (
   }
 
   try {
+    const authHeader =
+      event.headers?.Authorization || event.headers?.authorization;
+    if (!authHeader) {
+      return createResponse(
+        401,
+        { message: 'Unauthorized: Missing token' },
+        origin,
+      );
+    }
+    const token = authHeader.replace('Bearer ', '');
+    await authenticateToken(token, ADMIN_COGNITO_POOL_DOMAIN);
+
     requestBody = parseRequestBody(event);
 
     const { filesMetadata } = requestBody;
@@ -70,6 +88,13 @@ export const handler = async (
       return createResponse(
         error.statusCode,
         { message: error.message },
+        origin,
+      );
+    } else if (error instanceof UnauthorizedError) {
+      console.error('Error authorizing:', error.message);
+      return createResponse(
+        error.statusCode,
+        { message: 'Unauthorized' },
         origin,
       );
     }

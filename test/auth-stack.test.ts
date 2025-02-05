@@ -16,13 +16,10 @@ describe('AuthStack Tests', () => {
   test('Cognito Admin User Pool Client is created', () => {
     template.hasResourceProperties('AWS::Cognito::UserPoolClient', {
       PreventUserExistenceErrors: 'ENABLED',
-      ExplicitAuthFlows: [
-        'ALLOW_USER_PASSWORD_AUTH',
-        'ALLOW_REFRESH_TOKEN_AUTH',
-      ],
+      ExplicitAuthFlows: ['ALLOW_USER_SRP_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH'],
       SupportedIdentityProviders: ['COGNITO'],
       TokenValidityUnits: { RefreshToken: 'minutes' },
-      RefreshTokenValidity: 1440,
+      RefreshTokenValidity: 60,
       UserPoolId: { Ref: 'AdminAuthCognitoUserPoolBC6FC715' },
     });
   });

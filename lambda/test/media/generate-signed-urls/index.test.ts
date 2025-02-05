@@ -1,10 +1,17 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
+function createMockEvent(
+  body: any,
+  authToken?: string,
+  origin?: string,
+): Partial<APIGatewayProxyEvent> {
   return {
     body: body,
     httpMethod: 'POST',
-    headers: { Origin: 'http://localhost:3000' },
+    headers: {
+      Origin: origin || 'http://localhost:3000',
+      Authorization: authToken,
+    },
   };
 }
 
@@ -21,6 +28,8 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     process.env.S3_URL_TTL = '300';
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
+    process.env.ADMIN_COGNITO_POOL_DOMAIN =
+      'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_abcdefghi';
 
     // Mock the system time to ensure consistent test results
     jest.useFakeTimers().setSystemTime(new Date('2023-01-15T00:00:00Z'));
@@ -46,6 +55,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       v4: jest.fn().mockReturnValue('mock-uuid'),
     }));
 
+    jest.mock('../../../common/auth', () => ({
+      authenticateToken: jest.fn().mockResolvedValue(undefined),
+    }));
+
     // Import the handler after mocking
     handler = require('../../../media/generate-signed-urls/index').handler;
   });
@@ -66,10 +79,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event: Partial<APIGatewayProxyEvent> = {
-      body: JSON.stringify(requestBody),
-      headers: { origin: 'http://localhost:3000' },
-    };
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(requestBody),
+      'Bearer mocked-token',
+    );
 
     // Mock the S3 getSignedUrl method to return a signed URL
     getSignedUrlMock.mockResolvedValue('https://example.com/signed-url');
@@ -109,10 +122,11 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event: Partial<APIGatewayProxyEvent> = {
-      body: JSON.stringify(requestBody),
-      headers: { Origin: 'invalid' },
-    };
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(requestBody),
+      'Bearer mocked-token',
+      'invalid',
+    );
 
     const response = await handler(event);
 
@@ -122,7 +136,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 400 when request body is missing', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      null,
+      'Bearer mocked-token',
+    );
 
     const response = await handler(event);
 
@@ -134,6 +151,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   test('should return 400 when request body is invalid JSON', async () => {
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       'Invalid JSON String',
+      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -156,6 +174,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(invalidRequestBody),
+      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -178,6 +197,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(requestBody),
+      'Bearer mocked-token',
     );
 
     // Mock the S3 getSignedUrl method to throw an error
@@ -188,6 +208,31 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     expect(response.statusCode).toBe(500);
     const body = JSON.parse(response.body);
     expect(body.message).toBe('Internal server error.');
+  });
+
+  test('Error - Unauthorized Error (Missing token) returns 401', async () => {
+    const requestBody = {
+      filesMetadata: [
+        {
+          fileName: 'testfile.jpg',
+          contentType: 'image/jpeg',
+          userId: 'user123',
+        },
+      ],
+    };
+
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
+      JSON.stringify(requestBody),
+    );
+
+    // Mock the S3 getSignedUrl method to return a signed URL
+    getSignedUrlMock.mockResolvedValue('https://example.com/signed-url');
+
+    const response = await handler(event);
+
+    expect(response.statusCode).toBe(401);
+    const body = JSON.parse(response.body);
+    expect(body.message).toBe('Unauthorized: Missing token');
   });
 
   describe('Environment variable validation', () => {
@@ -231,6 +276,14 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );
+    });
+
+    test('should throw an error when ADMIN_COGNITO_POOL_DOMAIN is missing', () => {
+      delete process.env.ADMIN_COGNITO_POOL_DOMAIN;
+
+      expect(() => {
+        require('../../../media/generate-signed-urls/index');
+      }).toThrow('ADMIN_COGNITO_POOL_DOMAIN environment variable is missing.');
     });
   });
 });

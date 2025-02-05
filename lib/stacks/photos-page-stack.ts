@@ -149,6 +149,9 @@ export class PhotosPageStack extends Stack {
     this.stackMetadataTable.table.grantReadData(this.readMediaLambda.function);
     this.mediaMetadataTable.table.grantReadData(this.readMediaLambda.function);
 
+    const adminCognitoPoolDomain =
+      props.authStack.adminPool.userPool.userPoolProviderUrl;
+
     this.writeMediaLambda = new LambdaNodeFunction(this, 'WriteMediaLambda', {
       functionName: 'WriteMediaLambdaFunction',
       runtime: Runtime.NODEJS_20_X,
@@ -158,6 +161,7 @@ export class PhotosPageStack extends Stack {
         ...PhotosPageDynamoDbTables,
         CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
         ORIGIN_ALLOWLIST: serializedOriginAllowList,
+        ADMIN_COGNITO_POOL_DOMAIN: adminCognitoPoolDomain,
       },
     });
 
@@ -181,6 +185,7 @@ export class PhotosPageStack extends Stack {
           S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
           S3_URL_TTL: '300',
           ORIGIN_ALLOWLIST: serializedOriginAllowList,
+          ADMIN_COGNITO_POOL_DOMAIN: adminCognitoPoolDomain,
         },
       },
     );

@@ -7,6 +7,7 @@ interface Config {
   S3_BUCKET_NAME: string;
   S3_URL_TTL: number;
   ORIGIN_ALLOWLIST: string[];
+  ADMIN_COGNITO_POOL_DOMAIN: string;
 }
 
 /**
@@ -29,6 +30,11 @@ export function getConfig(): Config {
   const ORIGIN_ALLOWLIST = deserializeOriginAllowlist(
     process.env.ORIGIN_ALLOWLIST,
   );
+  /**
+   * The admin cognito pool domain used to find the jwks public key.
+   */
+  const ADMIN_COGNITO_POOL_DOMAIN = process.env
+    .ADMIN_COGNITO_POOL_DOMAIN as string;
 
   // Validate Environment Variables
   if (!S3_BUCKET_NAME) {
@@ -47,9 +53,16 @@ export function getConfig(): Config {
     );
   }
 
+  if (!ADMIN_COGNITO_POOL_DOMAIN) {
+    throw new Error(
+      'ADMIN_COGNITO_POOL_DOMAIN environment variable is missing.',
+    );
+  }
+
   return {
     S3_BUCKET_NAME,
     S3_URL_TTL,
     ORIGIN_ALLOWLIST,
+    ADMIN_COGNITO_POOL_DOMAIN,
   };
 }

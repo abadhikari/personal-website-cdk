@@ -9,6 +9,7 @@ interface Config {
   ORIGIN_ALLOWLIST: string[];
   STACK_METADATA_GSI_PARTITION_KEY: string;
   CDN_DOMAIN_URL: string;
+  ADMIN_COGNITO_POOL_DOMAIN: string;
 }
 
 /**
@@ -28,7 +29,7 @@ export function getConfig(): Config {
   /**
    * The CDN domain URL.
    */
-  const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL;
+  const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL as string;
   /**
    * The allowlist for origins for cross-origin requests.
    */
@@ -40,6 +41,11 @@ export function getConfig(): Config {
    */
   const STACK_METADATA_GSI_PARTITION_KEY = process.env
     .STACK_METADATA_GSI_PARTITION_KEY as string;
+  /**
+   * The admin cognito pool domain used to find the jwks public key.
+   */
+  const ADMIN_COGNITO_POOL_DOMAIN = process.env
+    .ADMIN_COGNITO_POOL_DOMAIN as string;
 
   // Validate Environment Variables
   if (!STACK_METADATA_TABLE) {
@@ -66,11 +72,18 @@ export function getConfig(): Config {
     );
   }
 
+  if (!ADMIN_COGNITO_POOL_DOMAIN) {
+    throw new Error(
+      'ADMIN_COGNITO_POOL_DOMAIN environment variable is missing.',
+    );
+  }
+
   return {
     STACK_METADATA_TABLE,
     MEDIA_METADATA_TABLE,
     ORIGIN_ALLOWLIST,
     STACK_METADATA_GSI_PARTITION_KEY,
     CDN_DOMAIN_URL,
+    ADMIN_COGNITO_POOL_DOMAIN,
   };
 }
