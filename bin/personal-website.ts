@@ -7,6 +7,7 @@ import {
   ACCOUNT_ID,
   ACCOUNT_REGION,
 } from '../lib/configuration/account-config';
+import { ReviewsPageStack } from '../lib/stacks/reviews-page-stack';
 
 const app = new cdk.App();
 
@@ -17,4 +18,8 @@ const authStack = new AuthStack(app, 'AuthStack', {
 new PhotosPageStack(app, 'PhotosPageStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
   authStack,
+});
+
+new ReviewsPageStack(app, 'ReviewsPageStack', {
+  env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
 });
