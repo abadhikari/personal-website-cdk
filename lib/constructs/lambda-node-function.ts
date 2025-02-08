@@ -10,14 +10,17 @@ export interface LambdaNodeFunctionProps extends NodejsFunctionProps {
    * The name of the Lambda function.
    */
   readonly functionName: string;
+
   /**
    * The amount of memory allocated to the Lambda function in MB.
    */
   readonly memorySize?: number;
+
   /**
    * The timeout duration for the Lambda function.
    */
   readonly timeout?: Duration;
+
   /**
    * Key-value pairs that represent environment variables for the Lambda function.
    */

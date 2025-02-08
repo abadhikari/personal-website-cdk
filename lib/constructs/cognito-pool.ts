@@ -11,18 +11,22 @@ export interface CognitoPoolProps {
    * The name of the userPool.
    */
   readonly userPoolName: string;
+
   /**
    * The validity duration of the refresh token.
    */
   readonly refreshTokenValidity: Duration;
+
   /**
    * Defines the account recovery method for users who forget their credentials.
    */
   readonly accountRecovery: AccountRecovery;
+
   /**
    * Determines whether users can sign up on their own or must be manually created by an admin.
    */
   readonly selfSignUpEnabled: boolean;
+
   /**
    * Defines which login alias users can use (e.g., username, email, phone).
    */
@@ -31,6 +35,7 @@ export interface CognitoPoolProps {
     email?: boolean;
     phone?: boolean;
   };
+
   /**
    * Specifies which attributes should be auto-verified by Cognito (email, phone).
    */
@@ -38,6 +43,7 @@ export interface CognitoPoolProps {
     email?: boolean;
     phone?: boolean;
   };
+
   /**
    * Defines password policy (e.g., length, special characters).
    */
@@ -48,6 +54,7 @@ export interface CognitoPoolProps {
     requireDigits?: boolean;
     requireSymbols?: boolean;
   };
+
   /**
    * Defines standard attributes (e.g., email, phone).
    */
@@ -55,6 +62,7 @@ export interface CognitoPoolProps {
     email?: { required?: boolean; mutable?: boolean };
     phoneNumber?: { required?: boolean; mutable?: boolean };
   };
+
   /**
    * Defines which authentication flows are allowed (e.g., userPassword, adminInitiated).
    */
@@ -64,14 +72,17 @@ export interface CognitoPoolProps {
     custom?: boolean;
     userSrp?: boolean;
   };
+
   /**
    * Defines the cognito domain name.
    */
   readonly domainPrefix?: string;
+
   /**
    * List of allowed callback URLs for the Cognito Hosted UI.
    */
   readonly callbackUrls: string[];
+
   /**
    * List of allowed logout URLs for the Cognito Hosted UI.
    */

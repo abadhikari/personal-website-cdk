@@ -13,15 +13,18 @@ export interface S3BucketProps {
    * The name of the S3 bucket.
    */
   readonly bucketName: string;
+
   /**
    * Specifies the removal policy for the bucket, determining
    * whether the bucket is retained or deleted when the stack is destroyed.
    */
   readonly removalPolicy: RemovalPolicy;
+
   /**
    * Specifies whether versioning is enabled for the S3 bucket.
    */
   readonly versioned: boolean;
+
   /**
    * Specifies CORS rules for the S3 bucket.
    */

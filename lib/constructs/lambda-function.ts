@@ -7,26 +7,32 @@ export interface LambdaFunctionProps {
    * The name of the Lambda function.
    */
   readonly functionName: string;
+
   /**
    * The runtime of the Lambda function.
    */
   readonly runtime: Runtime;
+
   /**
    * The directory of the Lambda function code.
    */
   readonly codeDirectory: string;
+
   /**
    * The method in a Lambda function's code that processes events.
    */
   readonly handler: string;
+
   /**
    * The amount of memory allocated to the Lambda function in MB.
    */
   readonly memorySize?: number;
+
   /**
    * The timeout duration for the Lambda function.
    */
   readonly timeout?: Duration;
+
   /**
    * Key-value pairs that represent environment variables for the Lambda function.
    */

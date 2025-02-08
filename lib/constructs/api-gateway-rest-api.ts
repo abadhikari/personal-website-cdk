@@ -7,10 +7,12 @@ export interface ApiGatewayRestApiProps {
    * The name of the Rest API.
    */
   readonly restApiName: string;
+
   /**
    * The description of the Rest API.
    */
   readonly description: string;
+
   /**
    * configuration that enables CORS (Cross-Origin Resource Sharing) for the API Gateway.
    */

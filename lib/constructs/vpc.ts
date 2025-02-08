@@ -27,7 +27,6 @@ export interface VpcProps {
     /**
      * A human-readable identifier for the subnet group.
      */
-
     name: string;
 
     /**

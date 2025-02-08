@@ -6,17 +6,22 @@ export interface SecretsManagerProps {
    * The username for the secret.
    */
   readonly username: string;
+
   /**
    * The key that will be used to generate the secret password.
    * This key will be inserted into the generated secret string as the password value.
    */
   readonly generateStringKey: string;
+
   /**
    * The length of the password to be generated.
    * This determines the number of characters in the generated password.
    */
   readonly passwordLength: number;
 
+  /**
+   * Characters that will be excluded from the created secret.
+   */
   readonly excludeCharacters: string;
 }
 

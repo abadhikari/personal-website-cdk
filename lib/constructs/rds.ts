@@ -14,42 +14,50 @@ export interface RdsProps {
    * This defines the database engine to use (e.g., PostgreSQL, MySQL, etc.).
    */
   readonly engine: IInstanceEngine;
+
   /**
    * The VPC where the RDS instance will be placed.
    * The RDS instance will reside in this VPC, making it part of your isolated network infrastructure.
    */
   readonly vpc: Vpc;
+
   /**
    * The secret containing the RDS credentials (username and password).
    * The credentials are fetched from this secret for authentication to the RDS instance.
    */
   readonly secret: Secret;
+
   /**
    * The instance type for the RDS instance.
    * Defines the compute capacity and size for the RDS instance.
    */
   readonly instanceType: InstanceType;
+
   /**
    * Whether to enable multi-AZ deployments for high availability.
    * Enabling multi-AZ ensures that the RDS instance has a standby instance in a different availability zone for failover.
    * This is only really useful if there's multiple rds instances.
    */
   readonly multiAz: boolean;
+
   /**
    * The allocated storage for the RDS instance.
    * Defines how much storage the database should have. For example, 20GB for a small database or more for larger datasets.
    */
   readonly allocatedStorage: number;
+
   /**
    * The name of the database to be created in the RDS instance.
    * This is the initial database that will be created when the RDS instance is launched.
    */
   readonly databaseName: string;
+
   /**
    * The backup retention period for the RDS instance.
    * Defines how long automated backups are retained. A typical value is 7 days, but you can adjust it as needed.
    */
   readonly backupRetention: Duration;
+
   /**
    * Whether to enable deletion protection for the RDS instance.
    * If true, it prevents the RDS instance from being deleted accidentally.
