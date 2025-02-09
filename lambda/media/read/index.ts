@@ -20,6 +20,26 @@ const {
 } = getConfig();
 
 /**
+ * The fields that we want from querying the stack metadata table. This will
+ * exclude the staticKey field which is unwanted. Also ensures we know exactly
+ * what will come from dynamodb, adding an extra layer of security.
+ */
+const EXPECTED_STACK_METADATA_FIELDS = [
+  'stackId',
+  'caption',
+  '#loc',
+  'uploadTimestamp',
+];
+
+/**
+ * Dynamodb reserves certain keywords. To avoid errors for expecting fields
+ * that conflict with these keywords, have to substitute them temporarily.
+ */
+const EXPRESSION_ATTRIBUTE_NAMES = {
+  '#loc': 'location',
+};
+
+/**
  * Interface representing the structure of the query parameters.
  *
  * @interface QueryParameters
@@ -165,6 +185,8 @@ async function queryStackMetadataTable(
       ':start': startTimestamp,
       ':end': endTimestamp,
     },
+    ProjectionExpression: EXPECTED_STACK_METADATA_FIELDS.join(', '),
+    ExpressionAttributeNames: EXPRESSION_ATTRIBUTE_NAMES,
   };
   const command = new QueryCommand(params);
   return await dynamoDbClient.send(command);

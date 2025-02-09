@@ -24,6 +24,7 @@ The PhotosPageStack creates and configures the following AWS resources:
 ## AuthStack
 
 The AuthStack creates and configures the following AWS resources:
+
 - **Cognito Admin User Pool:** Provides a secure user directory for administrative access.
 
 ## Table of Contents
@@ -55,11 +56,13 @@ The AuthStack creates and configures the following AWS resources:
 
 - **Metadata Management:**  
   Two DynamoDB tables are created:
+
   - A **Media Metadata Table** to store details about individual media files.
   - A **Stack Metadata Table** to store details about media stacks (e.g., albums), complete with Global Secondary Index (GSI) configuration for flexible querying.
 
 - **Serverless Functions:**  
   Three Lambda functions are deployed:
+
   - **ReadMediaLambda** for retrieving media metadata.
   - **WriteMediaLambda** for writing media metadata.
   - **GenerateSignedMediaUrlLambda** for generating signed URLs to facilitate secure media uploads.
@@ -100,6 +103,7 @@ The AuthStack creates and configures the following AWS resources:
 ## Usage
 
 Before deploying, you can run the following to see if your changes pass the tests and also to display a diff of the changes.
+
 ```bash
 npm run prepare
 ```
