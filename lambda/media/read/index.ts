@@ -87,7 +87,11 @@ export const handler = async (
 
     const stacks = stackMetadataResponse.Items || [];
     if (stacks.length === 0) {
-      return createResponse(404, { message: 'No stacks found!' }, origin);
+      return createResponse(
+        200,
+        { stackAndMediaData: [], lastEvaluatedKey: null },
+        origin,
+      );
     }
 
     // For each stack, query the MediaMetadata table in parallel

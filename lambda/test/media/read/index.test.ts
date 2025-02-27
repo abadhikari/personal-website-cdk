@@ -108,7 +108,7 @@ describe('Read Lambda Function Tests', () => {
     expect(responseBody.lastEvaluatedKey).toEqual(lastEvaluatedKey);
   });
 
-  test('should return 404 error if no stacks are found', async () => {
+  test('should return 200 with empty response if no stacks are found', async () => {
     dynamoDbSendMock.mockImplementation((command) => {
       const params = command.input;
       if (params.TableName === 'StackMetadataTable') {
@@ -127,9 +127,10 @@ describe('Read Lambda Function Tests', () => {
 
     const response = await handler(event);
 
-    expect(response.statusCode).toBe(404);
+    expect(response.statusCode).toBe(200);
     const responseBody = JSON.parse(response.body);
-    expect(responseBody.message).toMatch(/No stacks found/);
+    expect(responseBody.stackAndMediaData).toHaveLength(0);
+    expect(responseBody.lastEvaluatedKey).toEqual(null);
   });
 
   test('should return 500 error if stack item is missing stackId', async () => {
