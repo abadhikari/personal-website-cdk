@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
+import { ApiStack } from '../lib/stacks/api-stack';
 import { AuthStack } from '../lib/stacks/auth-stack';
 import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
 import {
@@ -15,11 +16,22 @@ const authStack = new AuthStack(app, 'AuthStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
 });
 
-new PhotosPageStack(app, 'PhotosPageStack', {
+const photosPageStack = new PhotosPageStack(app, 'PhotosPageStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
   authStack,
 });
 
 new ReviewsPageStack(app, 'ReviewsPageStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
+});
+
+new ApiStack(app, 'ApiStack', {
+  env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
+  adminPool: authStack.adminPool,
+  media: {
+    readLambda: photosPageStack.readMediaLambda,
+    writeLambda: photosPageStack.writeMediaLambda,
+    deleteLambda: photosPageStack.deleteMediaLambda,
+    generateSignedUrlsLambda: photosPageStack.generateSignedMediaUrlsLambda,
+  },
 });

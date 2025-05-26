@@ -11,8 +11,6 @@ import { CloudFrontDistribution } from '../constructs/cloudfront-distribution';
 import { S3Bucket } from '../constructs/s3-bucket';
 import { ACCOUNT_ID } from '../configuration/account-config';
 import { DynamoDbTable } from '../constructs/dynamodb-table';
-import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
-import { Cors } from 'aws-cdk-lib/aws-apigateway';
 import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
@@ -53,18 +51,16 @@ export class PhotosPageStack extends Stack {
   private readonly stackMetadataTable: DynamoDbTable;
 
   /**
-   * The API Gateway REST API used for handling media-related HTTP requests on the photos page.
-   */
-  private readonly restApi: ApiGatewayRestApi;
-  /**
    * The Lambda function responsible for reading (retrieving) media from the storage or database.
    * This function is integrated with a GET method in API Gateway.
    */
-  private readonly readMediaLambda: LambdaNodeFunction;
+  public readonly readMediaLambda: LambdaNodeFunction;
 
-  private readonly writeMediaLambda: LambdaNodeFunction;
+  public readonly writeMediaLambda: LambdaNodeFunction;
 
-  private readonly generateSignedMediaUrlsLambda: LambdaNodeFunction;
+  public readonly deleteMediaLambda: LambdaNodeFunction;
+
+  public readonly generateSignedMediaUrlsLambda: LambdaNodeFunction;
 
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
@@ -173,6 +169,27 @@ export class PhotosPageStack extends Stack {
       this.writeMediaLambda.function,
     );
 
+    this.deleteMediaLambda = new LambdaNodeFunction(this, 'DeleteMediaLambda', {
+      functionName: 'DeleteMediaLambdaFunction',
+      runtime: Runtime.NODEJS_20_X,
+      entry: 'lambda/media/delete/index.ts',
+      handler: 'handler',
+      environment: {
+        ...PhotosPageDynamoDbTables,
+        ORIGIN_ALLOWLIST: serializedOriginAllowList,
+        S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
+      },
+    });
+
+    // Grant the write lambda write permissions to the dynamoDb tables
+    this.stackMetadataTable.table.grantReadWriteData(
+      this.deleteMediaLambda.function,
+    );
+    this.mediaMetadataTable.table.grantReadWriteData(
+      this.deleteMediaLambda.function,
+    );
+    this.mediaBucket.bucket.grantDelete(this.deleteMediaLambda.function);
+
     this.generateSignedMediaUrlsLambda = new LambdaNodeFunction(
       this,
       'GenerateSignedMediaUrlLambda',
@@ -197,35 +214,6 @@ export class PhotosPageStack extends Stack {
     // Grant S3 permissions to the Lambda to generate signed URLs
     this.mediaBucket.bucket.grantPut(
       this.generateSignedMediaUrlsLambda.function,
-    );
-
-    // API Gateway
-    this.restApi = new ApiGatewayRestApi(this, 'MediaApi', {
-      restApiName: 'MediaApi',
-      description: 'API for handling media on the photos page',
-      cors: {
-        allowMethods: Cors.ALL_METHODS,
-        allowOrigins: ['*'],
-        allowHeaders: ['Content-Type', 'Authorization'],
-      },
-    });
-
-    this.restApi.addLambdaIntegration(
-      this.readMediaLambda.function,
-      '/v1/media',
-      'GET',
-    );
-
-    this.restApi.addLambdaIntegration(
-      this.writeMediaLambda.function,
-      '/v1/media',
-      'POST',
-    );
-
-    this.restApi.addLambdaIntegration(
-      this.generateSignedMediaUrlsLambda.function,
-      'v1/media/upload-url',
-      'POST',
     );
   }
 }

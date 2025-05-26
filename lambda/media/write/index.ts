@@ -64,7 +64,7 @@ interface Media {
  * @property {string} thumbnail - The S3 path of the thumbnail-sized image.
  * @property {string} full - The S3 path of the full-sized image.
  */
-interface ImagePath {
+export interface ImagePath {
   thumbnail: string;
   full: string;
 }

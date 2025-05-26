@@ -6,6 +6,7 @@ import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
 import { getConfig } from './config';
 import { queryParametersSchema } from './schemas';
+import { queryMediaMetadataTable } from '../../common/queryMediaMetadataTable';
 import { decode, encode } from '../../common/string';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -99,7 +100,12 @@ export const handler = async (
       if (!stack.stackId) {
         throw new Error('stackId field is missing from stack');
       }
-      return queryMediaMetadataTable(stack.stackId);
+      return queryMediaMetadataTable(
+        dynamoDbClient,
+        stack.stackId,
+        MEDIA_METADATA_TABLE,
+        MEDIA_METADATA_GSI,
+      );
     });
 
     // Resolve all media queries in parallel
@@ -191,25 +197,6 @@ async function queryStackMetadataTable(
     },
     ProjectionExpression: EXPECTED_STACK_METADATA_FIELDS.join(', '),
     ExpressionAttributeNames: EXPRESSION_ATTRIBUTE_NAMES,
-  };
-  const command = new QueryCommand(params);
-  return await dynamoDbClient.send(command);
-}
-
-/**
- * Queries the MediaMetadata DynamoDB table to retrieve media metadata for a given stack ID.
- *
- * @param stackId - The stack ID for which media metadata is being queried.
- * @returns A Promise that resolves to the query result containing the media metadata.
- */
-async function queryMediaMetadataTable(stackId: string) {
-  const params = {
-    TableName: MEDIA_METADATA_TABLE,
-    IndexName: MEDIA_METADATA_GSI,
-    KeyConditionExpression: 'stackId = :stackId',
-    ExpressionAttributeValues: {
-      ':stackId': stackId,
-    },
   };
   const command = new QueryCommand(params);
   return await dynamoDbClient.send(command);

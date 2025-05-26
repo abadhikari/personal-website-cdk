@@ -1,5 +1,9 @@
 import { Construct } from 'constructs';
-import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import {
+  LambdaIntegration,
+  MethodOptions,
+  RestApi,
+} from 'aws-cdk-lib/aws-apigateway';
 import { Function } from 'aws-cdk-lib/aws-lambda';
 
 export interface ApiGatewayRestApiProps {
@@ -27,6 +31,7 @@ interface Cors {
    * A list of allowed origins for cross-origin requests.
    */
   allowOrigins: Array<string>;
+
   /**
    * A list of allowed HTTP methods for cross-origin requests.
    */
@@ -72,9 +77,10 @@ export class ApiGatewayRestApi extends Construct {
     lambdaFunction: Function,
     resourcePath: string,
     method: string,
+    opts?: MethodOptions,
   ) {
     const resource = this.restApi.root.resourceForPath(resourcePath);
     const integration = new LambdaIntegration(lambdaFunction);
-    resource.addMethod(method, integration);
+    resource.addMethod(method, integration, opts);
   }
 }
