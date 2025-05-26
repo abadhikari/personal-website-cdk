@@ -1,12 +1,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import {
-  DynamoDBClient,
-  QueryCommandOutput,
-  TransactWriteItemsCommand,
-} from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { unmarshall } from '@aws-sdk/util-dynamodb';
-import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  TransactWriteCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
 import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
@@ -38,9 +36,9 @@ interface QueryParameters {
   stackId: string;
 }
 
-interface Media {
+export interface PartialMedia {
   mediaId: string;
-  imagePath: ImagePath;
+  imageUrl: ImagePath;
 }
 
 /**
@@ -104,7 +102,9 @@ function parseQueryParams(event: APIGatewayProxyEvent): QueryParameters {
     throw new ValidationError('Query parameters are missing.');
   }
 
-  const { error, value } = queryParametersSchema.validate(event.queryStringParameters);
+  const { error, value } = queryParametersSchema.validate(
+    event.queryStringParameters,
+  );
 
   if (error) {
     throw new ValidationError('Invalid request: ' + error.details[0].message);
@@ -142,7 +142,7 @@ async function deleteMedia(stackId: string, mediaId?: string) {
     deletes.push({
       Delete: {
         TableName: MEDIA_METADATA_TABLE,
-        Key: { mediaId: { S: id } },
+        Key: { mediaId: id },
       },
     });
   }
@@ -152,12 +152,12 @@ async function deleteMedia(stackId: string, mediaId?: string) {
     deletes.push({
       Delete: {
         TableName: STACK_METADATA_TABLE,
-        Key: { stackId: { S: stackId } },
+        Key: { stackId: stackId },
       },
     });
   }
 
-  const command = new TransactWriteItemsCommand({
+  const command = new TransactWriteCommand({
     TransactItems: deletes,
   });
 
@@ -174,18 +174,17 @@ async function deleteMedia(stackId: string, mediaId?: string) {
  * @returns An array of mediaId strings.
  * @throws {Error} - Throws if no media items are found or if a media item is missing a valid mediaId.
  */
-function extractMediaItems(mediaResponse: QueryCommandOutput): Media[] {
+function extractMediaItems(mediaResponse: QueryCommandOutput): PartialMedia[] {
   const media = mediaResponse.Items;
   if (!media || media.length === 0) {
     throw new Error('No media items found.');
   }
 
   return media.map((item) => {
-    const unmarshalled = unmarshall(item);
-    if (typeof unmarshalled.mediaId !== 'string' || !unmarshalled.imagePath) {
+    if (typeof item.mediaId !== 'string' || !item.imageUrl) {
       throw new Error('Invalid media item: missing required fields');
     }
-    return unmarshalled as Media;
+    return item as unknown as PartialMedia;
   });
 }
 
@@ -198,19 +197,22 @@ function extractMediaItems(mediaResponse: QueryCommandOutput): Media[] {
  * @param mediaId - (Optional) The specific mediaId to delete. If not provided, all mediaItems will be deleted.
  * @throws {Error} - Throws if the specified mediaId is not found in the list.
  */
-async function deleteMediaItemsFromS3(mediaItems: Media[], mediaId?: string) {
+async function deleteMediaItemsFromS3(
+  mediaItems: PartialMedia[],
+  mediaId?: string,
+) {
   let imagePaths: ImagePath[];
 
   if (mediaId) {
     const match = mediaItems.find((item) => item.mediaId === mediaId);
 
-    if (!match || !match.imagePath) {
+    if (!match || !match.imageUrl) {
       throw new Error(`No media item found for mediaId: ${mediaId}`);
     }
 
-    imagePaths = [match.imagePath];
+    imagePaths = [match.imageUrl];
   } else {
-    imagePaths = mediaItems.map((item) => item.imagePath);
+    imagePaths = mediaItems.map((item) => item.imageUrl);
   }
 
   await Promise.all(

@@ -23,33 +23,29 @@ describe('Delete Lambda Handler Tests', () => {
     /* env vars the Lambda expects */
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
-    process.env.MEDIA_METADATA_GSI   = 'MediaMetadataGSI';
-    process.env.ORIGIN_ALLOWLIST     = 'http://localhost:3000,https://abhinnaadhikari.com';
-    process.env.S3_BUCKET_NAME       = 'test-bucket';
-    process.env.AWS_REGION           = 'us-east-1';
+    process.env.MEDIA_METADATA_GSI = 'MediaMetadataGSI';
+    process.env.ORIGIN_ALLOWLIST =
+      'http://localhost:3000,https://abhinnaadhikari.com';
+    process.env.S3_BUCKET_NAME = 'test-bucket';
+    process.env.AWS_REGION = 'us-east-1';
 
     dynamoDbSendMock = jest.fn();
-    s3SendMock       = jest.fn();
+    s3SendMock = jest.fn();
 
     /* minimal mocks for the AWS SDK v3 clients */
     jest.mock('@aws-sdk/client-dynamodb', () => ({
       DynamoDBClient: jest.fn(),
-      TransactWriteItemsCommand: jest.fn((input) => ({ input })),
     }));
 
     jest.mock('@aws-sdk/lib-dynamodb', () => ({
       DynamoDBDocumentClient: { from: () => ({ send: dynamoDbSendMock }) },
-      QueryCommand:           jest.fn((input) => ({ input })),
+      QueryCommand: jest.fn((input) => ({ input })),
+      TransactWriteCommand: jest.fn((input) => ({ input })),
     }));
 
     jest.mock('@aws-sdk/client-s3', () => ({
-      S3Client:            jest.fn(() => ({ send: s3SendMock })),
+      S3Client: jest.fn(() => ({ send: s3SendMock })),
       DeleteObjectCommand: jest.fn((input) => ({ input })),
-    }));
-
-    /* keep unmarshall as a no‑op */
-    jest.mock('@aws-sdk/util-dynamodb', () => ({
-      unmarshall: jest.fn((item) => item),
     }));
 
     /* import the Lambda after mocks & env are set */
@@ -61,14 +57,13 @@ describe('Delete Lambda Handler Tests', () => {
   });
 
   test('happy path – deletes one item', async () => {
-    /* 1️⃣ query result (already “unmarshalled”) */
     dynamoDbSendMock
       .mockResolvedValueOnce({
         Items: [
           {
-            mediaId:  'media123',
-            imagePath: {
-              full:      'https://cdn/foo/full.jpg',
+            mediaId: 'media123',
+            imageUrl: {
+              full: 'https://cdn/foo/full.jpg',
               thumbnail: 'https://cdn/foo/thumb.jpg',
             },
           },
@@ -88,7 +83,9 @@ describe('Delete Lambda Handler Tests', () => {
     const response = await handler(event as any);
 
     expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body).message).toBe('Data deleted successfully!');
+    expect(JSON.parse(response.body).message).toBe(
+      'Data deleted successfully!',
+    );
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);
     expect(s3SendMock).toHaveBeenCalledTimes(2);
   });
@@ -142,44 +139,44 @@ describe('Delete Lambda Handler Tests', () => {
     beforeEach(() => {
       jest.resetModules();
     });
-  
+
     test('throws when STACK_METADATA_TABLE is missing', () => {
       delete process.env.STACK_METADATA_TABLE;
-  
+
       expect(() => {
         require('../../../media/delete/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
-  
+
     test('throws when MEDIA_METADATA_TABLE is missing', () => {
       delete process.env.MEDIA_METADATA_TABLE;
-  
+
       expect(() => {
         require('../../../media/delete/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
     });
-  
+
     test('throws when MEDIA_METADATA_GSI is missing', () => {
       delete process.env.MEDIA_METADATA_GSI;
-  
+
       expect(() => {
         require('../../../media/delete/index');
       }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
     });
-  
+
     test('throws when ORIGIN_ALLOWLIST is missing or empty', () => {
       delete process.env.ORIGIN_ALLOWLIST;
-  
+
       expect(() => {
         require('../../../media/delete/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );
     });
-  
+
     test('throws when S3_BUCKET_NAME is missing', () => {
       delete process.env.S3_BUCKET_NAME;
-  
+
       expect(() => {
         require('../../../media/delete/index');
       }).toThrow('S3_BUCKET_NAME environment variable is missing.');

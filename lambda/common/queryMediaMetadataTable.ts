@@ -1,5 +1,4 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 /**
  * Queries the MediaMetadata DynamoDB table to retrieve media metadata for a given stack ID.
@@ -8,7 +7,7 @@ import { QueryCommand } from '@aws-sdk/lib-dynamodb';
  * @returns A Promise that resolves to the query result containing the media metadata.
  */
 export async function queryMediaMetadataTable(
-  dynamoDbClient: DynamoDBClient,
+  dynamoDbClient: DynamoDBDocumentClient,
   stackId: string,
   mediaMetadataTable: string,
   mediaMetadataGsi: string,
