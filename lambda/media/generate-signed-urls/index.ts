@@ -147,7 +147,7 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
 
   const sanitizedFileName = sanitizeFileName(fileName);
 
-  const key = createKey(userId, fileName);
+  const key = createKey(userId, sanitizedFileName);
 
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,

@@ -25,6 +25,9 @@ describe('ApiStack Tests', () => {
         generateSignedUrlsLambda: photosPageStack.generateSignedMediaUrlsLambda,
         deleteLambda: photosPageStack.deleteMediaLambda,
       },
+      stack: {
+        editLambda: photosPageStack.editStackMetadataLambda,
+      },
     });
     template = Template.fromStack(stack);
   });

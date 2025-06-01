@@ -62,6 +62,8 @@ export class PhotosPageStack extends Stack {
 
   public readonly generateSignedMediaUrlsLambda: LambdaNodeFunction;
 
+  public readonly editStackMetadataLambda: LambdaNodeFunction;
+
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
     super(scope, id, props);
 
@@ -181,7 +183,7 @@ export class PhotosPageStack extends Stack {
       },
     });
 
-    // Grant the write lambda write permissions to the dynamoDb tables
+    // Grant the delete lambda read and write permissions to the dynamoDb tables
     this.stackMetadataTable.table.grantReadWriteData(
       this.deleteMediaLambda.function,
     );
@@ -189,6 +191,26 @@ export class PhotosPageStack extends Stack {
       this.deleteMediaLambda.function,
     );
     this.mediaBucket.bucket.grantDelete(this.deleteMediaLambda.function);
+
+    this.editStackMetadataLambda = new LambdaNodeFunction(
+      this,
+      'EditStackMetadataLambda',
+      {
+        functionName: 'EditStackMetadataLambdaFunction',
+        runtime: Runtime.NODEJS_20_X,
+        entry: 'lambda/stack/edit/index.ts',
+        handler: 'handler',
+        environment: {
+          ...PhotosPageDynamoDbTables,
+          ORIGIN_ALLOWLIST: serializedOriginAllowList,
+        },
+      },
+    );
+
+    // Grant the edit stack lambda write permissions to the dynamoDb tables
+    this.stackMetadataTable.table.grantWriteData(
+      this.editStackMetadataLambda.function,
+    );
 
     this.generateSignedMediaUrlsLambda = new LambdaNodeFunction(
       this,

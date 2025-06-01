@@ -20,6 +20,9 @@ export interface ApiStackProps extends StackProps {
     deleteLambda: LambdaNodeFunction;
     generateSignedUrlsLambda: LambdaNodeFunction;
   };
+  stack: {
+    editLambda: LambdaNodeFunction;
+  };
 }
 
 /**
@@ -80,6 +83,16 @@ export class ApiStack extends Stack {
       props.media.deleteLambda.function,
       '/v1/media',
       'DELETE',
+      {
+        authorizer: this.authorizer,
+        authorizationType: AuthorizationType.COGNITO,
+      },
+    );
+
+    this.restApi.addLambdaIntegration(
+      props.stack.editLambda.function,
+      '/v1/stack',
+      'PATCH',
       {
         authorizer: this.authorizer,
         authorizationType: AuthorizationType.COGNITO,

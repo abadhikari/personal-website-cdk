@@ -34,4 +34,7 @@ new ApiStack(app, 'ApiStack', {
     deleteLambda: photosPageStack.deleteMediaLambda,
     generateSignedUrlsLambda: photosPageStack.generateSignedMediaUrlsLambda,
   },
+  stack: {
+    editLambda: photosPageStack.editStackMetadataLambda,
+  },
 });
