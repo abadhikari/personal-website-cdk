@@ -11,6 +11,7 @@ import { UnauthorizedError, ValidationError } from '../../common/errors';
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
 import { authenticateToken } from '../../common/auth';
+import { ImagePath } from '../../common/types';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -55,18 +56,6 @@ interface Media {
   alternativeText?: string;
   imagePath: ImagePath;
   mediaType: string;
-}
-
-/**
- * Interface representing the structure of image paths in the media of a parsed request body.
- *
- * @interface ImagePath
- * @property {string} thumbnail - The S3 path of the thumbnail-sized image.
- * @property {string} full - The S3 path of the full-sized image.
- */
-export interface ImagePath {
-  thumbnail: string;
-  full: string;
 }
 
 /**

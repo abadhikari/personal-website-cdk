@@ -20,13 +20,15 @@ describe('ApiStack Tests', () => {
     stack = new ApiStack(app, 'TestApiStack', {
       adminPool: authStack.adminPool,
       media: {
-        readLambda: photosPageStack.readMediaLambda,
-        writeLambda: photosPageStack.writeMediaLambda,
         generateSignedUrlsLambda: photosPageStack.generateSignedMediaUrlsLambda,
         deleteLambda: photosPageStack.deleteMediaLambda,
       },
       stack: {
+        writeLambda: photosPageStack.writeStackLambda,
         editLambda: photosPageStack.editStackMetadataLambda,
+      },
+      stacks: {
+        readLambda: photosPageStack.readStacksLambda,
       },
     });
     template = Template.fromStack(stack);
@@ -47,7 +49,7 @@ describe('ApiStack Tests', () => {
   test('Integrates Read Lambda with API Gateway', () => {
     template.hasResourceProperties('AWS::ApiGateway::Method', {
       HttpMethod: 'GET',
-      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1mediaD83F5FBB' },
+      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1stacks8FB6C6CF' },
       RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
       Integration: {
         Type: 'AWS_PROXY',
@@ -62,7 +64,7 @@ describe('ApiStack Tests', () => {
               ':lambda:path/2015-03-31/functions/',
               {
                 'Fn::ImportValue':
-                  'TestPhotosPageStack:ExportsOutputFnGetAttReadMediaLambdaLambdaNodeFunction1978D939ArnF9A07EB0',
+                  'TestPhotosPageStack:ExportsOutputFnGetAttReadStacksLambdaLambdaNodeFunction7483E2A3Arn5705DD9E',
               },
               '/invocations',
             ],
@@ -75,7 +77,7 @@ describe('ApiStack Tests', () => {
   test('Integrates Write Lambda with API Gateway', () => {
     template.hasResourceProperties('AWS::ApiGateway::Method', {
       HttpMethod: 'POST',
-      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1mediaD83F5FBB' },
+      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1stack2EC88AE9' },
       RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
       Integration: {
         Type: 'AWS_PROXY',
@@ -90,7 +92,7 @@ describe('ApiStack Tests', () => {
               ':lambda:path/2015-03-31/functions/',
               {
                 'Fn::ImportValue':
-                  'TestPhotosPageStack:ExportsOutputFnGetAttWriteMediaLambdaLambdaNodeFunction9ED779D8Arn71680A84',
+                  'TestPhotosPageStack:ExportsOutputFnGetAttWriteStackLambdaLambdaNodeFunction68AC7CA2Arn27CD2DA9',
               },
               '/invocations',
             ],

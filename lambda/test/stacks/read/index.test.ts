@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { decode, encode } from '../../../common/string';
+import { encode } from '../../../common/string';
 
 function createMockEvent(
   queryStringParameters: any,
@@ -50,7 +50,7 @@ describe('Read Lambda Function Tests', () => {
     });
 
     // Import the handler after mocking
-    handler = require('../../../media/read/index').handler;
+    handler = require('../../../stacks/read/index').handler;
   });
 
   afterEach(() => {
@@ -273,7 +273,7 @@ describe('Read Lambda Function Tests', () => {
       delete process.env.STACK_METADATA_TABLE;
 
       expect(() => {
-        require('../../../media/read/index');
+        require('../../../stacks/read/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
 
@@ -281,7 +281,7 @@ describe('Read Lambda Function Tests', () => {
       delete process.env.STACK_METADATA_GSI;
 
       expect(() => {
-        require('../../../media/read/index');
+        require('../../../stacks/read/index');
       }).toThrow('STACK_METADATA_GSI environment variable is missing');
     });
 
@@ -289,7 +289,7 @@ describe('Read Lambda Function Tests', () => {
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
-        require('../../../media/read/index');
+        require('../../../stacks/read/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
     });
 
@@ -297,7 +297,7 @@ describe('Read Lambda Function Tests', () => {
       delete process.env.MEDIA_METADATA_GSI;
 
       expect(() => {
-        require('../../../media/read/index');
+        require('../../../stacks/read/index');
       }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
     });
 
@@ -305,7 +305,7 @@ describe('Read Lambda Function Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../media/read/index');
+        require('../../../stacks/read/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );
@@ -315,7 +315,7 @@ describe('Read Lambda Function Tests', () => {
       delete process.env.STACK_METADATA_GSI_PARTITION_KEY;
 
       expect(() => {
-        require('../../../media/read/index');
+        require('../../../stacks/read/index');
       }).toThrow(
         'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
       );

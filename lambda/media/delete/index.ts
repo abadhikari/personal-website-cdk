@@ -11,7 +11,7 @@ import { ValidationError } from '../../common/errors';
 import { getConfig } from './config';
 import { queryParametersSchema } from './schemas';
 import { queryMediaMetadataTable } from '../../common/queryMediaMetadataTable';
-import { ImagePath } from '../write';
+import { ImagePath } from '../../common/types';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3Client = new S3Client({ region: process.env.AWS_REGION });

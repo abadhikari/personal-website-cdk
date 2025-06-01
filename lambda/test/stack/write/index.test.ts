@@ -76,7 +76,7 @@ describe('Write Lambda Handler Tests', () => {
     }));
 
     // Import the handler after mocking
-    handler = require('../../../media/write/index').handler;
+    handler = require('../../../stack/write/index').handler;
   });
 
   afterEach(() => {
@@ -221,7 +221,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.STACK_METADATA_TABLE;
 
       expect(() => {
-        require('../../../media/write/index');
+        require('../../../stack/write/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
 
@@ -229,7 +229,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
-        require('../../../media/write/index');
+        require('../../../stack/write/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
     });
 
@@ -237,7 +237,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.CDN_DOMAIN_URL;
 
       expect(() => {
-        require('../../../media/write/index');
+        require('../../../stack/write/index');
       }).toThrow('CDN_DOMAIN_URL environment variable is missing.');
     });
 
@@ -245,7 +245,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../media/write/index');
+        require('../../../stack/write/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );
@@ -255,7 +255,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.STACK_METADATA_GSI_PARTITION_KEY;
 
       expect(() => {
-        require('../../../media/write/index');
+        require('../../../stack/write/index');
       }).toThrow(
         'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
       );
@@ -265,7 +265,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.ADMIN_COGNITO_POOL_DOMAIN;
 
       expect(() => {
-        require('../../../media/write/index');
+        require('../../../stack/write/index');
       }).toThrow('ADMIN_COGNITO_POOL_DOMAIN environment variable is missing.');
     });
   });

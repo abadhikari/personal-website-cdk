@@ -51,12 +51,16 @@ export class PhotosPageStack extends Stack {
   private readonly stackMetadataTable: DynamoDbTable;
 
   /**
-   * The Lambda function responsible for reading (retrieving) media from the storage or database.
-   * This function is integrated with a GET method in API Gateway.
+   * The Lambda function responsible for reading (retrieving) stacks and corresponding media
+   * from the storage or database.
    */
-  public readonly readMediaLambda: LambdaNodeFunction;
+  public readonly readStacksLambda: LambdaNodeFunction;
 
-  public readonly writeMediaLambda: LambdaNodeFunction;
+  /**
+   * The Lambda function responsible for writing a stack and corresponding media
+   * metadata to the database.
+   */
+  public readonly writeStackLambda: LambdaNodeFunction;
 
   public readonly deleteMediaLambda: LambdaNodeFunction;
 
@@ -132,10 +136,10 @@ export class PhotosPageStack extends Stack {
     // Lambdas
     const serializedOriginAllowList = ORIGIN_ALLOWLIST.join(',');
 
-    this.readMediaLambda = new LambdaNodeFunction(this, 'ReadMediaLambda', {
-      functionName: 'ReadMediaLambdaFunction',
+    this.readStacksLambda = new LambdaNodeFunction(this, 'ReadStacksLambda', {
+      functionName: 'photos_page_read_stacks_v1',
       runtime: Runtime.NODEJS_20_X,
-      entry: 'lambda/media/read/index.ts',
+      entry: 'lambda/stacks/read/index.ts',
       handler: 'handler',
       environment: {
         ...PhotosPageDynamoDbTables,
@@ -143,17 +147,17 @@ export class PhotosPageStack extends Stack {
       },
     });
 
-    // Grant the read lambda read permissions to the dynamoDb tables
-    this.stackMetadataTable.table.grantReadData(this.readMediaLambda.function);
-    this.mediaMetadataTable.table.grantReadData(this.readMediaLambda.function);
+    // Grant the read stacks lambda read permissions to the dynamoDb tables
+    this.stackMetadataTable.table.grantReadData(this.readStacksLambda.function);
+    this.mediaMetadataTable.table.grantReadData(this.readStacksLambda.function);
 
     const adminCognitoPoolDomain =
       props.authStack.adminPool.userPool.userPoolProviderUrl;
 
-    this.writeMediaLambda = new LambdaNodeFunction(this, 'WriteMediaLambda', {
-      functionName: 'WriteMediaLambdaFunction',
+    this.writeStackLambda = new LambdaNodeFunction(this, 'WriteStackLambda', {
+      functionName: 'photos_page_write_stack_v1',
       runtime: Runtime.NODEJS_20_X,
-      entry: 'lambda/media/write/index.ts',
+      entry: 'lambda/stack/write/index.ts',
       handler: 'handler',
       environment: {
         ...PhotosPageDynamoDbTables,
@@ -165,10 +169,10 @@ export class PhotosPageStack extends Stack {
 
     // Grant the write lambda write permissions to the dynamoDb tables
     this.stackMetadataTable.table.grantWriteData(
-      this.writeMediaLambda.function,
+      this.writeStackLambda.function,
     );
     this.mediaMetadataTable.table.grantWriteData(
-      this.writeMediaLambda.function,
+      this.writeStackLambda.function,
     );
 
     this.deleteMediaLambda = new LambdaNodeFunction(this, 'DeleteMediaLambda', {

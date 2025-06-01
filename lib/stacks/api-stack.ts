@@ -15,13 +15,15 @@ import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 export interface ApiStackProps extends StackProps {
   adminPool: CognitoPool;
   media: {
-    readLambda: LambdaNodeFunction;
-    writeLambda: LambdaNodeFunction;
     deleteLambda: LambdaNodeFunction;
     generateSignedUrlsLambda: LambdaNodeFunction;
   };
   stack: {
     editLambda: LambdaNodeFunction;
+    writeLambda: LambdaNodeFunction;
+  };
+  stacks: {
+    readLambda: LambdaNodeFunction;
   };
 }
 
@@ -66,18 +68,12 @@ export class ApiStack extends Stack {
     new BasePathMapping(this, 'BasePathMapping', {
       domainName: this.customDomain,
       restApi: this.restApi.restApi,
-      basePath: '', // root path
+      basePath: '',
     });
 
     this.authorizer = new CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
       cognitoUserPools: [props.adminPool.userPool],
     });
-
-    this.restApi.addLambdaIntegration(
-      props.media.readLambda.function,
-      '/v1/media',
-      'GET',
-    );
 
     this.restApi.addLambdaIntegration(
       props.media.deleteLambda.function,
@@ -100,8 +96,14 @@ export class ApiStack extends Stack {
     );
 
     this.restApi.addLambdaIntegration(
-      props.media.writeLambda.function,
-      '/v1/media',
+      props.stacks.readLambda.function,
+      '/v1/stacks',
+      'GET',
+    );
+
+    this.restApi.addLambdaIntegration(
+      props.stack.writeLambda.function,
+      '/v1/stack',
       'POST',
     );
 

@@ -29,12 +29,14 @@ new ApiStack(app, 'ApiStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
   adminPool: authStack.adminPool,
   media: {
-    readLambda: photosPageStack.readMediaLambda,
-    writeLambda: photosPageStack.writeMediaLambda,
     deleteLambda: photosPageStack.deleteMediaLambda,
     generateSignedUrlsLambda: photosPageStack.generateSignedMediaUrlsLambda,
   },
   stack: {
     editLambda: photosPageStack.editStackMetadataLambda,
+    writeLambda: photosPageStack.writeStackLambda,
+  },
+  stacks: {
+    readLambda: photosPageStack.readStacksLambda,
   },
 });
