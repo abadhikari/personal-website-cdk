@@ -6,9 +6,8 @@ import { deserializeOriginAllowlist } from '../../common/cors';
 interface Config {
   STACK_METADATA_TABLE: string;
   MEDIA_METADATA_TABLE: string;
+  MEDIA_METADATA_GSI: string;
   ORIGIN_ALLOWLIST: string[];
-  STACK_METADATA_GSI_PARTITION_KEY: string;
-  CDN_DOMAIN_URL: string;
 }
 
 /**
@@ -26,20 +25,15 @@ export function getConfig(): Config {
    */
   const MEDIA_METADATA_TABLE = process.env.MEDIA_METADATA_TABLE as string;
   /**
-   * The CDN domain URL.
+   * The name of the Global Secondary Index (GSI) used to query media metadata by stack ID.
    */
-  const CDN_DOMAIN_URL = process.env.CDN_DOMAIN_URL as string;
+  const MEDIA_METADATA_GSI = process.env.MEDIA_METADATA_GSI as string;
   /**
    * The allowlist for origins for cross-origin requests.
    */
   const ORIGIN_ALLOWLIST = deserializeOriginAllowlist(
     process.env.ORIGIN_ALLOWLIST,
   );
-  /**
-   * The static key of the Global Secondary Index (GSI) used to query stack metadata.
-   */
-  const STACK_METADATA_GSI_PARTITION_KEY = process.env
-    .STACK_METADATA_GSI_PARTITION_KEY as string;
 
   // Validate Environment Variables
   if (!STACK_METADATA_TABLE) {
@@ -50,8 +44,8 @@ export function getConfig(): Config {
     throw new Error('MEDIA_METADATA_TABLE environment variable is missing.');
   }
 
-  if (!CDN_DOMAIN_URL) {
-    throw new Error('CDN_DOMAIN_URL environment variable is missing.');
+  if (!MEDIA_METADATA_GSI) {
+    throw new Error('MEDIA_METADATA_GSI environment variable is missing.');
   }
 
   if (!ORIGIN_ALLOWLIST || ORIGIN_ALLOWLIST.length === 0) {
@@ -60,17 +54,10 @@ export function getConfig(): Config {
     );
   }
 
-  if (!STACK_METADATA_GSI_PARTITION_KEY) {
-    throw new Error(
-      'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
-    );
-  }
-
   return {
     STACK_METADATA_TABLE,
     MEDIA_METADATA_TABLE,
+    MEDIA_METADATA_GSI,
     ORIGIN_ALLOWLIST,
-    STACK_METADATA_GSI_PARTITION_KEY,
-    CDN_DOMAIN_URL,
   };
 }

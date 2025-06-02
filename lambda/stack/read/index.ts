@@ -1,23 +1,20 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
 import { createResponse } from '../../common/createResponse';
 import { ValidationError } from '../../common/errors';
 import { getConfig } from './config';
 import { queryParametersSchema } from './schemas';
 import { queryMediaMetadataTable } from '../../common/queryMediaMetadataTable';
-import { decode, encode } from '../../common/string';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 const {
   STACK_METADATA_TABLE,
-  STACK_METADATA_GSI,
   MEDIA_METADATA_TABLE,
   MEDIA_METADATA_GSI,
   ORIGIN_ALLOWLIST,
-  STACK_METADATA_GSI_PARTITION_KEY,
 } = getConfig();
 
 /**
@@ -44,20 +41,15 @@ const EXPRESSION_ATTRIBUTE_NAMES = {
  * Interface representing the structure of the query parameters.
  *
  * @interface QueryParameters
- * @property {string} stackLimit - The number of max number of stacks.
- * @property {number} startTimestamp - The starting timestamp for the time range.
- * @property {number} endTimestamp - The ending timestamp for the time range.
+ * @property {string} stackId - The specific stackId to retrieve.
  */
 interface QueryParameters {
-  stackLimit: number;
-  startTimestamp: number;
-  endTimestamp: number;
-  lastEvaluatedKey?: string;
+  stackId: string;
 }
 
 /**
- * The main Lambda handler function that processes the read API Gateway request, queries DynamoDB for stack and media metadata,
- * and returns the combined result in a display-ready format with a list of stacks and corresponding media of the stacks.
+ * The main Lambda handler function that processes the read API Gateway request, queries DynamoDB for the specific stack and media metadata,
+ * and returns the combined result in a display-ready format with a stack and its corresponding media.
  *
  * @param event - The API Gateway event containing the request.
  * @returns A Promise that resolves to the API Gateway response with the stack and media metadata.
@@ -75,58 +67,29 @@ export const handler = async (
   try {
     queryParameters = parseQueryParams(event);
 
-    const { stackLimit, startTimestamp, endTimestamp, lastEvaluatedKey } =
-      queryParameters;
+    const { stackId } = queryParameters;
 
-    // Query StackMetadata table using GSI to get the stackLimit most recent stacks
-    const stackMetadataResponse = await queryStackMetadataTable(
-      stackLimit,
-      startTimestamp,
-      endTimestamp,
-      lastEvaluatedKey,
-    );
+    const stack = await getStackMetadataById(stackId);
 
-    // If no stacks are returned, return early with an empty result.
-    // This avoids unnecessary media queries and signals pagination is complete.
-    const stacks = stackMetadataResponse.Items || [];
-    if (stacks.length === 0) {
-      return createResponse(
-        200,
-        { stackAndMediaData: [], lastEvaluatedKey: null },
-        origin,
-      );
+    if (!stack) {
+      return createResponse(404, { message: 'Stack not found.' }, origin);
     }
 
-    // For each stack, query the MediaMetadata table in parallel
-    const mediaPromises = stacks.map((stack) => {
-      if (!stack.stackId) {
-        throw new Error('stackId field is missing from stack');
-      }
-      return queryMediaMetadataTable(
-        dynamoDbClient,
-        stack.stackId,
-        MEDIA_METADATA_TABLE,
-        MEDIA_METADATA_GSI,
-      );
-    });
+    // Query the media associated with the stack
+    const media = await queryMediaMetadataTable(
+      dynamoDbClient,
+      stackId,
+      MEDIA_METADATA_TABLE,
+      MEDIA_METADATA_GSI,
+    );
 
-    // Resolve all media queries in parallel
-    const mediaResponses = await Promise.all(mediaPromises);
-
-    // Combine the results from both queries into display ready object
-    const stackAndMediaData = stacks.map((stack, index) => ({
-      stack,
-      media: mediaResponses[index].Items,
-    }));
-
-    // Return the successful response
     return createResponse(
       200,
       {
-        stackAndMediaData,
-        lastEvaluatedKey: stackMetadataResponse.LastEvaluatedKey
-          ? encode(stackMetadataResponse.LastEvaluatedKey)
-          : null,
+        stackAndMediaData: {
+          stack,
+          media: media.Items ?? [],
+        },
       },
       origin,
     );
@@ -171,35 +134,21 @@ function parseQueryParams(event: APIGatewayProxyEvent): QueryParameters {
 }
 
 /**
- * Queries the StackMetadata DynamoDB table to retrieve the most recent stacks within a given time range.
+ * Queries the StackMetadata DynamoDB table to retrieve the specific stack associated with the stackId.
  *
- * @param limit - The maximum number of stacks to retrieve.
- * @param startTimestamp - The start of the timestamp range for querying.
- * @param endTimestamp - The end of the timestamp range for querying.
+ * @param stackId - the identifier of the stack.
  * @returns A Promise that resolves to the query result containing the stack metadata.
  */
-async function queryStackMetadataTable(
-  limit: number,
-  startTimestamp: number,
-  endTimestamp: number,
-  lastEvaluatedKey?: string,
-) {
+async function getStackMetadataById(stackId: string) {
   const params = {
     TableName: STACK_METADATA_TABLE,
-    IndexName: STACK_METADATA_GSI,
-    Limit: limit,
-    ExclusiveStartKey: lastEvaluatedKey ? decode(lastEvaluatedKey) : undefined,
-    ScanIndexForward: false, // Sort by most recent (descending order)
-    KeyConditionExpression:
-      'staticKey = :staticKey AND uploadTimestamp BETWEEN :start AND :end',
-    ExpressionAttributeValues: {
-      ':staticKey': STACK_METADATA_GSI_PARTITION_KEY,
-      ':start': startTimestamp,
-      ':end': endTimestamp,
+    Key: {
+      stackId,
     },
     ProjectionExpression: EXPECTED_STACK_METADATA_FIELDS.join(', '),
     ExpressionAttributeNames: EXPRESSION_ATTRIBUTE_NAMES,
   };
-  const command = new QueryCommand(params);
-  return await dynamoDbClient.send(command);
+  const command = new GetCommand(params);
+  const result = await dynamoDbClient.send(command);
+  return result.Item ?? null;
 }

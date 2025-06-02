@@ -2,22 +2,16 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { v4 as uuidv4 } from 'uuid';
 import { createResponse } from '../../common/createResponse';
 import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
-import { UnauthorizedError, ValidationError } from '../../common/errors';
+import { ValidationError } from '../../common/errors';
 import { requestBodySchema } from './schemas';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getConfig } from './config';
 import { sanitizeFileName } from './sanitizeFileName';
-import { authenticateToken } from '../../common/auth';
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
-const {
-  S3_BUCKET_NAME,
-  S3_URL_TTL,
-  ORIGIN_ALLOWLIST,
-  ADMIN_COGNITO_POOL_DOMAIN,
-} = getConfig();
+const { S3_BUCKET_NAME, S3_URL_TTL, ORIGIN_ALLOWLIST } = getConfig();
 
 /**
  * Interface representing the metadata for each file that will be uploaded.
@@ -37,7 +31,7 @@ interface FileMetadata {
  * Interface representing the structure of the parsed request body.
  *
  * @interface RequestBody
- * @property {string} filesMetadata - An array containing metadata for each file to be uploaded.
+ * @property {Array<FileMetadata>} filesMetadata - An array containing metadata for each file to be uploaded.
  */
 interface RequestBody {
   filesMetadata: Array<FileMetadata>;
@@ -60,24 +54,12 @@ export const handler = async (
   }
 
   try {
-    const authHeader =
-      event.headers?.Authorization || event.headers?.authorization;
-    if (!authHeader) {
-      return createResponse(
-        401,
-        { message: 'Unauthorized: Missing token' },
-        origin,
-      );
-    }
-    const token = authHeader.replace('Bearer ', '');
-    await authenticateToken(token, ADMIN_COGNITO_POOL_DOMAIN);
-
     requestBody = parseRequestBody(event);
 
     const { filesMetadata } = requestBody;
 
     const signedUrlPromisesAndKeys = filesMetadata.map((fileMetadata) =>
-      getSignedUrlPromiseAndKey(fileMetadata),
+      getSignedUrlPromiseAndKey(fileMetadata, event),
     );
 
     const signedUrlsAndKeys = await Promise.all(signedUrlPromisesAndKeys);
@@ -88,13 +70,6 @@ export const handler = async (
       return createResponse(
         error.statusCode,
         { message: error.message },
-        origin,
-      );
-    } else if (error instanceof UnauthorizedError) {
-      console.error('Error authorizing:', error.message);
-      return createResponse(
-        error.statusCode,
-        { message: 'Unauthorized' },
         origin,
       );
     }
@@ -142,11 +117,15 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
  * @param {FileMetadata} fileMetadata - The metadata for the file to be uploaded.
  * @returns {Promise<string>} - The signed URL for uploading the file.
  */
-async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
-  const { userId, fileName, contentType } = fileMetadata;
+async function getSignedUrlPromiseAndKey(
+  fileMetadata: FileMetadata,
+  event: APIGatewayProxyEvent,
+) {
+  const { fileName, contentType } = fileMetadata;
 
   const sanitizedFileName = sanitizeFileName(fileName);
 
+  const userId = retrieveUserIdFromEvent(event);
   const key = createKey(userId, sanitizedFileName);
 
   const command = new PutObjectCommand({
@@ -160,6 +139,16 @@ async function getSignedUrlPromiseAndKey(fileMetadata: FileMetadata) {
   });
 
   return { uploadUrl, key };
+}
+
+function retrieveUserIdFromEvent(event: APIGatewayProxyEvent): string {
+  const claims = event.requestContext.authorizer?.claims;
+
+  if (!claims || !claims.sub) {
+    throw new Error('User identity not found in request context.');
+  }
+
+  return claims.sub;
 }
 
 /**

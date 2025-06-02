@@ -1,20 +1,17 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
-import { AuthStack } from '../lib/stacks/auth-stack';
 import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
 import { ACCOUNT_ID } from '../lib/configuration/account-config';
 import { PhotosPageDynamoDbTables } from '../lib/configuration/dynamodb-config';
 
 describe('PhotosPageStack Tests', () => {
   let app: cdk.App;
-  let authStack: AuthStack;
   let stack: PhotosPageStack;
   let template: Template;
 
   beforeEach(() => {
     app = new cdk.App();
-    authStack = new AuthStack(app, 'TestAuthStack', {});
-    stack = new PhotosPageStack(app, 'TestPhotosPageStack', { authStack });
+    stack = new PhotosPageStack(app, 'TestPhotosPageStack', {});
     template = Template.fromStack(stack);
   });
 

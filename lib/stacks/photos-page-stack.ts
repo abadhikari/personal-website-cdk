@@ -14,11 +14,8 @@ import { DynamoDbTable } from '../constructs/dynamodb-table';
 import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
-import { AuthStack } from './auth-stack';
 
-export interface PhotosPageStackProps extends StackProps {
-  authStack: AuthStack;
-}
+export interface PhotosPageStackProps extends StackProps {}
 
 /**
  * PhotosPageStack sets up the backend infrastructure for the photo page
@@ -57,15 +54,33 @@ export class PhotosPageStack extends Stack {
   public readonly readStacksLambda: LambdaNodeFunction;
 
   /**
+   * The Lambda function responsible for reading (retrieving) a specific stack and the
+   * corresponding media from the storage or database.
+   */
+  public readonly readStackLambda: LambdaNodeFunction;
+
+  /**
    * The Lambda function responsible for writing a stack and corresponding media
    * metadata to the database.
    */
   public readonly writeStackLambda: LambdaNodeFunction;
 
+  /**
+   * The Lambda function responsible for deleting a stack and corresponding media
+   * metadata from the database.
+   */
   public readonly deleteMediaLambda: LambdaNodeFunction;
 
+  /**
+   * The Lambda function responsible for producing s3 signedUrls that allow the user
+   * to upload files.
+   */
   public readonly generateSignedMediaUrlsLambda: LambdaNodeFunction;
 
+  /**
+   * The Lambda function responsible for editing a stack
+   * metadata in the database.
+   */
   public readonly editStackMetadataLambda: LambdaNodeFunction;
 
   constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
@@ -151,8 +166,20 @@ export class PhotosPageStack extends Stack {
     this.stackMetadataTable.table.grantReadData(this.readStacksLambda.function);
     this.mediaMetadataTable.table.grantReadData(this.readStacksLambda.function);
 
-    const adminCognitoPoolDomain =
-      props.authStack.adminPool.userPool.userPoolProviderUrl;
+    this.readStackLambda = new LambdaNodeFunction(this, 'ReadStackLambda', {
+      functionName: 'photos_page_read_stack_v1',
+      runtime: Runtime.NODEJS_20_X,
+      entry: 'lambda/stack/read/index.ts',
+      handler: 'handler',
+      environment: {
+        ...PhotosPageDynamoDbTables,
+        ORIGIN_ALLOWLIST: serializedOriginAllowList,
+      },
+    });
+
+    // Grant the read stack lambda read permissions to the dynamoDb tables
+    this.stackMetadataTable.table.grantReadData(this.readStackLambda.function);
+    this.mediaMetadataTable.table.grantReadData(this.readStackLambda.function);
 
     this.writeStackLambda = new LambdaNodeFunction(this, 'WriteStackLambda', {
       functionName: 'photos_page_write_stack_v1',
@@ -163,7 +190,6 @@ export class PhotosPageStack extends Stack {
         ...PhotosPageDynamoDbTables,
         CDN_DOMAIN_URL: this.mediaCdn.distribution.distributionDomainName,
         ORIGIN_ALLOWLIST: serializedOriginAllowList,
-        ADMIN_COGNITO_POOL_DOMAIN: adminCognitoPoolDomain,
       },
     });
 
@@ -228,7 +254,6 @@ export class PhotosPageStack extends Stack {
           S3_BUCKET_NAME: this.mediaBucket.bucket.bucketName,
           S3_URL_TTL: '300',
           ORIGIN_ALLOWLIST: serializedOriginAllowList,
-          ADMIN_COGNITO_POOL_DOMAIN: adminCognitoPoolDomain,
         },
       },
     );

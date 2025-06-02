@@ -18,7 +18,6 @@ const authStack = new AuthStack(app, 'AuthStack', {
 
 const photosPageStack = new PhotosPageStack(app, 'PhotosPageStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
-  authStack,
 });
 
 new ReviewsPageStack(app, 'ReviewsPageStack', {
@@ -34,6 +33,7 @@ new ApiStack(app, 'ApiStack', {
   },
   stack: {
     editLambda: photosPageStack.editStackMetadataLambda,
+    readLambda: photosPageStack.readStackLambda,
     writeLambda: photosPageStack.writeStackLambda,
   },
   stacks: {

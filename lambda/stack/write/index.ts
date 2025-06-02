@@ -7,10 +7,9 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
 import { createResponse } from '../../common/createResponse';
-import { UnauthorizedError, ValidationError } from '../../common/errors';
+import { ValidationError } from '../../common/errors';
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
-import { authenticateToken } from '../../common/auth';
 import { ImagePath } from '../../common/types';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -21,7 +20,6 @@ const {
   ORIGIN_ALLOWLIST,
   STACK_METADATA_GSI_PARTITION_KEY,
   CDN_DOMAIN_URL,
-  ADMIN_COGNITO_POOL_DOMAIN,
 } = getConfig();
 
 /**
@@ -76,18 +74,6 @@ export const handler = async (
   }
 
   try {
-    const authHeader =
-      event.headers?.Authorization || event.headers?.authorization;
-    if (!authHeader) {
-      return createResponse(
-        401,
-        { message: 'Unauthorized: Missing token' },
-        origin,
-      );
-    }
-    const token = authHeader.replace('Bearer ', '');
-    await authenticateToken(token, ADMIN_COGNITO_POOL_DOMAIN);
-
     requestBody = parseRequestBody(event);
     const { stackId, caption, uploadTimestamp, location, media } = requestBody;
     const stackMetadataPromise = saveStackMetadata(
@@ -112,13 +98,6 @@ export const handler = async (
       return createResponse(
         error.statusCode,
         { message: error.message },
-        origin,
-      );
-    } else if (error instanceof UnauthorizedError) {
-      console.error('Error authorizing:', error.message);
-      return createResponse(
-        error.statusCode,
-        { message: 'Unauthorized' },
         origin,
       );
     }

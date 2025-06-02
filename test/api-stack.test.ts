@@ -14,9 +14,7 @@ describe('ApiStack Tests', () => {
   beforeEach(() => {
     app = new cdk.App();
     authStack = new AuthStack(app, 'TestAuthStack', {});
-    photosPageStack = new PhotosPageStack(app, 'TestPhotosPageStack', {
-      authStack,
-    });
+    photosPageStack = new PhotosPageStack(app, 'TestPhotosPageStack', {});
     stack = new ApiStack(app, 'TestApiStack', {
       adminPool: authStack.adminPool,
       media: {
@@ -25,6 +23,7 @@ describe('ApiStack Tests', () => {
       },
       stack: {
         writeLambda: photosPageStack.writeStackLambda,
+        readLambda: photosPageStack.readStackLambda,
         editLambda: photosPageStack.editStackMetadataLambda,
       },
       stacks: {

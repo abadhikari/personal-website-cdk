@@ -1,15 +1,11 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-function createMockEvent(
-  body: any,
-  authToken?: string,
-): Partial<APIGatewayProxyEvent> {
+function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
   return {
     body: body,
     httpMethod: 'POST',
     headers: {
       Origin: 'http://localhost:3000',
-      Authorization: authToken,
     },
   };
 }
@@ -46,8 +42,6 @@ describe('Write Lambda Handler Tests', () => {
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
     process.env.STACK_METADATA_GSI_PARTITION_KEY = 'ALL_STACKS';
-    process.env.ADMIN_COGNITO_POOL_DOMAIN =
-      'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_abcdefghi';
 
     dynamoDbSendMock = jest.fn();
     PutCommandMock = jest.fn();
@@ -71,10 +65,6 @@ describe('Write Lambda Handler Tests', () => {
       };
     });
 
-    jest.mock('../../../common/auth', () => ({
-      authenticateToken: jest.fn().mockResolvedValue(undefined),
-    }));
-
     // Import the handler after mocking
     handler = require('../../../stack/write/index').handler;
   });
@@ -88,7 +78,6 @@ describe('Write Lambda Handler Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(VALID_INPUT),
-      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -101,10 +90,7 @@ describe('Write Lambda Handler Tests', () => {
   });
 
   test('Error - Missing Request Body', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      undefined,
-      'Bearer mocked-token',
-    );
+    const event: Partial<APIGatewayProxyEvent> = createMockEvent(undefined);
 
     const response = await handler(event);
 
@@ -116,7 +102,6 @@ describe('Write Lambda Handler Tests', () => {
   test('Error - Invalid JSON Format', async () => {
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       'Invalid JSON String',
-      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -133,7 +118,6 @@ describe('Write Lambda Handler Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(invalidInput),
-      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -150,7 +134,6 @@ describe('Write Lambda Handler Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(invalidInput),
-      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -165,7 +148,6 @@ describe('Write Lambda Handler Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(VALID_INPUT),
-      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -173,22 +155,6 @@ describe('Write Lambda Handler Tests', () => {
     expect(response.statusCode).toBe(500);
     expect(JSON.parse(response.body).message).toBe('Failed to save metadata.');
     expect(dynamoDbSendMock).toHaveBeenCalled();
-  });
-
-  test('Error - Unauthorized Error (Missing token) returns 401', async () => {
-    dynamoDbSendMock.mockResolvedValue({});
-
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(VALID_INPUT),
-    );
-
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(401);
-    expect(JSON.parse(response.body).message).toBe(
-      'Unauthorized: Missing token',
-    );
-    expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('ConditionalCheckFailedException is Handled Gracefully and returns 200', async () => {
@@ -200,7 +166,6 @@ describe('Write Lambda Handler Tests', () => {
 
     const event: Partial<APIGatewayProxyEvent> = createMockEvent(
       JSON.stringify(VALID_INPUT),
-      'Bearer mocked-token',
     );
 
     const response = await handler(event);
@@ -259,14 +224,6 @@ describe('Write Lambda Handler Tests', () => {
       }).toThrow(
         'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
       );
-    });
-
-    test('should throw an error when ADMIN_COGNITO_POOL_DOMAIN is missing', () => {
-      delete process.env.ADMIN_COGNITO_POOL_DOMAIN;
-
-      expect(() => {
-        require('../../../stack/write/index');
-      }).toThrow('ADMIN_COGNITO_POOL_DOMAIN environment variable is missing.');
     });
   });
 });
