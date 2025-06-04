@@ -53,6 +53,11 @@ export class ApiStack extends Stack {
         allowOrigins: ['*'],
         allowHeaders: ['Content-Type', 'Authorization'],
       },
+      stageName: 'prod',
+      throttling: {
+        rateLimit: 5,
+        burstLimit: 20,
+      },
     });
 
     this.certificate = Certificate.fromCertificateArn(

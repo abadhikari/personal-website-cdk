@@ -32,10 +32,6 @@ describe('ReviewsPageStack Tests', () => {
     template.resourceCountIs('AWS::SecretsManager::Secret', 1);
   });
 
-  test('API Gateway RestApi is created', () => {
-    template.resourceCountIs('AWS::ApiGateway::RestApi', 1);
-  });
-
   test('RDS Subnet Group is created with the correct configuration', () => {
     template.resourceCountIs('AWS::RDS::DBSubnetGroup', 1);
     template.hasResourceProperties('AWS::RDS::DBSubnetGroup', {

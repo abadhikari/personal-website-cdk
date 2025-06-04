@@ -18,9 +18,34 @@ export interface ApiGatewayRestApiProps {
   readonly description: string;
 
   /**
+   * Configuration for throttling requests to the API Gateway.
+   */
+  readonly throttling: Throttling;
+
+  /**
+   * Optional custom stage name for the API Gateway deployment.
+   */
+  readonly stageName: string;
+
+  /**
    * configuration that enables CORS (Cross-Origin Resource Sharing) for the API Gateway.
    */
   readonly cors?: Cors;
+}
+
+/**
+ * Configuration for throttling requests to the API Gateway.
+ */
+interface Throttling {
+  /**
+   * The rate limit (requests per second) for the API Gateway stage.
+   */
+  rateLimit: number;
+
+  /**
+   * The burst limit (maximum number of requests allowed in a short period).
+   */
+  burstLimit: number;
 }
 
 /**
@@ -54,7 +79,7 @@ export class ApiGatewayRestApi extends Construct {
 
   constructor(scope: Construct, id: string, props: ApiGatewayRestApiProps) {
     super(scope, id);
-    const { restApiName, description, cors } = props;
+    const { restApiName, description, throttling, cors, stageName } = props;
     this.restApi = new RestApi(this, 'ApiGatewayRestApi', {
       restApiName,
       description,
@@ -62,6 +87,11 @@ export class ApiGatewayRestApi extends Construct {
         allowOrigins: cors.allowOrigins,
         allowMethods: cors.allowMethods,
         allowHeaders: cors.allowHeaders,
+      },
+      deployOptions: {
+        stageName: stageName,
+        throttlingRateLimit: throttling.rateLimit,
+        throttlingBurstLimit: throttling.burstLimit,
       },
     });
   }

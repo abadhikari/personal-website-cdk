@@ -81,16 +81,5 @@ export class ReviewsPageStack extends Stack {
       backupRetention: Duration.days(7),
       deletionProtection: true,
     });
-
-    // API Gateway
-    this.reviewsApi = new ApiGatewayRestApi(this, 'ReviewsApi', {
-      restApiName: 'ReviewsApi',
-      description: 'API for handling reviews on the reviews page',
-      cors: {
-        allowMethods: Cors.ALL_METHODS,
-        allowOrigins: ['*'],
-        allowHeaders: ['Content-Type', 'Authorization'],
-      },
-    });
   }
 }
