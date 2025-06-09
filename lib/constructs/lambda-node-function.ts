@@ -1,5 +1,6 @@
 import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
+import { IVpc, ISecurityGroup } from 'aws-cdk-lib/aws-ec2';
 import {
   NodejsFunction,
   NodejsFunctionProps,
@@ -25,6 +26,16 @@ export interface LambdaNodeFunctionProps extends NodejsFunctionProps {
    * Key-value pairs that represent environment variables for the Lambda function.
    */
   readonly environment?: { [key: string]: string };
+
+  /**
+   * The VPC in which the Lambda function runs. Required for connecting to private resources.
+   */
+  readonly vpc?: IVpc;
+
+  /**
+   * Security groups to associate with the Lambda. Required if accessing RDS or other networked services.
+   */
+  readonly securityGroups?: ISecurityGroup[];
 }
 
 /**
@@ -50,6 +61,8 @@ export class LambdaNodeFunction extends Construct {
       timeout: props.timeout || Duration.seconds(3),
       environment: props.environment || {},
       bundling: props.bundling || { minify: true },
+      vpc: props.vpc,
+      securityGroups: props.securityGroups,
     });
   }
 }

@@ -13,7 +13,11 @@ import {
   SubnetType,
 } from 'aws-cdk-lib/aws-ec2';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
-import { Port, SecurityGroup } from 'aws-cdk-lib/aws-ec2';
+import {
+  InterfaceVpcEndpointAwsService,
+  Port,
+  SecurityGroup,
+} from 'aws-cdk-lib/aws-ec2';
 
 export interface ReviewsPageStackProps extends StackProps {}
 
@@ -66,6 +70,10 @@ export class ReviewsPageStack extends Stack {
           subnetType: SubnetType.PRIVATE_ISOLATED,
         },
       ],
+    });
+
+    this.reviewsVpc.vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+      service: InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
     });
 
     const lambdaToRdsSecurityGroup = new SecurityGroup(this, 'LambdaToRdsSG', {

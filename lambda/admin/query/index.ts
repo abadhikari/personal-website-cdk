@@ -125,6 +125,7 @@ async function getDbClient(
     host: creds.host,
     port: creds.port,
     database: creds.dbname,
+    ssl: { rejectUnauthorized: false },
   });
 
   await client.connect();
