@@ -19,7 +19,11 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "strictPropertyInitialization": false,
-    "typeRoots": ["./node_modules/@types"]
+    "typeRoots": ["./node_modules/@types"],
+    "baseUrl": ".",
+    "paths": {
+      "@lambda/*": ["lambda/*"]
+    }
   },
   "exclude": ["node_modules", "cdk.out", "build"]
 }

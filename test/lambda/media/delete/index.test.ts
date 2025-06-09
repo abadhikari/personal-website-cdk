@@ -49,7 +49,7 @@ describe('Delete Lambda Handler Tests', () => {
     }));
 
     /* import the Lambda after mocks & env are set */
-    handler = require('../../../media/delete/index').handler;
+    handler = require('@lambda/media/delete/index').handler;
   });
 
   afterEach(() => {
@@ -144,7 +144,7 @@ describe('Delete Lambda Handler Tests', () => {
       delete process.env.STACK_METADATA_TABLE;
 
       expect(() => {
-        require('../../../media/delete/index');
+        require('@lambda/media/delete/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
 
@@ -152,7 +152,7 @@ describe('Delete Lambda Handler Tests', () => {
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
-        require('../../../media/delete/index');
+        require('@lambda/media/delete/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
     });
 
@@ -160,7 +160,7 @@ describe('Delete Lambda Handler Tests', () => {
       delete process.env.MEDIA_METADATA_GSI;
 
       expect(() => {
-        require('../../../media/delete/index');
+        require('@lambda/media/delete/index');
       }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
     });
 
@@ -168,7 +168,7 @@ describe('Delete Lambda Handler Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../media/delete/index');
+        require('@lambda/media/delete/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );
@@ -178,7 +178,7 @@ describe('Delete Lambda Handler Tests', () => {
       delete process.env.S3_BUCKET_NAME;
 
       expect(() => {
-        require('../../../media/delete/index');
+        require('@lambda/media/delete/index');
       }).toThrow('S3_BUCKET_NAME environment variable is missing.');
     });
   });

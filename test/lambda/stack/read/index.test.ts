@@ -39,7 +39,7 @@ describe('Read Single Stack Lambda Function Tests', () => {
       QueryCommand: jest.fn((params) => ({ input: params })),
     }));
 
-    handler = require('../../../stack/read/index').handler;
+    handler = require('@lambda/stack/read/index').handler;
   });
 
   afterEach(() => {
@@ -132,7 +132,7 @@ describe('Read Single Stack Lambda Function Tests', () => {
       delete process.env.STACK_METADATA_TABLE;
 
       expect(() => {
-        require('../../../stack/read/index');
+        require('@lambda/stack/read/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
 
@@ -140,7 +140,7 @@ describe('Read Single Stack Lambda Function Tests', () => {
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
-        require('../../../stack/read/index');
+        require('@lambda/stack/read/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
     });
 
@@ -148,7 +148,7 @@ describe('Read Single Stack Lambda Function Tests', () => {
       delete process.env.MEDIA_METADATA_GSI;
 
       expect(() => {
-        require('../../../stack/read/index');
+        require('@lambda/stack/read/index');
       }).toThrow('MEDIA_METADATA_GSI environment variable is missing.');
     });
 
@@ -156,7 +156,7 @@ describe('Read Single Stack Lambda Function Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../stack/read/index');
+        require('@lambda/stack/read/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );

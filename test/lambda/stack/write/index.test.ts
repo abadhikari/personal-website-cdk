@@ -66,7 +66,7 @@ describe('Write Lambda Handler Tests', () => {
     });
 
     // Import the handler after mocking
-    handler = require('../../../stack/write/index').handler;
+    handler = require('@lambda/stack/write/index').handler;
   });
 
   afterEach(() => {
@@ -186,7 +186,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.STACK_METADATA_TABLE;
 
       expect(() => {
-        require('../../../stack/write/index');
+        require('@lambda/stack/write/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
 
@@ -194,7 +194,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.MEDIA_METADATA_TABLE;
 
       expect(() => {
-        require('../../../stack/write/index');
+        require('@lambda/stack/write/index');
       }).toThrow('MEDIA_METADATA_TABLE environment variable is missing.');
     });
 
@@ -202,7 +202,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.CDN_DOMAIN_URL;
 
       expect(() => {
-        require('../../../stack/write/index');
+        require('@lambda/stack/write/index');
       }).toThrow('CDN_DOMAIN_URL environment variable is missing.');
     });
 
@@ -210,7 +210,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../stack/write/index');
+        require('@lambda/stack/write/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );
@@ -220,7 +220,7 @@ describe('Write Lambda Handler Tests', () => {
       delete process.env.STACK_METADATA_GSI_PARTITION_KEY;
 
       expect(() => {
-        require('../../../stack/write/index');
+        require('@lambda/stack/write/index');
       }).toThrow(
         'STACK_METADATA_GSI_PARTITION_KEY environment variable is missing.',
       );

@@ -59,7 +59,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     }));
 
     // Import the handler after mocking
-    handler = require('../../../media/generate-signed-urls/index').handler;
+    handler = require('@lambda/media/generate-signed-urls/index').handler;
   });
 
   afterEach(() => {
@@ -206,7 +206,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       delete process.env.S3_BUCKET_NAME;
 
       expect(() => {
-        require('../../../media/generate-signed-urls/index');
+        require('@lambda/media/generate-signed-urls/index');
       }).toThrow('S3_BUCKET_NAME environment variable is missing.');
     });
 
@@ -214,7 +214,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       delete process.env.S3_URL_TTL;
 
       expect(() => {
-        require('../../../media/generate-signed-urls/index');
+        require('@lambda/media/generate-signed-urls/index');
       }).toThrow(
         'S3_URL_TTL environment variable is missing or not a valid number',
       );
@@ -224,7 +224,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       process.env.S3_URL_TTL = 'invalid_number';
 
       expect(() => {
-        require('../../../media/generate-signed-urls/index');
+        require('@lambda/media/generate-signed-urls/index');
       }).toThrow(
         'S3_URL_TTL environment variable is missing or not a valid number',
       );
@@ -234,7 +234,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../media/generate-signed-urls/index');
+        require('@lambda/media/generate-signed-urls/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );

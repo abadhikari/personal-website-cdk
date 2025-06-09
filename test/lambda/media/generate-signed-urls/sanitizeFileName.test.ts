@@ -1,4 +1,4 @@
-import { sanitizeFileName } from '../../../media/generate-signed-urls/sanitizeFileName';
+import { sanitizeFileName } from '@lambda/media/generate-signed-urls/sanitizeFileName';
 
 describe('sanitizeFileName', () => {
   test('should sanitize various file names correctly', () => {

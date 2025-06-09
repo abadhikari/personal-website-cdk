@@ -1,6 +1,6 @@
 module.exports = {
   testEnvironment: 'node',
-  roots: ['<rootDir>/test', '<rootDir>/lambda/test'],
+  roots: ['<rootDir>/test'],
   testMatch: ['**/*.test.ts'],
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
@@ -8,6 +8,9 @@ module.exports = {
   collectCoverage: true,
   coverageDirectory: 'build/coverage',
   coverageReporters: ['text', 'html'],
+  moduleNameMapper: {
+    '^@lambda/(.*)$': '<rootDir>/lambda/$1',
+  },
   collectCoverageFrom: [
     'lib/**/*.ts',
     'lambda/**/*.ts',

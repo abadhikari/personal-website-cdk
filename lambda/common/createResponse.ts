@@ -9,7 +9,7 @@
 export function createResponse(
   statusCode: number,
   body: object,
-  origin: string,
+  origin?: string,
 ) {
   const headers = {
     ...(origin && {

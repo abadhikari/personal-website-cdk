@@ -37,7 +37,7 @@ describe('Edit Lambda Handler Tests', () => {
       UpdateCommand: jest.fn((input) => ({ input })),
     }));
 
-    handler = require('../../../stack/edit/index').handler;
+    handler = require('@lambda/stack/edit/index').handler;
   });
 
   afterEach(() => {
@@ -107,7 +107,7 @@ describe('Edit Lambda Handler Tests', () => {
       delete process.env.STACK_METADATA_TABLE;
 
       expect(() => {
-        require('../../../stack/edit/index');
+        require('@lambda/stack/edit/index');
       }).toThrow('STACK_METADATA_TABLE environment variable is missing.');
     });
 
@@ -115,7 +115,7 @@ describe('Edit Lambda Handler Tests', () => {
       delete process.env.ORIGIN_ALLOWLIST;
 
       expect(() => {
-        require('../../../stack/edit/index');
+        require('@lambda/stack/edit/index');
       }).toThrow(
         'ORIGIN_ALLOWLIST environment variable is missing or empty list.',
       );

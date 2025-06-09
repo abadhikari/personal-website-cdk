@@ -1,7 +1,7 @@
 import { StackProps, Stack, Duration } from 'aws-cdk-lib';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
-import { Cors } from 'aws-cdk-lib/aws-apigateway';
 import { Vpc } from '../constructs/vpc';
 import { SecretsManager } from '../constructs/secrets-manager';
 import { Rds } from '../constructs/rds';
@@ -12,6 +12,8 @@ import {
   InstanceType,
   SubnetType,
 } from 'aws-cdk-lib/aws-ec2';
+import { LambdaNodeFunction } from '../constructs/lambda-node-function';
+import { Port, SecurityGroup } from 'aws-cdk-lib/aws-ec2';
 
 export interface ReviewsPageStackProps extends StackProps {}
 
@@ -46,6 +48,11 @@ export class ReviewsPageStack extends Stack {
    */
   private readonly reviewsDbInstance: Rds;
 
+  /**
+   * The Lambda function responsible for sending queries to ds.
+   */
+  public readonly databaseAdminQueryLambda: LambdaNodeFunction;
+
   constructor(scope: Construct, id: string, props: ReviewsPageStackProps) {
     super(scope, id, props);
 
@@ -59,6 +66,12 @@ export class ReviewsPageStack extends Stack {
           subnetType: SubnetType.PRIVATE_ISOLATED,
         },
       ],
+    });
+
+    const lambdaToRdsSecurityGroup = new SecurityGroup(this, 'LambdaToRdsSG', {
+      vpc: this.reviewsVpc.vpc,
+      description: 'Security group for Lambdas accessing the reviews RDS',
+      allowAllOutbound: true,
     });
 
     // SecretsManager
@@ -81,5 +94,40 @@ export class ReviewsPageStack extends Stack {
       backupRetention: Duration.days(7),
       deletionProtection: true,
     });
+
+    this.reviewsDbInstance.instance.connections.allowFrom(
+      lambdaToRdsSecurityGroup,
+      Port.tcp(5432),
+      'Allow all review Lambdas to connect to RDS',
+    );
+
+    // Lambda
+    this.databaseAdminQueryLambda = new LambdaNodeFunction(
+      this,
+      'DatabaseAdminQueryLambda',
+      {
+        functionName: 'reviews_page_database_admin_query_stack_v1',
+        description:
+          'Internal admin query Lambda for manual RDS inspection and alterations',
+        runtime: Runtime.NODEJS_20_X,
+        entry: 'lambda/admin/query/index.ts',
+        handler: 'handler',
+        securityGroups: [lambdaToRdsSecurityGroup],
+        vpc: this.reviewsVpc.vpc,
+        environment: {
+          DB_SECRET_ARN: this.rdsCredentialsSecret.secret.secretArn,
+        },
+      },
+    );
+
+    // Allow Lambda to query RDS
+    this.reviewsDbInstance.instance.grantConnect(
+      this.databaseAdminQueryLambda.function,
+    );
+
+    // Give Lambda access to fetch the RDS secret
+    this.rdsCredentialsSecret.secret.grantRead(
+      this.databaseAdminQueryLambda.function,
+    );
   }
 }
