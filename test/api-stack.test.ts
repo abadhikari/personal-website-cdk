@@ -3,11 +3,13 @@ import { Template } from 'aws-cdk-lib/assertions';
 import { ApiStack } from '../lib/stacks/api-stack';
 import { AuthStack } from '../lib/stacks/auth-stack';
 import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
+import { ReviewsPageStack } from '../lib/stacks/reviews-page-stack';
 
 describe('ApiStack Tests', () => {
   let app: cdk.App;
   let authStack: AuthStack;
   let photosPageStack: PhotosPageStack;
+  let reviewsPageStack: ReviewsPageStack;
   let stack: ApiStack;
   let template: Template;
 
@@ -15,6 +17,7 @@ describe('ApiStack Tests', () => {
     app = new cdk.App();
     authStack = new AuthStack(app, 'TestAuthStack', {});
     photosPageStack = new PhotosPageStack(app, 'TestPhotosPageStack', {});
+    reviewsPageStack = new ReviewsPageStack(app, 'TestReviewsPageStack', {});
     stack = new ApiStack(app, 'TestApiStack', {
       adminPool: authStack.adminPool,
       media: {
@@ -28,6 +31,9 @@ describe('ApiStack Tests', () => {
       },
       stacks: {
         readLambda: photosPageStack.readStacksLambda,
+      },
+      content: {
+        writeLambda: reviewsPageStack.writeContentLambda,
       },
     });
     template = Template.fromStack(stack);

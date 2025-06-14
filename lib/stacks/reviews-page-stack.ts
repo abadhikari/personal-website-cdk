@@ -1,7 +1,6 @@
 import { StackProps, Stack, Duration } from 'aws-cdk-lib';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
 import { Vpc } from '../constructs/vpc';
 import { SecretsManager } from '../constructs/secrets-manager';
 import { Rds } from '../constructs/rds';
@@ -18,6 +17,7 @@ import {
   Port,
   SecurityGroup,
 } from 'aws-cdk-lib/aws-ec2';
+import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 
 export interface ReviewsPageStackProps extends StackProps {}
 
@@ -29,14 +29,9 @@ export interface ReviewsPageStackProps extends StackProps {}
  * - A VPC to host resources
  * - Secrets Manager to store database credentials
  * - An RDS instance for storing review data
- * - API Gateway for handling HTTP requests related to reviews
+ * - Admin Lambda to make admin queries to the database.
  */
 export class ReviewsPageStack extends Stack {
-  /**
-   * The API Gateway REST API used for handling reviews-related HTTP requests on the reviews page.
-   */
-  private readonly reviewsApi: ApiGatewayRestApi;
-
   /**
    * The VPC (Virtual Private Cloud) in which the rds instance resides.
    */
@@ -53,16 +48,18 @@ export class ReviewsPageStack extends Stack {
   private readonly reviewsDbInstance: Rds;
 
   /**
-   * The Lambda function responsible for sending queries to ds.
+   * The Lambda function responsible for sending queries to database.
    */
-  public readonly databaseAdminQueryLambda: LambdaNodeFunction;
+  private readonly databaseAdminQueryLambda: LambdaNodeFunction;
+
+  public readonly writeContentLambda: LambdaNodeFunction;
 
   constructor(scope: Construct, id: string, props: ReviewsPageStackProps) {
     super(scope, id, props);
 
     // VPC
     this.reviewsVpc = new Vpc(this, 'ReviewsVpc', {
-      maxAzs: 3,
+      maxAzs: 2,
       subnetConfiguration: [
         {
           cidrMask: 24,
@@ -110,11 +107,13 @@ export class ReviewsPageStack extends Stack {
     );
 
     // Lambda
+    const serializedOriginAllowList = ORIGIN_ALLOWLIST.join(',');
+
     this.databaseAdminQueryLambda = new LambdaNodeFunction(
       this,
       'DatabaseAdminQueryLambda',
       {
-        functionName: 'reviews_page_database_admin_query_stack_v1',
+        functionName: 'reviews_page_database_admin_query_v1',
         description:
           'Internal admin query Lambda for manual RDS inspection and alterations',
         runtime: Runtime.NODEJS_20_X,
@@ -128,14 +127,41 @@ export class ReviewsPageStack extends Stack {
       },
     );
 
-    // Allow Lambda to query RDS
-    this.reviewsDbInstance.instance.grantConnect(
-      this.databaseAdminQueryLambda.function,
+    // Allow Lambda to query the database
+    this.grantLambdaDbAccess(this.databaseAdminQueryLambda);
+
+    this.writeContentLambda = new LambdaNodeFunction(
+      this,
+      'WriteContentLambda',
+      {
+        functionName: 'reviews_page_write_content_v1',
+        runtime: Runtime.NODEJS_20_X,
+        entry: 'lambda/content/write/index.ts',
+        handler: 'handler',
+        securityGroups: [lambdaToRdsSecurityGroup],
+        vpc: this.reviewsVpc.vpc,
+        environment: {
+          DB_SECRET_ARN: this.rdsCredentialsSecret.secret.secretArn,
+          ORIGIN_ALLOWLIST: serializedOriginAllowList,
+        },
+      },
     );
 
-    // Give Lambda access to fetch the RDS secret
-    this.rdsCredentialsSecret.secret.grantRead(
-      this.databaseAdminQueryLambda.function,
-    );
+    this.grantLambdaDbAccess(this.writeContentLambda);
+  }
+
+  /**
+   * Grants the given Lambda function permission to:
+   * - Connect to the reviews RDS instance
+   * - Read the database credentials from Secrets Manager
+   *
+   * This method ensures the Lambda can securely authenticate and
+   * communicate with the database.
+   *
+   * @param lambda - The LambdaNodeFunction instance requiring DB access
+   */
+  private grantLambdaDbAccess(lambda: LambdaNodeFunction) {
+    this.reviewsDbInstance.instance.grantConnect(lambda.function);
+    this.rdsCredentialsSecret.secret.grantRead(lambda.function);
   }
 }

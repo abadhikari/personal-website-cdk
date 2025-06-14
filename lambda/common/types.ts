@@ -9,3 +9,22 @@ export interface ImagePath {
   thumbnail: string;
   full: string;
 }
+
+/**
+ * A constant map representing all valid content categories in the system.
+ *
+ * This provides enum-like access (e.g. ContentCategory.FOOD_AND_DRINK),
+ * while also allowing for runtime-safe iteration via Object.values().
+ */
+export const ContentCategory = {
+  FOOD_AND_DRINK: 'FoodAndDrink',
+  ENTERTAINMENT: 'Entertainment',
+} as const;
+
+export type ContentCategory =
+  (typeof ContentCategory)[keyof typeof ContentCategory];
+
+export interface QueryWithParams {
+  sql: string;
+  values: any[];
+}

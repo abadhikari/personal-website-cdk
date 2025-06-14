@@ -1,6 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-/* helper to fake an API Gateway event */
 function createMockDeleteEvent(
   queryStringParameters: Record<string, any>,
 ): Partial<APIGatewayProxyEvent> {

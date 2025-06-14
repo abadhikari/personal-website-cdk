@@ -26,6 +26,9 @@ export interface ApiStackProps extends StackProps {
   stacks: {
     readLambda: LambdaNodeFunction;
   };
+  content: {
+    writeLambda: LambdaNodeFunction;
+  };
 }
 
 /**
@@ -126,6 +129,16 @@ export class ApiStack extends Stack {
     this.restApi.addLambdaIntegration(
       props.media.generateSignedUrlsLambda.function,
       'v1/media/upload-url',
+      'POST',
+      {
+        authorizer: this.authorizer,
+        authorizationType: AuthorizationType.COGNITO,
+      },
+    );
+
+    this.restApi.addLambdaIntegration(
+      props.content.writeLambda.function,
+      'v1/content',
       'POST',
       {
         authorizer: this.authorizer,

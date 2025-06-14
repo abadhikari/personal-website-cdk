@@ -11,9 +11,9 @@
     "cdk": "cdk",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "npm run build && npm run test && npm run cdk diff",
-    "deploy": "npm run format && npm run build && npm run test && npm run cdk synth && npm run cdk deploy",
-    "deployall": "npm run format && npm run build && npm run test && npm run cdk synth && npm run cdk deploy -- --all"
+    "prepare": "npm run format && npm run build && npm run test && npm run cdk diff",
+    "deploy": "npm run build && npm run test && npm run cdk synth && npm run cdk deploy",
+    "deployall": "npm run build && npm run test && npm run cdk synth && npm run cdk deploy -- --all"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.145",

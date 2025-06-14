@@ -20,7 +20,7 @@ const photosPageStack = new PhotosPageStack(app, 'PhotosPageStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
 });
 
-new ReviewsPageStack(app, 'ReviewsPageStack', {
+const reviewsPageStack = new ReviewsPageStack(app, 'ReviewsPageStack', {
   env: { account: ACCOUNT_ID, region: ACCOUNT_REGION },
 });
 
@@ -38,5 +38,8 @@ new ApiStack(app, 'ApiStack', {
   },
   stacks: {
     readLambda: photosPageStack.readStacksLambda,
+  },
+  content: {
+    writeLambda: reviewsPageStack.writeContentLambda,
   },
 });
