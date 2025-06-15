@@ -13,6 +13,11 @@ const fileMetadataSchema = Joi.object({
       'any.required': 'contentType is required',
       'string.pattern.base': 'contentType must be a valid MIME type',
     }),
+  type: Joi.string().valid('primary', 'thumbnail').required().messages({
+    'string.base': 'type must be a string',
+    'any.only': 'type must be either "primary" or "thumbnail"',
+    'any.required': 'type is required',
+  }),
 });
 
 export const requestBodySchema = Joi.object({

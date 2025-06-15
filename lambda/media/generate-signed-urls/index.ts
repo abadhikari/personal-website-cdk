@@ -19,12 +19,13 @@ const { S3_BUCKET_NAME, S3_URL_TTL, ORIGIN_ALLOWLIST } = getConfig();
  * @interface RequestBody
  * @property {string} fileName - The name of the file to be uploaded.
  * @property {string} contentType - The MIME content type of the file.
- * @property {string} userId - The ID of the user uploading the file.
+ * @property {'primary' | 'thumbnail'} type - The role of the file in the upload.
+ *  Used to distinguish main content from secondary assets..
  */
 interface FileMetadata {
   fileName: string;
   contentType: string;
-  userId: string;
+  type: 'primary' | 'thumbnail';
 }
 
 /**
@@ -121,7 +122,7 @@ async function getSignedUrlPromiseAndKey(
   fileMetadata: FileMetadata,
   event: APIGatewayProxyEvent,
 ) {
-  const { fileName, contentType } = fileMetadata;
+  const { fileName, contentType, type } = fileMetadata;
 
   const sanitizedFileName = sanitizeFileName(fileName);
 
@@ -138,7 +139,7 @@ async function getSignedUrlPromiseAndKey(
     expiresIn: S3_URL_TTL,
   });
 
-  return { uploadUrl, key };
+  return { uploadUrl, key, type };
 }
 
 function retrieveUserIdFromEvent(event: APIGatewayProxyEvent): string {

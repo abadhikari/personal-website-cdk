@@ -73,6 +73,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
         {
           fileName: 'testfile.jpg',
           contentType: 'image/jpeg',
+          type: 'primary',
         },
       ],
     };
@@ -92,6 +93,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       {
         uploadUrl: 'https://example.com/signed-url',
         key: 'user/user123/2023/01/mock-uuid_testfile.jpg',
+        type: 'primary',
       },
     ]);
 
@@ -114,6 +116,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
         {
           fileName: 'testfile.jpg',
           contentType: 'image/jpeg',
+          type: 'thumbnail',
         },
       ],
     };
@@ -179,6 +182,7 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
         {
           fileName: 'testfile.jpg',
           contentType: 'image/jpeg',
+          type: 'thumbnail',
         },
       ],
     };
