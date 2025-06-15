@@ -34,31 +34,31 @@ describe('content write handler', () => {
   };
 
   const VALID_FOOD_AND_DRINK_BODY = {
-    category: 'FoodAndDrink',
+    category_id: 4,
     payload: {
       name: 'Sushi Place',
       address: '123 Main St',
       city: 'NYC',
-      venue: 'Sushi Inc.',
+      venue_id: 1,
       country: 'USA',
       latitude: 40.7128,
       longitude: -74.006,
-      price_range: '$$',
-      cuisines: ['Japanese', 'Seafood'],
+      price_level: 2,
+      cuisine_ids: [1, 2],
     },
   };
 
   const VALID_ENTERTAINMENT_BODY = {
-    category: 'Entertainment',
+    category_id: 5,
     payload: {
       name: 'Carnegie Hall',
       address: '123 Main St',
       city: 'NYC',
-      venue: 'Live Music',
+      venue_id: 3,
       country: 'USA',
       latitude: 40.7128,
       longitude: -74.006,
-      price_range: '$$',
+      price_level: 3,
     },
   };
 

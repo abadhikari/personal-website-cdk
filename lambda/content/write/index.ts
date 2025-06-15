@@ -22,7 +22,7 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
  * @property {string} query - The query to the database.
  */
 export interface RequestBody<T = any> {
-  category: ContentCategory;
+  category_id: ContentCategory;
   payload: T;
 }
 
@@ -31,12 +31,12 @@ interface ExperiencePayload {
   address: string;
   city: string;
   state?: string;
-  venue: string;
+  venue_id: number;
   country: string;
   latitude: number;
   longitude: number;
-  price_range: string;
-  cuisines?: string[];
+  price_level: number;
+  cuisine_ids?: number[];
 }
 
 const CONTENT_ID_PLACEHOLDER = ':CONTENT_ID';
@@ -59,12 +59,12 @@ export const handler = async (
 
   try {
     requestBody = parseRequestBody(event);
-    const { category, payload } = requestBody;
+    const { category_id, payload } = requestBody;
 
     const credentials = await getDbCredentials(DB_SECRET_ARN);
     const db = await getDbClient(credentials);
 
-    const queries = await createWriteContentQueries(category, payload);
+    const queries = await createWriteContentQueries(category_id, payload);
 
     await executeAtomicTransaction(db, queries, executeContentTransaction);
 
@@ -84,7 +84,7 @@ export const handler = async (
       );
     }
 
-    console.error('Error to write content:', error);
+    console.error('Error to write content:', error, requestBody);
     return createResponse(500, { message: 'Failed to write content.' }, origin);
   }
 };
@@ -112,11 +112,11 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
       );
     }
 
-    const { category, payload } = baseValue;
+    const { category_id, payload } = baseValue;
 
-    const payloadSchema = retrieveSchemaForCategory(category);
+    const payloadSchema = retrieveSchemaForCategory(category_id);
     if (!payloadSchema) {
-      throw new ValidationError(`Unsupported category: ${category}`);
+      throw new ValidationError(`Unsupported category: ${category_id}`);
     }
 
     const { error: payloadError, value: validatedPayload } =
@@ -127,7 +127,7 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
       );
     }
 
-    return { category, payload: validatedPayload };
+    return { category_id, payload: validatedPayload };
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new ValidationError('Invalid JSON format.');
@@ -173,7 +173,7 @@ function buildFoodAndDrinkQuery(
   category: ContentCategory,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
-  const { cuisines = [] } = payload;
+  const { cuisine_ids = [] } = payload;
   const queries: QueryWithParams[] = [];
 
   const contentInsert = createContentInsertQuery(category);
@@ -182,8 +182,8 @@ function buildFoodAndDrinkQuery(
   const experienceInsert = createExperiencesInsertQuery(payload);
   queries.push(experienceInsert);
 
-  if (cuisines.length) {
-    const cuisineInsert = createCuisineInsertQuery(cuisines);
+  if (cuisine_ids.length) {
+    const cuisineInsert = createCuisineInsertQuery(cuisine_ids);
     queries.push(cuisineInsert);
   }
 
@@ -239,15 +239,15 @@ function createExperiencesInsertQuery(
     address,
     city,
     state,
-    venue,
+    venue_id,
     country,
     latitude,
     longitude,
-    price_range,
+    price_level,
   } = payload;
   return {
     sql: `INSERT INTO experiences (
-             content_id, name, address, city, state, venue, country, latitude, longitude, price_range
+             content_id, name, address, city, state, venue_id, country, latitude, longitude, price_level
            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     values: [
       CONTENT_ID_PLACEHOLDER,
@@ -255,11 +255,11 @@ function createExperiencesInsertQuery(
       address,
       city,
       state ?? null,
-      venue,
+      venue_id,
       country,
       latitude,
       longitude,
-      price_range,
+      price_level,
     ],
   };
 }
@@ -271,12 +271,12 @@ function createExperiencesInsertQuery(
  * @param cuisines - Array of cuisine strings.
  * @returns A parameterized SQL insert query for the experience_cuisines table.
  */
-function createCuisineInsertQuery(cuisines: string[]): QueryWithParams {
+function createCuisineInsertQuery(cuisines_ids: number[]): QueryWithParams {
   return {
-    sql: `INSERT INTO experience_cuisines (content_id, cuisine)
-            VALUES ${cuisines.map((_, i) => `($1, $${i + 2})`).join(', ')}
+    sql: `INSERT INTO experience_cuisines (content_id, cuisine_id)
+            VALUES ${cuisines_ids.map((_, i) => `($1, $${i + 2})`).join(', ')}
             ON CONFLICT DO NOTHING`,
-    values: [CONTENT_ID_PLACEHOLDER, ...cuisines],
+    values: [CONTENT_ID_PLACEHOLDER, ...cuisines_ids],
   };
 }
 

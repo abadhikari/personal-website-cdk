@@ -17,8 +17,8 @@ export interface ImagePath {
  * while also allowing for runtime-safe iteration via Object.values().
  */
 export const ContentCategory = {
-  FOOD_AND_DRINK: 'FoodAndDrink',
-  ENTERTAINMENT: 'Entertainment',
+  FOOD_AND_DRINK: 4,
+  ENTERTAINMENT: 5,
 } as const;
 
 export type ContentCategory =

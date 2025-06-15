@@ -2,13 +2,14 @@ import { ContentCategory } from '@lambda/common/types';
 import * as Joi from 'joi';
 
 export const baseRequestSchema = Joi.object({
-  category: Joi.string()
+  category_id: Joi.number()
+    .integer()
     .valid(...Object.values(ContentCategory))
     .required()
     .messages({
-      'string.base': 'category must be a string',
-      'any.required': 'category is required',
-      'any.only': `category must be one of: ${Object.values(ContentCategory).join(', ')}`,
+      'number.base': 'category_id must be a number',
+      'any.required': 'category_id is required',
+      'any.only': `category_id must be one of: ${Object.values(ContentCategory).join(', ')}`,
     }),
   payload: Joi.object().required().messages({
     'object.base': 'payload must be an object',
@@ -32,9 +33,11 @@ export const experienceSchema = Joi.object({
   state: Joi.string().optional().messages({
     'string.base': 'state must be a string',
   }),
-  venue: Joi.string().required().messages({
-    'string.base': 'venue must be a string',
-    'any.required': 'venue is required',
+  venue_id: Joi.number().integer().positive().required().messages({
+    'number.base': 'venue_id must be a number',
+    'number.integer': 'venue_id must be an integer',
+    'number.positive': 'venue_id must be a positive number',
+    'any.required': 'venue_id is required',
   }),
   country: Joi.string().required().messages({
     'string.base': 'country must be a string',
@@ -52,22 +55,28 @@ export const experienceSchema = Joi.object({
     'number.max': 'longitude must be at most 180',
     'any.required': 'longitude is required',
   }),
-  price_range: Joi.string()
-    .valid('$', '$$', '$$$', '$$$$', '$$$$$')
-    .required()
-    .messages({
-      'string.base': 'price_range must be a string',
-      'any.only': 'price_range must be one of: $, $$, $$$, $$$$, $$$$$',
-      'any.required': 'price_range is required',
-    }),
-  cuisines: Joi.array().items(Joi.string()).min(1).optional().messages({
-    'array.base': 'cuisines must be an array',
-    'array.min': 'at least one cuisine is required if provided',
+  price_level: Joi.number().integer().min(1).max(5).required().messages({
+    'number.base': 'price_level must be a number',
+    'number.integer': 'price_level must be an integer',
+    'number.min': 'price_level must be between 1 and 5',
+    'number.max': 'price_level must be between 1 and 5',
+    'any.required': 'price_level is required',
   }),
+  cuisine_ids: Joi.array()
+    .items(Joi.number().integer().positive())
+    .min(1)
+    .optional()
+    .messages({
+      'array.base': 'cuisine_ids must be an array',
+      'array.min': 'at least one cuisine_id is required if provided',
+      'number.base': 'each cuisine_id must be a number',
+      'number.integer': 'each cuisine_id must be an integer',
+      'number.positive': 'each cuisine_id must be a positive number',
+    }),
 });
 
 export function retrieveSchemaForCategory(
-  category: string,
+  category: number,
 ): Joi.ObjectSchema | null {
   switch (category) {
     case ContentCategory.FOOD_AND_DRINK:
