@@ -140,43 +140,43 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
  * Builds a list of SQL queries needed to persist content to the database
  * based on the provided content category and payload.
  *
- * @param category - The category of the content being written.
+ * @param category_id - The category of the content being written.
  * @param payload - The validated payload object for the content.
  * @returns An ordered list of parameterized SQL queries.
  * @throws ValidationError - If the category is unsupported.
  */
 export function createWriteContentQueries(
-  category: ContentCategory,
+  category_id: ContentCategory,
   payload: any,
 ): QueryWithParams[] {
-  switch (category) {
+  switch (category_id) {
     case ContentCategory.FOOD_AND_DRINK:
       const foodAndDrinkPayload = payload as ExperiencePayload;
-      return buildFoodAndDrinkQuery(category, foodAndDrinkPayload);
+      return buildFoodAndDrinkQuery(category_id, foodAndDrinkPayload);
     case ContentCategory.ENTERTAINMENT:
       const entertainmentPayload = payload as ExperiencePayload;
-      return buildEntertainmentQuery(category, entertainmentPayload);
+      return buildEntertainmentQuery(category_id, entertainmentPayload);
 
     default:
-      throw new ValidationError(`Unsupported category: ${category}`);
+      throw new ValidationError(`Unsupported category_id: ${category_id}`);
   }
 }
 
 /**
  * Builds queries for FOOD_AND_DRINK content.
  *
- * @param category - Content category, should be FOOD_AND_DRINK.
+ * @param category_id - Content category, should be FOOD_AND_DRINK.
  * @param payload - Experience payload object.
  * @returns Query list for content, experience, and cuisine inserts.
  */
 function buildFoodAndDrinkQuery(
-  category: ContentCategory,
+  category_id: ContentCategory,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
   const { cuisine_ids = [] } = payload;
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category);
+  const contentInsert = createContentInsertQuery(category_id);
   queries.push(contentInsert);
 
   const experienceInsert = createExperiencesInsertQuery(payload);
@@ -193,17 +193,17 @@ function buildFoodAndDrinkQuery(
 /**
  * Builds queries for ENTERTAINMENT content.
  *
- * @param category - Content category, should be ENTERTAINMENT.
+ * @param category_id - Content category, should be ENTERTAINMENT.
  * @param payload - Experience payload object.
  * @returns Query list for content and experience inserts.
  */
 function buildEntertainmentQuery(
-  category: ContentCategory,
+  category_id: ContentCategory,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category);
+  const contentInsert = createContentInsertQuery(category_id);
   queries.push(contentInsert);
 
   const experienceInsert = createExperiencesInsertQuery(payload);
@@ -214,13 +214,15 @@ function buildEntertainmentQuery(
 /**
  * Creates the SQL query to insert a new content row and return its ID.
  *
- * @param category - The content category (e.g., FOOD_AND_DRINK).
+ * @param category_id - The content category (e.g., FOOD_AND_DRINK).
  * @returns A parameterized SQL insert query with RETURNING clause.
  */
-function createContentInsertQuery(category: ContentCategory): QueryWithParams {
+function createContentInsertQuery(
+  category_id: ContentCategory,
+): QueryWithParams {
   return {
-    sql: `INSERT INTO content (category) VALUES ($1) RETURNING content_id`,
-    values: [category],
+    sql: `INSERT INTO content (category_id) VALUES ($1) RETURNING content_id`,
+    values: [category_id],
   };
 }
 
@@ -271,12 +273,12 @@ function createExperiencesInsertQuery(
  * @param cuisines - Array of cuisine strings.
  * @returns A parameterized SQL insert query for the experience_cuisines table.
  */
-function createCuisineInsertQuery(cuisines_ids: number[]): QueryWithParams {
+function createCuisineInsertQuery(cuisine_ids: number[]): QueryWithParams {
   return {
     sql: `INSERT INTO experience_cuisines (content_id, cuisine_id)
-            VALUES ${cuisines_ids.map((_, i) => `($1, $${i + 2})`).join(', ')}
+            VALUES ${cuisine_ids.map((_, i) => `($1, $${i + 2})`).join(', ')}
             ON CONFLICT DO NOTHING`,
-    values: [CONTENT_ID_PLACEHOLDER, ...cuisines_ids],
+    values: [CONTENT_ID_PLACEHOLDER, ...cuisine_ids],
   };
 }
 
