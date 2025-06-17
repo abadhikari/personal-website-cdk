@@ -18,8 +18,9 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
 /**
  * Interface representing the structure of the parsed request body.
  *
- * @interface RequestBody
- * @property {string} query - The query to the database.
+ * @template T - Type of the payload object.
+ * @property category_id - The category of the content (used for routing logic).
+ * @property payload - The validated content-specific payload to write.
  */
 export interface RequestBody<T = any> {
   category_id: ContentCategory;
@@ -27,7 +28,7 @@ export interface RequestBody<T = any> {
 }
 
 interface ExperiencePayload {
-  name: string;
+  title: string;
   address: string;
   city: string;
   state?: string;
@@ -173,10 +174,10 @@ function buildFoodAndDrinkQuery(
   category_id: ContentCategory,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
-  const { cuisine_ids = [] } = payload;
+  const { cuisine_ids = [], title } = payload;
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category_id);
+  const contentInsert = createContentInsertQuery(category_id, title);
   queries.push(contentInsert);
 
   const experienceInsert = createExperiencesInsertQuery(payload);
@@ -203,7 +204,7 @@ function buildEntertainmentQuery(
 ): QueryWithParams[] {
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category_id);
+  const contentInsert = createContentInsertQuery(category_id, payload.title);
   queries.push(contentInsert);
 
   const experienceInsert = createExperiencesInsertQuery(payload);
@@ -219,10 +220,11 @@ function buildEntertainmentQuery(
  */
 function createContentInsertQuery(
   category_id: ContentCategory,
+  title: string,
 ): QueryWithParams {
   return {
-    sql: `INSERT INTO content (category_id) VALUES ($1) RETURNING content_id`,
-    values: [category_id],
+    sql: `INSERT INTO content (category_id, title) VALUES ($1, $2) RETURNING content_id`,
+    values: [category_id, title],
   };
 }
 
@@ -237,7 +239,7 @@ function createExperiencesInsertQuery(
   payload: ExperiencePayload,
 ): QueryWithParams {
   const {
-    name,
+    title,
     address,
     city,
     state,
@@ -249,11 +251,11 @@ function createExperiencesInsertQuery(
   } = payload;
   return {
     sql: `INSERT INTO experiences (
-             content_id, name, address, city, state, venue_id, country, latitude, longitude, price_level
+             content_id, title, address, city, state, venue_id, country, latitude, longitude, price_level
            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
     values: [
       CONTENT_ID_PLACEHOLDER,
-      name,
+      title,
       address,
       city,
       state ?? null,
@@ -296,6 +298,11 @@ async function executeContentTransaction(
   queries: QueryWithParams[],
 ): Promise<void> {
   const contentWriteResults = await db.query(queries[0].sql, queries[0].values);
+
+  if (!contentWriteResults.rows.length) {
+    throw new Error('Content table insert did not return an ID.');
+  }
+
   const contentId = contentWriteResults.rows[0].content_id;
   for (let i = 1; i < queries.length; i++) {
     const query = queries[i];

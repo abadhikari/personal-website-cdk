@@ -36,7 +36,7 @@ describe('content write handler', () => {
   const VALID_FOOD_AND_DRINK_BODY = {
     category_id: 4,
     payload: {
-      name: 'Sushi Place',
+      title: 'Sushi Place',
       address: '123 Main St',
       city: 'NYC',
       venue_id: 1,
@@ -51,7 +51,7 @@ describe('content write handler', () => {
   const VALID_ENTERTAINMENT_BODY = {
     category_id: 5,
     payload: {
-      name: 'Carnegie Hall',
+      title: 'Carnegie Hall',
       address: '123 Main St',
       city: 'NYC',
       venue_id: 3,

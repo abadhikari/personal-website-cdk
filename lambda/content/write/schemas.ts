@@ -18,9 +18,9 @@ export const baseRequestSchema = Joi.object({
 });
 
 export const experienceSchema = Joi.object({
-  name: Joi.string().required().messages({
-    'string.base': 'name must be a string',
-    'any.required': 'name is required',
+  title: Joi.string().required().messages({
+    'string.base': 'title must be a string',
+    'any.required': 'title is required',
   }),
   address: Joi.string().required().messages({
     'string.base': 'address must be a string',
