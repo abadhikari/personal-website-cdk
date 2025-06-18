@@ -127,6 +127,7 @@ npm run test
 The tests use the AWS CDK assertions library to ensure that resources such as the VPC, RDS DB instance, Secrets Manager secret, API Gateway, and DB subnet group are configured as expected.
 
 ### Updating Snapshots
+
 If you’ve made legitimate changes to the stack and want to update the stored snapshot:
 
 ```bash
