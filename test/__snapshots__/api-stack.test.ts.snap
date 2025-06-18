@@ -1,0 +1,1524 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ApiStack – single snapshot + invariants matches snapshot and enforces auth + wiring rules 1`] = `
+{
+  "Outputs": {
+    "SiteApiApiGatewayRestApiEndpoint8C340DAF": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "SiteApiApiGatewayRestApi2686602D",
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region",
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix",
+            },
+            "/",
+            {
+              "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+            },
+            "/",
+          ],
+        ],
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "ApiAuthorizer68095F41": {
+      "Properties": {
+        "IdentitySource": "method.request.header.Authorization",
+        "Name": "ApiApiAuthorizer151366AF",
+        "ProviderARNs": [
+          {
+            "Fn::ImportValue": "Auth:ExportsOutputFnGetAttAdminAuthCognitoUserPoolBC6FC715ArnBDAA87AB",
+          },
+        ],
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+        "Type": "COGNITO_USER_POOLS",
+      },
+      "Type": "AWS::ApiGateway::Authorizer",
+    },
+    "BasePathMappingF35F2767": {
+      "Properties": {
+        "BasePath": "",
+        "DomainName": {
+          "Ref": "CustomDomain21DD44B6",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+        "Stage": {
+          "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+        },
+      },
+      "Type": "AWS::ApiGateway::BasePathMapping",
+    },
+    "CustomDomain21DD44B6": {
+      "Properties": {
+        "DomainName": "api.abhinnaadhikari.com",
+        "EndpointConfiguration": {
+          "Types": [
+            "REGIONAL",
+          ],
+        },
+        "RegionalCertificateArn": "arn:aws:acm:us-east-1:509399600387:certificate/d3fa4275-808f-433d-a78c-be107c519407",
+      },
+      "Type": "AWS::ApiGateway::DomainName",
+    },
+    "SiteApiApiGatewayRestApi2686602D": {
+      "Properties": {
+        "Description": "Central API for abhinnaadhikari.com website endpoints",
+        "Name": "AbhinnaAdhikariApi",
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "SiteApiApiGatewayRestApiAccount20479701": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "SiteApiApiGatewayRestApi2686602D",
+      ],
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "SiteApiApiGatewayRestApiCloudWatchRole8D6DA793",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ApiGateway::Account",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SiteApiApiGatewayRestApiCloudWatchRole8D6DA793": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "SiteApiApiGatewayRestApiDeployment4249AC8Aa37cec68e0d45d833f5b1f50c4bd8221": {
+      "DependsOn": [
+        "SiteApiApiGatewayRestApiOPTIONSE33872A9",
+        "SiteApiApiGatewayRestApiv1contentOPTIONS35E15A34",
+        "SiteApiApiGatewayRestApiv1contentPOST1FBB7691",
+        "SiteApiApiGatewayRestApiv1content704A0DAE",
+        "SiteApiApiGatewayRestApiv1contentsGET15701874",
+        "SiteApiApiGatewayRestApiv1contentsOPTIONS2B5397A7",
+        "SiteApiApiGatewayRestApiv1contents0641FA01",
+        "SiteApiApiGatewayRestApiv1mediaDELETEC15FA4D9",
+        "SiteApiApiGatewayRestApiv1mediaOPTIONSBDDA2514",
+        "SiteApiApiGatewayRestApiv1mediaD83F5FBB",
+        "SiteApiApiGatewayRestApiv1mediauploadurlOPTIONSFFBA557F",
+        "SiteApiApiGatewayRestApiv1mediauploadurlPOST902E8D0D",
+        "SiteApiApiGatewayRestApiv1mediauploadurl5F22BCAC",
+        "SiteApiApiGatewayRestApiv1OPTIONSC74490D7",
+        "SiteApiApiGatewayRestApiv1ACCB980D",
+        "SiteApiApiGatewayRestApiv1stackGET433914F7",
+        "SiteApiApiGatewayRestApiv1stackOPTIONS434E5E8F",
+        "SiteApiApiGatewayRestApiv1stackPATCHBB6B17E7",
+        "SiteApiApiGatewayRestApiv1stackPOST545E3144",
+        "SiteApiApiGatewayRestApiv1stack2EC88AE9",
+        "SiteApiApiGatewayRestApiv1stacksGET51C5DBBB",
+        "SiteApiApiGatewayRestApiv1stacksOPTIONS7A4CD522",
+        "SiteApiApiGatewayRestApiv1stacks8FB6C6CF",
+      ],
+      "Properties": {
+        "Description": "Central API for abhinnaadhikari.com website endpoints",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A": {
+      "DependsOn": [
+        "SiteApiApiGatewayRestApiAccount20479701",
+      ],
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "SiteApiApiGatewayRestApiDeployment4249AC8Aa37cec68e0d45d833f5b1f50c4bd8221",
+        },
+        "MethodSettings": [
+          {
+            "DataTraceEnabled": false,
+            "HttpMethod": "*",
+            "ResourcePath": "/*",
+            "ThrottlingBurstLimit": 20,
+            "ThrottlingRateLimit": 5,
+          },
+        ],
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+        "StageName": "prod",
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "SiteApiApiGatewayRestApiOPTIONSE33872A9": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Fn::GetAtt": [
+            "SiteApiApiGatewayRestApi2686602D",
+            "RootResourceId",
+          ],
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1ACCB980D": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "SiteApiApiGatewayRestApi2686602D",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "v1",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1OPTIONSC74490D7": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1content704A0DAE": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "content",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1contentOPTIONS35E15A34": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1content704A0DAE",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1contentPOST1FBB7691": {
+      "Properties": {
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "ApiAuthorizer68095F41",
+        },
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttWriteContentLambdaLambdaNodeFunction72021AF0Arn8F56DC93",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1content704A0DAE",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1contentPOSTApiPermissionApiSiteApiApiGatewayRestApi966AF9F8POSTv1contentA22FAC5C": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttWriteContentLambdaLambdaNodeFunction72021AF0Arn8F56DC93",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/POST/v1/content",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1contentPOSTApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8POSTv1contentA787BFB1": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttWriteContentLambdaLambdaNodeFunction72021AF0Arn8F56DC93",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/POST/v1/content",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1contents0641FA01": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "contents",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1contentsGET15701874": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadContentsLambdaLambdaNodeFunction9F79202CArnB143FE97",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1contents0641FA01",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1contentsGETApiPermissionApiSiteApiApiGatewayRestApi966AF9F8GETv1contents8D7902B4": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadContentsLambdaLambdaNodeFunction9F79202CArnB143FE97",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/GET/v1/contents",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1contentsGETApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8GETv1contents3EE9CC93": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadContentsLambdaLambdaNodeFunction9F79202CArnB143FE97",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/GET/v1/contents",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1contentsOPTIONS2B5397A7": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1contents0641FA01",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1mediaD83F5FBB": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "media",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1mediaDELETEApiPermissionApiSiteApiApiGatewayRestApi966AF9F8DELETEv1media97F0F7C0": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttDeleteMediaLambdaLambdaNodeFunctionE0132D0CArn6E514775",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/DELETE/v1/media",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1mediaDELETEApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8DELETEv1media4879EF09": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttDeleteMediaLambdaLambdaNodeFunctionE0132D0CArn6E514775",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/DELETE/v1/media",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1mediaDELETEC15FA4D9": {
+      "Properties": {
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "ApiAuthorizer68095F41",
+        },
+        "HttpMethod": "DELETE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Photos:ExportsOutputFnGetAttDeleteMediaLambdaLambdaNodeFunctionE0132D0CArn6E514775",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1mediaD83F5FBB",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1mediaOPTIONSBDDA2514": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1mediaD83F5FBB",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1mediauploadurl5F22BCAC": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1mediaD83F5FBB",
+        },
+        "PathPart": "upload-url",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1mediauploadurlOPTIONSFFBA557F": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1mediauploadurl5F22BCAC",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1mediauploadurlPOST902E8D0D": {
+      "Properties": {
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "ApiAuthorizer68095F41",
+        },
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Photos:ExportsOutputFnGetAttGenerateSignedMediaUrlLambdaLambdaNodeFunction1363B525Arn8B5DEA58",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1mediauploadurl5F22BCAC",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1mediauploadurlPOSTApiPermissionApiSiteApiApiGatewayRestApi966AF9F8POSTv1mediauploadurlBBDBD66A": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttGenerateSignedMediaUrlLambdaLambdaNodeFunction1363B525Arn8B5DEA58",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/POST/v1/media/upload-url",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1mediauploadurlPOSTApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8POSTv1mediauploadurl7F38DDF7": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttGenerateSignedMediaUrlLambdaLambdaNodeFunction1363B525Arn8B5DEA58",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/POST/v1/media/upload-url",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stack2EC88AE9": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "stack",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1stackGET433914F7": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Photos:ExportsOutputFnGetAttReadStackLambdaLambdaNodeFunctionF3A738F1ArnF760C82B",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1stack2EC88AE9",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1stackGETApiPermissionApiSiteApiApiGatewayRestApi966AF9F8GETv1stackE5E39CD1": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttReadStackLambdaLambdaNodeFunctionF3A738F1ArnF760C82B",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/GET/v1/stack",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stackGETApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8GETv1stackD309D19B": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttReadStackLambdaLambdaNodeFunctionF3A738F1ArnF760C82B",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/GET/v1/stack",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stackOPTIONS434E5E8F": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1stack2EC88AE9",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1stackPATCHApiPermissionApiSiteApiApiGatewayRestApi966AF9F8PATCHv1stackEED79CC6": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttEditStackMetadataLambdaLambdaNodeFunctionFAB5D4A8Arn4814D20F",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/PATCH/v1/stack",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stackPATCHApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8PATCHv1stackB2985C37": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttEditStackMetadataLambdaLambdaNodeFunctionFAB5D4A8Arn4814D20F",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/PATCH/v1/stack",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stackPATCHBB6B17E7": {
+      "Properties": {
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "ApiAuthorizer68095F41",
+        },
+        "HttpMethod": "PATCH",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Photos:ExportsOutputFnGetAttEditStackMetadataLambdaLambdaNodeFunctionFAB5D4A8Arn4814D20F",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1stack2EC88AE9",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1stackPOST545E3144": {
+      "Properties": {
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "ApiAuthorizer68095F41",
+        },
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Photos:ExportsOutputFnGetAttWriteStackLambdaLambdaNodeFunction68AC7CA2Arn27CD2DA9",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1stack2EC88AE9",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1stackPOSTApiPermissionApiSiteApiApiGatewayRestApi966AF9F8POSTv1stack12A91860": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttWriteStackLambdaLambdaNodeFunction68AC7CA2Arn27CD2DA9",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/POST/v1/stack",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stackPOSTApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8POSTv1stackD24AB277": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttWriteStackLambdaLambdaNodeFunction68AC7CA2Arn27CD2DA9",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/POST/v1/stack",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stacks8FB6C6CF": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "stacks",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1stacksGET51C5DBBB": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Photos:ExportsOutputFnGetAttReadStacksLambdaLambdaNodeFunction7483E2A3Arn5705DD9E",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1stacks8FB6C6CF",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1stacksGETApiPermissionApiSiteApiApiGatewayRestApi966AF9F8GETv1stacks000D97C6": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttReadStacksLambdaLambdaNodeFunction7483E2A3Arn5705DD9E",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/GET/v1/stacks",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stacksGETApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8GETv1stacks75D949B9": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Photos:ExportsOutputFnGetAttReadStacksLambdaLambdaNodeFunction7483E2A3Arn5705DD9E",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/GET/v1/stacks",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1stacksOPTIONS7A4CD522": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1stacks8FB6C6CF",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

@@ -42,4 +42,7 @@ new ApiStack(app, 'ApiStack', {
   content: {
     writeLambda: reviewsPageStack.writeContentLambda,
   },
+  contents: {
+    readLambda: reviewsPageStack.readContentsLambda,
+  },
 });

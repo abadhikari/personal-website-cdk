@@ -29,7 +29,12 @@ export interface ApiStackProps extends StackProps {
   content: {
     writeLambda: LambdaNodeFunction;
   };
+  contents: {
+    readLambda: LambdaNodeFunction;
+  };
 }
+
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 /**
  * ApiStack sets up the backend infrastructure for all things
@@ -63,6 +68,7 @@ export class ApiStack extends Stack {
       },
     });
 
+    // Setup custom domain for api
     this.certificate = Certificate.fromCertificateArn(
       this,
       'ApiCert',
@@ -80,70 +86,58 @@ export class ApiStack extends Stack {
       basePath: '',
     });
 
+    // Configure authorizer for authentication
     this.authorizer = new CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
       cognitoUserPools: [props.adminPool.userPool],
     });
 
-    this.restApi.addLambdaIntegration(
-      props.media.deleteLambda.function,
-      '/v1/media',
-      'DELETE',
-      {
-        authorizer: this.authorizer,
-        authorizationType: AuthorizationType.COGNITO,
-      },
-    );
-
-    this.restApi.addLambdaIntegration(
-      props.stack.editLambda.function,
-      '/v1/stack',
-      'PATCH',
-      {
-        authorizer: this.authorizer,
-        authorizationType: AuthorizationType.COGNITO,
-      },
-    );
-
-    this.restApi.addLambdaIntegration(
-      props.stack.readLambda.function,
-      '/v1/stack',
-      'GET',
-    );
-
-    this.restApi.addLambdaIntegration(
-      props.stacks.readLambda.function,
-      '/v1/stacks',
-      'GET',
-    );
-
-    this.restApi.addLambdaIntegration(
-      props.stack.writeLambda.function,
-      '/v1/stack',
+    // media
+    this.addLambdaRoute(props.media.deleteLambda, '/v1/media', 'DELETE');
+    this.addLambdaRoute(
+      props.media.generateSignedUrlsLambda,
+      '/v1/media/upload-url',
       'POST',
-      {
-        authorizer: this.authorizer,
-        authorizationType: AuthorizationType.COGNITO,
-      },
     );
 
-    this.restApi.addLambdaIntegration(
-      props.media.generateSignedUrlsLambda.function,
-      'v1/media/upload-url',
-      'POST',
-      {
-        authorizer: this.authorizer,
-        authorizationType: AuthorizationType.COGNITO,
-      },
-    );
+    // stacks
+    this.addLambdaRoute(props.stack.editLambda, '/v1/stack', 'PATCH');
+    this.addLambdaRoute(props.stack.readLambda, '/v1/stack', 'GET');
+    this.addLambdaRoute(props.stack.writeLambda, '/v1/stack', 'POST');
 
-    this.restApi.addLambdaIntegration(
-      props.content.writeLambda.function,
-      'v1/content',
-      'POST',
-      {
-        authorizer: this.authorizer,
-        authorizationType: AuthorizationType.COGNITO,
-      },
+    // stack
+    this.addLambdaRoute(props.stacks.readLambda, '/v1/stacks', 'GET');
+
+    // content
+    this.addLambdaRoute(props.content.writeLambda, '/v1/content', 'POST');
+
+    // contents
+    this.addLambdaRoute(props.contents.readLambda, '/v1/contents', 'GET');
+  }
+
+  /**
+   * Adds a Lambda integration to the API Gateway.
+   *
+   * Automatically applies Cognito authentication for all mutating methods
+   * (POST, PATCH, PUT, DELETE), and leaves GET routes unauthenticated by default.
+   *
+   * @param lambda - The Lambda function to integrate with the API Gateway route.
+   * @param path - The REST path for the route (e.g. '/v1/media').
+   * @param method - The HTTP method for the route (e.g. 'GET', 'POST').
+   */
+  private addLambdaRoute(
+    lambda: LambdaNodeFunction,
+    path: string,
+    method: HttpMethod,
+  ) {
+    const requiresAuthentication = ['POST', 'PATCH', 'DELETE', 'PUT'].includes(
+      method,
     );
+    const options = requiresAuthentication
+      ? {
+          authorizer: this.authorizer,
+          authorizationType: AuthorizationType.COGNITO,
+        }
+      : {};
+    this.restApi.addLambdaIntegration(lambda.function, path, method, options);
   }
 }

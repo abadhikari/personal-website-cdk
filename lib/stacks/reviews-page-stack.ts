@@ -52,7 +52,15 @@ export class ReviewsPageStack extends Stack {
    */
   private readonly databaseAdminQueryLambda: LambdaNodeFunction;
 
+  /**
+   * The Lambda function responsible for writing content to database.
+   */
   public readonly writeContentLambda: LambdaNodeFunction;
+
+  /**
+   * The Lambda function responsible for reading contents from database.
+   */
+  public readonly readContentsLambda: LambdaNodeFunction;
 
   constructor(scope: Construct, id: string, props: ReviewsPageStackProps) {
     super(scope, id, props);
@@ -127,7 +135,6 @@ export class ReviewsPageStack extends Stack {
       },
     );
 
-    // Allow Lambda to query the database
     this.grantLambdaDbAccess(this.databaseAdminQueryLambda);
 
     this.writeContentLambda = new LambdaNodeFunction(
@@ -148,6 +155,25 @@ export class ReviewsPageStack extends Stack {
     );
 
     this.grantLambdaDbAccess(this.writeContentLambda);
+
+    this.readContentsLambda = new LambdaNodeFunction(
+      this,
+      'ReadContentsLambda',
+      {
+        functionName: 'reviews_page_read_contents_v1',
+        runtime: Runtime.NODEJS_20_X,
+        entry: 'lambda/contents/read/index.ts',
+        handler: 'handler',
+        securityGroups: [lambdaToRdsSecurityGroup],
+        vpc: this.reviewsVpc.vpc,
+        environment: {
+          DB_SECRET_ARN: this.rdsCredentialsSecret.secret.secretArn,
+          ORIGIN_ALLOWLIST: serializedOriginAllowList,
+        },
+      },
+    );
+
+    this.grantLambdaDbAccess(this.readContentsLambda);
   }
 
   /**

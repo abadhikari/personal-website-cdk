@@ -126,6 +126,15 @@ npm run test
 
 The tests use the AWS CDK assertions library to ensure that resources such as the VPC, RDS DB instance, Secrets Manager secret, API Gateway, and DB subnet group are configured as expected.
 
+### Updating Snapshots
+If you’ve made legitimate changes to the stack and want to update the stored snapshot:
+
+```bash
+npm run test -- -u
+```
+
+This will regenerate the stored snapshot with the current CloudFormation output from your CDK stack. Only do this if you're confident the changes are expected.
+
 ## cdk.context.json
 
 During synthesis, AWS CDK automatically generates a `cdk.context.json` file that caches environment context (such as VPC details, available AZs, etc.). This file helps speed up subsequent syntheses and deployments. It is safe to commit this file to source control if you want consistent deployments.

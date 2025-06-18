@@ -5,165 +5,52 @@ import { AuthStack } from '../lib/stacks/auth-stack';
 import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
 import { ReviewsPageStack } from '../lib/stacks/reviews-page-stack';
 
-describe('ApiStack Tests', () => {
-  let app: cdk.App;
-  let authStack: AuthStack;
-  let photosPageStack: PhotosPageStack;
-  let reviewsPageStack: ReviewsPageStack;
-  let stack: ApiStack;
-  let template: Template;
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+const mutating: readonly HttpMethod[] = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
-  beforeEach(() => {
-    app = new cdk.App();
-    authStack = new AuthStack(app, 'TestAuthStack', {});
-    photosPageStack = new PhotosPageStack(app, 'TestPhotosPageStack', {});
-    reviewsPageStack = new ReviewsPageStack(app, 'TestReviewsPageStack', {});
-    stack = new ApiStack(app, 'TestApiStack', {
-      adminPool: authStack.adminPool,
-      media: {
-        generateSignedUrlsLambda: photosPageStack.generateSignedMediaUrlsLambda,
-        deleteLambda: photosPageStack.deleteMediaLambda,
-      },
-      stack: {
-        writeLambda: photosPageStack.writeStackLambda,
-        readLambda: photosPageStack.readStackLambda,
-        editLambda: photosPageStack.editStackMetadataLambda,
-      },
-      stacks: {
-        readLambda: photosPageStack.readStacksLambda,
-      },
-      content: {
-        writeLambda: reviewsPageStack.writeContentLambda,
-      },
-    });
-    template = Template.fromStack(stack);
+describe('ApiStack – single snapshot + invariants', () => {
+  const app = new cdk.App();
+
+  const auth = new AuthStack(app, 'Auth', {});
+  const photos = new PhotosPageStack(app, 'Photos', {});
+  const reviews = new ReviewsPageStack(app, 'Reviews', {});
+
+  const api = new ApiStack(app, 'Api', {
+    adminPool: auth.adminPool,
+    media: {
+      generateSignedUrlsLambda: photos.generateSignedMediaUrlsLambda,
+      deleteLambda: photos.deleteMediaLambda,
+    },
+    stack: {
+      writeLambda: photos.writeStackLambda,
+      readLambda: photos.readStackLambda,
+      editLambda: photos.editStackMetadataLambda,
+    },
+    stacks: { readLambda: photos.readStacksLambda },
+    content: { writeLambda: reviews.writeContentLambda },
+    contents: { readLambda: reviews.readContentsLambda },
   });
 
-  test('Creates an API Gateway RestApi with CORS configuration', () => {
+  const template = Template.fromStack(api);
+
+  it('matches snapshot and enforces auth + wiring rules', () => {
+    expect(template.toJSON()).toMatchSnapshot();
+
     template.hasResourceProperties('AWS::ApiGateway::RestApi', {
       Name: 'AbhinnaAdhikariApi',
       Description: 'Central API for abhinnaadhikari.com website endpoints',
     });
 
-    template.hasResourceProperties('AWS::ApiGateway::Method', {
-      HttpMethod: 'OPTIONS',
-      RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
-    });
-  });
+    const methods = template.findResources('AWS::ApiGateway::Method');
+    for (const methodRes of Object.values(methods)) {
+      const http = methodRes.Properties.HttpMethod as HttpMethod;
+      const authType = methodRes.Properties.AuthorizationType;
 
-  test('Integrates Read Lambda with API Gateway', () => {
-    template.hasResourceProperties('AWS::ApiGateway::Method', {
-      HttpMethod: 'GET',
-      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1stacks8FB6C6CF' },
-      RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
-      Integration: {
-        Type: 'AWS_PROXY',
-        Uri: {
-          'Fn::Join': [
-            '',
-            [
-              'arn:',
-              { Ref: 'AWS::Partition' },
-              ':apigateway:',
-              { Ref: 'AWS::Region' },
-              ':lambda:path/2015-03-31/functions/',
-              {
-                'Fn::ImportValue':
-                  'TestPhotosPageStack:ExportsOutputFnGetAttReadStacksLambdaLambdaNodeFunction7483E2A3Arn5705DD9E',
-              },
-              '/invocations',
-            ],
-          ],
-        },
-      },
-    });
-  });
-
-  test('Integrates Write Lambda with API Gateway', () => {
-    template.hasResourceProperties('AWS::ApiGateway::Method', {
-      HttpMethod: 'POST',
-      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1stack2EC88AE9' },
-      RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
-      Integration: {
-        Type: 'AWS_PROXY',
-        Uri: {
-          'Fn::Join': [
-            '',
-            [
-              'arn:',
-              { Ref: 'AWS::Partition' },
-              ':apigateway:',
-              { Ref: 'AWS::Region' },
-              ':lambda:path/2015-03-31/functions/',
-              {
-                'Fn::ImportValue':
-                  'TestPhotosPageStack:ExportsOutputFnGetAttWriteStackLambdaLambdaNodeFunction68AC7CA2Arn27CD2DA9',
-              },
-              '/invocations',
-            ],
-          ],
-        },
-      },
-    });
-  });
-
-  test('Integrates GetSignedUrls Lambda with API Gateway', () => {
-    template.hasResourceProperties('AWS::ApiGateway::Method', {
-      HttpMethod: 'POST',
-      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1mediauploadurl5F22BCAC' },
-      RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
-      Integration: {
-        Type: 'AWS_PROXY',
-        Uri: {
-          'Fn::Join': [
-            '',
-            [
-              'arn:',
-              { Ref: 'AWS::Partition' },
-              ':apigateway:',
-              { Ref: 'AWS::Region' },
-              ':lambda:path/2015-03-31/functions/',
-              {
-                'Fn::ImportValue':
-                  'TestPhotosPageStack:ExportsOutputFnGetAttGenerateSignedMediaUrlLambdaLambdaNodeFunction1363B525Arn8B5DEA58',
-              },
-              '/invocations',
-            ],
-          ],
-        },
-      },
-    });
-  });
-
-  test('Integrates Delete Lambda with API Gateway', () => {
-    template.hasResourceProperties('AWS::ApiGateway::Method', {
-      HttpMethod: 'DELETE',
-      ResourceId: { Ref: 'SiteApiApiGatewayRestApiv1mediaD83F5FBB' },
-      RestApiId: { Ref: 'SiteApiApiGatewayRestApi2686602D' },
-      AuthorizationType: 'COGNITO_USER_POOLS',
-      AuthorizerId: {
-        Ref: 'ApiAuthorizer68095F41',
-      },
-      Integration: {
-        Type: 'AWS_PROXY',
-        Uri: {
-          'Fn::Join': [
-            '',
-            [
-              'arn:',
-              { Ref: 'AWS::Partition' },
-              ':apigateway:',
-              { Ref: 'AWS::Region' },
-              ':lambda:path/2015-03-31/functions/',
-              {
-                'Fn::ImportValue':
-                  'TestPhotosPageStack:ExportsOutputFnGetAttDeleteMediaLambdaLambdaNodeFunctionE0132D0CArn6E514775',
-              },
-              '/invocations',
-            ],
-          ],
-        },
-      },
-    });
+      if (mutating.includes(http)) {
+        expect(authType).toBe('COGNITO_USER_POOLS');
+      } else {
+        expect(authType).not.toBe('COGNITO_USER_POOLS');
+      }
+    }
   });
 });
