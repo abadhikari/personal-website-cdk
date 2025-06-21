@@ -21,7 +21,7 @@ export const ContentCategory = {
   ENTERTAINMENT: 5,
 } as const;
 
-export type ContentCategory =
+export type ContentCategoryType =
   (typeof ContentCategory)[keyof typeof ContentCategory];
 
 export interface QueryWithParams {

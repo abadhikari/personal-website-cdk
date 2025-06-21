@@ -19,8 +19,6 @@ import {
 } from 'aws-cdk-lib/aws-ec2';
 import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 
-export interface ReviewsPageStackProps extends StackProps {}
-
 /**
  * ReviewsPageStack sets up the backend infrastructure for the reviews page
  * of abhinnaadhikari.com.
@@ -67,7 +65,7 @@ export class ReviewsPageStack extends Stack {
    */
   public readonly writeReviewLambda: LambdaNodeFunction;
 
-  constructor(scope: Construct, id: string, props: ReviewsPageStackProps) {
+  constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
     // VPC

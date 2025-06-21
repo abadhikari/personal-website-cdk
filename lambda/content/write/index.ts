@@ -1,9 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { createResponse } from '../../common/createResponse';
-import { ValidationError } from '../../common/errors';
-import { getConfig } from './config';
+import { createResponse } from '@lambda/common/createResponse';
+import { ValidationError } from '@lambda/common/errors';
+import { getConfig } from '@lambda/common/config/publicDatabase';
 import { baseRequestSchema, retrieveSchemaForCategory } from './schemas';
-import { ContentCategory, QueryWithParams } from '@lambda/common/types';
+import {
+  ContentCategory,
+  ContentCategoryType,
+  QueryWithParams,
+} from '@lambda/common/types';
 import {
   executeAtomicTransaction,
   getDbClient,
@@ -23,7 +27,7 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
  * @property payload - The validated content-specific payload to write.
  */
 export interface RequestBody<T = any> {
-  category_id: ContentCategory;
+  category_id: ContentCategoryType;
   payload: T;
 }
 
@@ -147,16 +151,14 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
  * @throws ValidationError - If the category is unsupported.
  */
 export function createWriteContentQueries(
-  category_id: ContentCategory,
+  category_id: ContentCategoryType,
   payload: any,
 ): QueryWithParams[] {
   switch (category_id) {
     case ContentCategory.FOOD_AND_DRINK:
-      const foodAndDrinkPayload = payload as ExperiencePayload;
-      return buildFoodAndDrinkQuery(category_id, foodAndDrinkPayload);
+      return buildFoodAndDrinkQuery(category_id, payload as ExperiencePayload);
     case ContentCategory.ENTERTAINMENT:
-      const entertainmentPayload = payload as ExperiencePayload;
-      return buildEntertainmentQuery(category_id, entertainmentPayload);
+      return buildEntertainmentQuery(category_id, payload as ExperiencePayload);
 
     default:
       throw new ValidationError(`Unsupported category_id: ${category_id}`);
@@ -171,7 +173,7 @@ export function createWriteContentQueries(
  * @returns Query list for content, experience, and cuisine inserts.
  */
 function buildFoodAndDrinkQuery(
-  category_id: ContentCategory,
+  category_id: ContentCategoryType,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
   const { cuisine_ids = [], title } = payload;
@@ -199,7 +201,7 @@ function buildFoodAndDrinkQuery(
  * @returns Query list for content and experience inserts.
  */
 function buildEntertainmentQuery(
-  category_id: ContentCategory,
+  category_id: ContentCategoryType,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
   const queries: QueryWithParams[] = [];
@@ -219,7 +221,7 @@ function buildEntertainmentQuery(
  * @returns A parameterized SQL insert query with RETURNING clause.
  */
 function createContentInsertQuery(
-  category_id: ContentCategory,
+  category_id: ContentCategoryType,
   title: string,
 ): QueryWithParams {
   return {

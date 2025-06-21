@@ -15,8 +15,6 @@ import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 
-export interface PhotosPageStackProps extends StackProps {}
-
 /**
  * PhotosPageStack sets up the backend infrastructure for the photo page
  * of abhinnaadhikari.com.
@@ -83,7 +81,7 @@ export class PhotosPageStack extends Stack {
    */
   public readonly editStackMetadataLambda: LambdaNodeFunction;
 
-  constructor(scope: Construct, id: string, props: PhotosPageStackProps) {
+  constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
     // S3 Bucket

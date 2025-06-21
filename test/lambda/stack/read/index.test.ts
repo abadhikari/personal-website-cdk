@@ -1,43 +1,34 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
-function createMockEvent(
-  queryStringParameters: any,
-): Partial<APIGatewayProxyEvent> {
-  return {
-    queryStringParameters,
-    httpMethod: 'GET',
-    headers: { Origin: 'http://localhost:3000' },
-  };
-}
+const dynamoDbSendMock = jest.fn();
+
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+  DynamoDBClient: jest.fn(),
+}));
+
+jest.mock('@aws-sdk/lib-dynamodb', () => ({
+  DynamoDBDocumentClient: {
+    from: () => ({
+      send: dynamoDbSendMock,
+    }),
+  },
+  GetCommand: jest.fn((params) => ({ input: params })),
+  QueryCommand: jest.fn((params) => ({ input: params })),
+}));
 
 describe('Read Single Stack Lambda Function Tests', () => {
-  let dynamoDbSendMock: jest.Mock;
   let handler: any;
 
   beforeEach(() => {
     jest.resetModules();
+    jest.clearAllMocks();
 
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
     process.env.MEDIA_METADATA_GSI = 'StackIdIndex';
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
-
-    dynamoDbSendMock = jest.fn();
-
-    jest.mock('@aws-sdk/client-dynamodb', () => ({
-      DynamoDBClient: jest.fn(),
-    }));
-
-    jest.mock('@aws-sdk/lib-dynamodb', () => ({
-      DynamoDBDocumentClient: {
-        from: () => ({
-          send: dynamoDbSendMock,
-        }),
-      },
-      GetCommand: jest.fn((params) => ({ input: params })),
-      QueryCommand: jest.fn((params) => ({ input: params })),
-    }));
 
     handler = require('@lambda/stack/read/index').handler;
   });
@@ -58,7 +49,7 @@ describe('Read Single Stack Lambda Function Tests', () => {
     ];
 
     dynamoDbSendMock.mockImplementation((command) => {
-      const { TableName, Key } = command.input;
+      const { TableName } = command.input;
       if (TableName === 'StackMetadataTable') {
         return Promise.resolve({ Item: stackItem });
       }
@@ -68,57 +59,95 @@ describe('Read Single Stack Lambda Function Tests', () => {
       return Promise.resolve({});
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackId: 'stack1',
-    });
-    const response = await handler(event);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackId: 'stack1',
+        },
+      }),
+    );
 
-    expect(response.statusCode).toBe(200);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(200);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.stackAndMediaData.stack).toEqual(stackItem);
     expect(responseBody.stackAndMediaData.media).toEqual(mediaItems);
   });
 
+  test('returns 403 when Origin is not allow‑listed', async () => {
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: INVALID_ORIGIN },
+      }),
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toBe('Forbidden: Invalid origin');
+  });
+
   test('should return 404 if stack is not found', async () => {
     dynamoDbSendMock.mockResolvedValue({ Item: undefined });
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackId: 'nonexistent',
-    });
-    const response = await handler(event);
 
-    expect(response.statusCode).toBe(404);
-    expect(JSON.parse(response.body).message).toMatch(/Stack not found/);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackId: 'nonexistant',
+        },
+      }),
+    );
+
+    expect(res.statusCode).toBe(404);
+    expect(JSON.parse(res.body).message).toMatch(/Stack not found/);
   });
 
   test('should return 500 if DynamoDB throws error', async () => {
     dynamoDbSendMock.mockRejectedValue(new Error('DynamoDB failure'));
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackId: 'stack1',
-    });
-    const response = await handler(event);
 
-    expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).message).toMatch(/Internal server error/);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackId: 'stack1',
+        },
+      }),
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body).message).toMatch(/Internal server error/);
   });
 
   test('should return 400 if query parameters are missing', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
-    const response = await handler(event);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+      }),
+    );
 
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toMatch(
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toMatch(
       /Query parameters are missing/,
     );
   });
 
   test('should return 400 if stackId is not valid', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackId: '',
-    });
-    const response = await handler(event);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackId: '',
+        },
+      }),
+    );
 
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toMatch(
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toMatch(
       'Invalid request: "stackId" is not allowed to be empty',
     );
   });

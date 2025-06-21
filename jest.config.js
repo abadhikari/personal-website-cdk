@@ -10,6 +10,7 @@ module.exports = {
   coverageReporters: ['text', 'html'],
   moduleNameMapper: {
     '^@lambda/(.*)$': '<rootDir>/lambda/$1',
+    '^@test-helpers/(.*)$': '<rootDir>/test/test-helpers/$1',
   },
   collectCoverageFrom: [
     'lib/**/*.ts',

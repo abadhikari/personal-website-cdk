@@ -13,43 +13,25 @@ describe('ReviewsPageStack Tests', () => {
     template = Template.fromStack(stack);
   });
 
-  test('VPC is created with the expected configuration', () => {
-    template.resourceCountIs('AWS::EC2::VPC', 1);
-    template.hasResourceProperties('AWS::EC2::VPC', {
-      CidrBlock: '10.0.0.0/16',
-    });
+  test('matches snapshot', () => {
+    expect(template.toJSON()).toMatchSnapshot();
   });
 
-  test('RDS DB Instance is created', () => {
-    template.resourceCountIs('AWS::RDS::DBInstance', 1);
+  test('only isolated subnets are created', () => {
+    const subnets = template.findResources('AWS::EC2::Subnet');
+    expect(Object.keys(subnets).length).toBeGreaterThan(0);
+
+    for (const subnet of Object.values(subnets)) {
+      const tags = subnet.Properties.Tags;
+      const subnetTypeTag = tags?.find((tag: any) => tag.Key === 'aws-cdk:subnet-type');
+      expect(subnetTypeTag?.Value).toEqual('Isolated');
+    }
+  });
+
+  test('creates RDS instance with correct config', () => {
     template.hasResourceProperties('AWS::RDS::DBInstance', {
       DBInstanceClass: 'db.t4g.micro',
       Engine: 'postgres',
     });
-  });
-
-  test('Secrets Manager secret is created', () => {
-    template.resourceCountIs('AWS::SecretsManager::Secret', 1);
-  });
-
-  test('RDS Subnet Group is created with the correct configuration', () => {
-    template.resourceCountIs('AWS::RDS::DBSubnetGroup', 1);
-    template.hasResourceProperties('AWS::RDS::DBSubnetGroup', {
-      DBSubnetGroupDescription: 'Subnet group for Rds database',
-    });
-  });
-
-  test('Only isolated subnets are created (no public or private subnets)', () => {
-    const subnets = template.findResources('AWS::EC2::Subnet');
-    expect(Object.keys(subnets).length).toBeGreaterThan(0);
-    for (const subnetId of Object.keys(subnets)) {
-      const subnet = subnets[subnetId];
-      expect(subnet.Properties.Tags).toBeDefined();
-      const subnetTypeTag = subnet.Properties.Tags.find(
-        (tag: any) => tag.Key === 'aws-cdk:subnet-type',
-      );
-      expect(subnetTypeTag).toBeDefined();
-      expect(subnetTypeTag.Value).toEqual('Isolated');
-    }
   });
 });

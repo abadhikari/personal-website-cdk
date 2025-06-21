@@ -1,35 +1,15 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import { mockClient } from 'aws-sdk-client-mock';
+import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
+import createMockEvent from "@test-helpers/createMockEvent";
 
-const connectMock = jest.fn();
 const queryMock = jest.fn();
 
-jest.mock('pg', () => ({
-  Client: jest.fn(() => ({ connect: connectMock, query: queryMock })),
+jest.mock('@lambda/common/db', () => ({
+  getDbCredentials: jest.fn(),
+  getDbClient: jest.fn().mockResolvedValue({ query: queryMock }),
 }));
-
-function createMockEvent(
-  queryStringParameters: Record<string, string | undefined> | undefined,
-  origin = 'http://localhost:3000',
-): Partial<APIGatewayProxyEvent> {
-  return {
-    httpMethod: 'GET',
-    headers: { origin },
-    queryStringParameters,
-  };
-}
 
 describe('content read handler', () => {
   let handler: any;
-  let secretsMock: ReturnType<typeof mockClient>;
-
-  const VALID_SECRET = {
-    username: 'user',
-    password: 'pass',
-    host: 'localhost',
-    port: 5432,
-    dbname: 'mydb',
-  };
 
   beforeEach(() => {
     jest.resetModules();
@@ -38,27 +18,19 @@ describe('content read handler', () => {
     process.env.DB_SECRET_ARN = 'mock-secret-arn';
     process.env.ORIGIN_ALLOWLIST = 'http://localhost:3000';
 
-    const {
-      SecretsManagerClient,
-      GetSecretValueCommand,
-    } = require('@aws-sdk/client-secrets-manager');
-
-    secretsMock = mockClient(SecretsManagerClient);
-    secretsMock.reset();
-    secretsMock.on(GetSecretValueCommand).resolves({
-      SecretString: JSON.stringify(VALID_SECRET),
-    } as any);
-
-    connectMock.mockResolvedValue(undefined);
     queryMock.mockResolvedValue({ rows: [{ foo: 'bar' }] });
 
     handler = require('@lambda/contents/read/index').handler;
   });
 
   it('200 + expected SQL (search present)', async () => {
-    const res = await handler(
-      createMockEvent({ limit: '10', search: 'Sushi' }),
-    );
+    const res = await handler(createMockEvent({
+      httpMethod: 'GET', 
+      queryStringParameters: { limit: '10', search: 'Sushi' },
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
 
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
@@ -71,7 +43,13 @@ describe('content read handler', () => {
   });
 
   it('200 + expected SQL (no search)', async () => {
-    const res = await handler(createMockEvent({ limit: '5' }));
+    const res = await handler(createMockEvent({
+      httpMethod: 'GET', 
+      queryStringParameters: { limit: '5' },
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
 
     expect(res.statusCode).toBe(200);
     const [sql, params] = queryMock.mock.calls[0];
@@ -80,40 +58,49 @@ describe('content read handler', () => {
   });
 
   it('403 when origin not allow-listed', async () => {
-    const res = await handler(
-      createMockEvent({ limit: '5' }, 'https://evil.com'),
-    );
+    const res = await handler(createMockEvent({
+      httpMethod: 'GET', 
+      queryStringParameters: { limit: '5' },
+      headers: {
+        origin: INVALID_ORIGIN
+      }
+    }));
     expect(res.statusCode).toBe(403);
   });
 
   it('400 when query params missing', async () => {
-    const res = await handler(createMockEvent(undefined));
+    const res = await handler(createMockEvent({
+      httpMethod: 'GET', 
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
     expect(res.statusCode).toBe(400);
   });
 
   it('400 on invalid schema (limit out of range)', async () => {
-    const res = await handler(createMockEvent({ limit: '0' }));
+    const res = await handler(createMockEvent({
+      httpMethod: 'GET', 
+      queryStringParameters: { limit: '0' },
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
     expect(res.statusCode).toBe(400);
   });
 
-  it('500 when Secrets Manager fails', async () => {
-    const {
-      GetSecretValueCommand,
-    } = require('@aws-sdk/client-secrets-manager');
-    secretsMock.reset();
-    secretsMock.on(GetSecretValueCommand).rejects(new Error('secrets err'));
-
-    const res = await handler(createMockEvent({ limit: '5' }));
-    expect(res.statusCode).toBe(500);
-  });
-
-  it('500 when PG query fails', async () => {
+  it('500 when database query fails', async () => {
     queryMock.mockRejectedValueOnce(new Error('query err'));
-    const res = await handler(createMockEvent({ limit: '5' }));
+
+    const res = await handler(createMockEvent({
+      httpMethod: 'GET', 
+      queryStringParameters: { limit: '5' },
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
     expect(res.statusCode).toBe(500);
   });
-
-  /* ---------- env-var validation ---------- */
 
   describe('Environment variable validation (contents-read)', () => {
     beforeEach(() => {

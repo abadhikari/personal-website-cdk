@@ -7,8 +7,6 @@ import {
   WEBSITE_DOMAIN,
 } from '../configuration/website-config';
 
-export interface AuthStackProps extends StackProps {}
-
 /**
  * AuthStack sets up the backend infrastructure for all things
  * authentication-related on abhinnaadhikari.com.
@@ -23,7 +21,7 @@ export interface AuthStackProps extends StackProps {}
 export class AuthStack extends Stack {
   public readonly adminPool: CognitoPool;
 
-  constructor(scope: Construct, id: string, props: AuthStackProps) {
+  constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
     // Cognito

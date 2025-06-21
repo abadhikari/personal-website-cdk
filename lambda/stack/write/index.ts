@@ -5,12 +5,12 @@ import {
   PutCommand,
   PutCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
-import { createResponse } from '../../common/createResponse';
-import { ValidationError } from '../../common/errors';
+import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
+import { createResponse } from '@lambda/common/createResponse';
+import { ValidationError } from '@lambda/common/errors';
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
-import { ImagePath } from '../../common/types';
+import { ImagePath } from '@lambda/common/types';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 

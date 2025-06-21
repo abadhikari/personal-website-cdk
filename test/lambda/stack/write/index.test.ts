@@ -1,14 +1,27 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
+import createMockEvent from "@test-helpers/createMockEvent";
 
-function createMockEvent(body: any): Partial<APIGatewayProxyEvent> {
+const dynamoDbSendMock = jest.fn();
+const PutCommandMock = jest.fn();
+
+jest.mock('@aws-sdk/client-dynamodb', () => {
   return {
-    body: body,
-    httpMethod: 'POST',
-    headers: {
-      Origin: 'http://localhost:3000',
-    },
+    DynamoDBClient: jest.fn(),
   };
-}
+});
+
+jest.mock('@aws-sdk/lib-dynamodb', () => {
+  return {
+    DynamoDBDocumentClient: {
+      from: () => ({
+        send: dynamoDbSendMock,
+      }),
+    },
+    PutCommand: PutCommandMock.mockImplementation((params) => ({
+      input: params,
+    })),
+  };
+});
 
 const VALID_INPUT = {
   stackId: 'stack123',
@@ -29,12 +42,11 @@ const VALID_INPUT = {
 };
 
 describe('Write Lambda Handler Tests', () => {
-  let dynamoDbSendMock: jest.Mock;
-  let PutCommandMock: jest.Mock;
   let handler: any;
 
   beforeEach(() => {
     jest.resetModules();
+    jest.clearAllMocks();
 
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
@@ -43,29 +55,6 @@ describe('Write Lambda Handler Tests', () => {
       'http://localhost:3000,https://abhinnaadhikari.com';
     process.env.STACK_METADATA_GSI_PARTITION_KEY = 'ALL_STACKS';
 
-    dynamoDbSendMock = jest.fn();
-    PutCommandMock = jest.fn();
-
-    jest.mock('@aws-sdk/client-dynamodb', () => {
-      return {
-        DynamoDBClient: jest.fn(),
-      };
-    });
-
-    jest.mock('@aws-sdk/lib-dynamodb', () => {
-      return {
-        DynamoDBDocumentClient: {
-          from: () => ({
-            send: dynamoDbSendMock,
-          }),
-        },
-        PutCommand: PutCommandMock.mockImplementation((params) => ({
-          input: params,
-        })),
-      };
-    });
-
-    // Import the handler after mocking
     handler = require('@lambda/stack/write/index').handler;
   });
 
@@ -76,84 +65,106 @@ describe('Write Lambda Handler Tests', () => {
   test('Happy Path - Valid Input returns 200', async () => {
     dynamoDbSendMock.mockResolvedValue({});
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(VALID_INPUT),
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: VALID_ORIGIN },
+        body: VALID_INPUT,
+      }),
     );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body).message).toBe(
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).message).toBe(
       'Media metadata saved successfully!',
     );
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);
   });
 
+  test('returns 403 when Origin is not allow‑listed', async () => {
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: INVALID_ORIGIN },
+      }),
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toBe('Forbidden: Invalid origin');
+    expect(dynamoDbSendMock).not.toHaveBeenCalled();
+  });
+
   test('Error - Missing Request Body', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(undefined);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: VALID_ORIGIN },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toBe('Request body is missing.');
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toBe('Request body is missing.');
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - Invalid JSON Format', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      'Invalid JSON String',
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: 'Invalid JSON String',
+        headers: { origin: VALID_ORIGIN },
+      }),
     );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toBe('Invalid JSON format.');
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toBe('Invalid JSON format.');
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - Validation Error (Invalid Fields) returns 400', async () => {
-    const invalidInput = {
-      invalidField: 'This field is not expected',
-    };
-
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(invalidInput),
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: VALID_ORIGIN },
+        body: {
+          invalidField: 'This field is not expected',
+        },
+      }),
     );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toContain('Invalid request:');
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toContain('Invalid request:');
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - Validation Error (Missing Required Fields) returns 400', async () => {
-    const invalidInput = {
-      stackId: 'stack123',
-    };
-
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(invalidInput),
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: VALID_ORIGIN },
+        body:  {
+          stackId: 'stack123',
+        },
+      }),
     );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    expect(JSON.parse(response.body).message).toContain('Invalid request:');
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toContain('Invalid request:');
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
   });
 
   test('Error - DynamoDB putItem Error returns 500', async () => {
     dynamoDbSendMock.mockRejectedValue(new Error('DynamoDB error'));
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(VALID_INPUT),
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: VALID_ORIGIN },
+        body: VALID_INPUT,
+      }),
     );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(500);
-    expect(JSON.parse(response.body).message).toBe('Failed to save metadata.');
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body).message).toBe('Failed to save metadata.');
     expect(dynamoDbSendMock).toHaveBeenCalled();
   });
 
@@ -164,14 +175,16 @@ describe('Write Lambda Handler Tests', () => {
       .mockRejectedValueOnce(conditionalError) // For stack metadata
       .mockResolvedValueOnce({}); // For media metadata
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(VALID_INPUT),
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: { origin: VALID_ORIGIN },
+        body: VALID_INPUT,
+      }),
     );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body).message).toBe(
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).message).toBe(
       'Media metadata saved successfully!',
     );
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);

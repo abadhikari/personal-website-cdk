@@ -1,12 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
-import { handleInvalidOrigin, retrieveOrigin } from '../../common/cors';
-import { createResponse } from '../../common/createResponse';
-import { ValidationError } from '../../common/errors';
+import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
+import { createResponse } from '@lambda/common/createResponse';
+import { ValidationError } from '@lambda/common/errors';
 import { getConfig } from './config';
 import { queryParametersSchema } from './schemas';
-import { queryMediaMetadataTable } from '../../common/queryMediaMetadataTable';
+import { queryMediaMetadataTable } from '@lambda/common/queryMediaMetadataTable';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 

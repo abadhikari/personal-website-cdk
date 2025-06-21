@@ -1,19 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import {
-  SecretsManagerClient,
-  GetSecretValueCommand,
-} from '@aws-sdk/client-secrets-manager';
-import { Client as PgClient } from 'pg';
-import { createResponse } from '../../common/createResponse';
-import { ValidationError } from '../../common/errors';
+import { createResponse } from '@lambda/common/createResponse';
+import { ValidationError } from '@lambda/common/errors';
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
-
-const secretsClient = new SecretsManagerClient({});
+import { getDbClient, getDbCredentials } from '@lambda/common/db';
 
 const { DB_SECRET_ARN } = getConfig();
-
-let cachedDb: PgClient | null = null;
 
 /**
  * Interface representing the structure of the parsed request body.
@@ -86,49 +78,4 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
     }
     throw error;
   }
-}
-
-/**
- * Retrieves database credentials from AWS Secrets Manager using the provided ARN.
- *
- * @param secretArn - The ARN of the secret to retrieve.
- * @returns Parsed credentials as an object with connection fields.
- */
-async function getDbCredentials(secretArn: string) {
-  const secret = await secretsClient.send(
-    new GetSecretValueCommand({ SecretId: secretArn }),
-  );
-
-  return JSON.parse(secret.SecretString ?? '{}') as {
-    username: string;
-    password: string;
-    host: string;
-    port: number;
-    dbname: string;
-  };
-}
-
-/**
- * Lazily connects and returns a cached PostgreSQL client.
- *
- * @param creds - The credentials object retrieved from Secrets Manager.
- * @returns Connected PostgreSQL client.
- */
-async function getDbClient(
-  creds: Awaited<ReturnType<typeof getDbCredentials>>,
-) {
-  if (cachedDb) return cachedDb;
-
-  const client = new PgClient({
-    user: creds.username,
-    password: creds.password,
-    host: creds.host,
-    port: creds.port,
-    database: creds.dbname,
-    ssl: { rejectUnauthorized: false },
-  });
-
-  await client.connect();
-  cachedDb = client;
-  return client;
 }

@@ -1,25 +1,32 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
+import createMockEvent from "@test-helpers/createMockEvent";
 
-function createMockDeleteEvent(
-  queryStringParameters: Record<string, any>,
-): Partial<APIGatewayProxyEvent> {
-  return {
-    queryStringParameters,
-    httpMethod: 'DELETE',
-    headers: { Origin: 'http://localhost:3000' },
-  };
-}
+const dynamoDbSendMock = jest.fn();
+const s3SendMock = jest.fn();
+
+jest.mock('@aws-sdk/client-dynamodb', () => ({
+  DynamoDBClient: jest.fn(),
+}));
+
+jest.mock('@aws-sdk/lib-dynamodb', () => ({
+  DynamoDBDocumentClient: { from: () => ({ send: dynamoDbSendMock }) },
+  QueryCommand: jest.fn((input) => ({ input })),
+  TransactWriteCommand: jest.fn((input) => ({ input })),
+}));
+
+jest.mock('@aws-sdk/client-s3', () => ({
+  S3Client: jest.fn(() => ({ send: s3SendMock })),
+  DeleteObjectCommand: jest.fn((input) => ({ input })),
+}));
 
 describe('Delete Lambda Handler Tests', () => {
-  let dynamoDbSendMock: jest.Mock;
-  let s3SendMock: jest.Mock;
   let handler: any;
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
 
-    /* env vars the Lambda expects */
+    // Env vars the Lambda expects
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.MEDIA_METADATA_TABLE = 'MediaMetadataTable';
     process.env.MEDIA_METADATA_GSI = 'MediaMetadataGSI';
@@ -28,26 +35,7 @@ describe('Delete Lambda Handler Tests', () => {
     process.env.S3_BUCKET_NAME = 'test-bucket';
     process.env.AWS_REGION = 'us-east-1';
 
-    dynamoDbSendMock = jest.fn();
-    s3SendMock = jest.fn();
-
-    /* minimal mocks for the AWS SDK v3 clients */
-    jest.mock('@aws-sdk/client-dynamodb', () => ({
-      DynamoDBClient: jest.fn(),
-    }));
-
-    jest.mock('@aws-sdk/lib-dynamodb', () => ({
-      DynamoDBDocumentClient: { from: () => ({ send: dynamoDbSendMock }) },
-      QueryCommand: jest.fn((input) => ({ input })),
-      TransactWriteCommand: jest.fn((input) => ({ input })),
-    }));
-
-    jest.mock('@aws-sdk/client-s3', () => ({
-      S3Client: jest.fn(() => ({ send: s3SendMock })),
-      DeleteObjectCommand: jest.fn((input) => ({ input })),
-    }));
-
-    /* import the Lambda after mocks & env are set */
+    // Import the Lambda after mocks & env are set
     handler = require('@lambda/media/delete/index').handler;
   });
 
@@ -68,21 +56,25 @@ describe('Delete Lambda Handler Tests', () => {
           },
         ],
       })
-      /* 2️⃣ transact write */
+      // Transaction write
       .mockResolvedValueOnce({});
 
-    /* S3 delete (called twice: full + thumbnail) */
+    // S3 delete (called twice: full + thumbnail)
     s3SendMock.mockResolvedValue({});
 
-    const event = createMockDeleteEvent({
-      stackId: 'stack123',
-      mediaId: 'media123',
-    });
+    const res = await handler(createMockEvent({
+      httpMethod: 'DELETE', 
+      queryStringParameters: {
+        stackId: 'stack123',
+        mediaId: 'media123',
+      },
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
 
-    const response = await handler(event as any);
-
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body).message).toBe(
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body).message).toBe(
       'Data deleted successfully!',
     );
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);
@@ -90,48 +82,164 @@ describe('Delete Lambda Handler Tests', () => {
   });
 
   test('validation error – missing stackId', async () => {
-    const event = createMockDeleteEvent({}); // no query params
-
-    const res = await handler(event as any);
+    const res = await handler(createMockEvent({
+      httpMethod: 'DELETE', 
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
 
     expect(res.statusCode).toBe(400);
-    expect(JSON.parse(res.body).message).toMatch(/invalid request/i);
+    expect(JSON.parse(res.body).message).toMatch('Query parameters are missing.');
 
     // should not hit Dynamo or S3
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
     expect(s3SendMock).not.toHaveBeenCalled();
   });
 
+  test('validation error – missing stackId', async () => {
+    const res = await handler(createMockEvent({
+      httpMethod: 'PATCH',
+      headers: { origin: VALID_ORIGIN },
+      queryStringParameters: { invalid: 'schema' },
+    }));
+
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body).message).toMatch(/invalid request/i);
+    expect(dynamoDbSendMock).not.toHaveBeenCalled();
+    expect(s3SendMock).not.toHaveBeenCalled();
+  });
+
   test('returns 500 when no media items exist', async () => {
-    // first send() = QueryCommand → empty Items
+    // First send() = QueryCommand → empty Items
     dynamoDbSendMock.mockResolvedValueOnce({ Items: [] });
 
-    const res = await handler(
-      createMockDeleteEvent({ stackId: 'stack123' }) as any,
-    );
+    const res = await handler(createMockEvent({
+      httpMethod: 'DELETE', 
+      queryStringParameters: {
+        stackId: 'stack123',
+      },
+      headers: {
+        origin: VALID_ORIGIN
+      }
+    }));
 
     expect(res.statusCode).toBe(500);
     expect(JSON.parse(res.body).message).toBe('Internal server error.');
 
-    // only the query runs
+    // Only the query runs
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(1);
     expect(s3SendMock).not.toHaveBeenCalled();
   });
 
   test('returns 403 when Origin is not allow‑listed', async () => {
-    const event: Partial<APIGatewayProxyEvent> = {
-      queryStringParameters: { stackId: 'stack123' },
-      httpMethod: 'DELETE',
-      headers: { Origin: 'http://malicious.com' },
-    };
-
-    const res = await handler(event as any);
+    const res = await handler(createMockEvent({
+      httpMethod: 'DELETE', 
+      queryStringParameters: {
+        stackId: 'stack123',
+      },
+      headers: {
+        origin: INVALID_ORIGIN
+      }
+    }));
 
     expect(res.statusCode).toBe(403);
     expect(JSON.parse(res.body).message).toBe('Forbidden: Invalid origin');
 
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
     expect(s3SendMock).not.toHaveBeenCalled();
+  });
+
+  test('happy path – deletes last media AND its stack', async () => {
+    // Only one media item in this stack ⇒ stack row should be deleted too.
+    dynamoDbSendMock
+      .mockResolvedValueOnce({
+        Items: [
+          {
+            mediaId: 'mediaSolo',
+            imageUrl: {
+              full: 'https://cdn/foo/full.jpg',
+              thumbnail: 'https://cdn/foo/thumb.jpg',
+            },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({}); // transact write
+
+    s3SendMock.mockResolvedValue({});
+
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'soloStack' }, // no mediaId – delete all
+      }),
+    );
+
+    expect(res.statusCode).toBe(200);
+
+    // Second call to Dynamo → TransactWriteCommand; confirm both deletes present
+    const transactCmd = dynamoDbSendMock.mock.calls[1][0];
+    expect(transactCmd.input.TransactItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          Delete: { TableName: 'StackMetadataTable', Key: { stackId: 'soloStack' } },
+        }),
+      ]),
+    );
+    expect(transactCmd.input.TransactItems).toHaveLength(2); // media + stack
+  });
+
+  test('returns 500 if requested mediaId is NOT in the stack', async () => {
+    // Stack has different media; lookup will later fail inside deleteMediaItemsFromS3
+    dynamoDbSendMock.mockResolvedValueOnce({
+      Items: [
+        {
+          mediaId: 'someOtherId',
+          imageUrl: {
+            full: 'https://cdn/foo/full.jpg',
+            thumbnail: 'https://cdn/foo/thumb.jpg',
+          },
+        },
+      ],
+    });
+
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'stack123', mediaId: 'missing' },
+      }),
+    );
+
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body).message).toMatch(/Internal server error/);
+  });
+
+  test('logs an error and succeeds when CDN URL is invalid (S3 deletion throws)', async () => {
+    dynamoDbSendMock
+      .mockResolvedValueOnce({
+        Items: [
+          {
+            mediaId: 'badUrl',
+            imageUrl: { full: 'not-a-url', thumbnail: 'still-not-a-url' },
+          },
+        ],
+      })
+      .mockResolvedValueOnce({}); // transact write
+
+    // Force any S3 call to throw
+    s3SendMock.mockRejectedValue(new Error('S3 rejection'));
+
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'stackBad' },
+      }),
+    );
+
+    expect(res.statusCode).toBe(200); // still succeeds
   });
 
   describe('Environment variable validation (delete Lambda)', () => {

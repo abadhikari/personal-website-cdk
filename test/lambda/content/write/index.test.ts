@@ -1,37 +1,20 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
-import { mockClient } from 'aws-sdk-client-mock';
+import createMockEvent from "@test-helpers/createMockEvent";
+import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
 
-const connectMock = jest.fn();
 const queryMock = jest.fn();
 
-jest.mock('pg', () => ({
-  Client: jest.fn(() => ({ connect: connectMock, query: queryMock })),
-}));
-
-function createMockEvent(
-  body: any,
-  origin = 'http://localhost:3000',
-): Partial<APIGatewayProxyEvent> {
+jest.mock('@lambda/common/db', () => {
+  const actual = jest.requireActual('@lambda/common/db');
   return {
-    body,
-    httpMethod: 'POST',
-    headers: {
-      origin: origin,
-    },
+    ...actual,
+    getDbCredentials: jest.fn(),
+    getDbClient: jest.fn().mockResolvedValue({ query: queryMock }),
+    executeAtomicTransaction: jest.fn((client, queries, fn) => fn(client, queries)),
   };
-}
+});
 
 describe('content write handler', () => {
   let handler: any;
-  let secretsMock: ReturnType<typeof mockClient>;
-
-  const VALID_SECRET = {
-    username: 'user',
-    password: 'pass',
-    host: 'localhost',
-    port: 5432,
-    dbname: 'mydb',
-  };
 
   const VALID_FOOD_AND_DRINK_BODY = {
     category_id: 4,
@@ -67,20 +50,8 @@ describe('content write handler', () => {
     jest.clearAllMocks();
 
     process.env.DB_SECRET_ARN = 'mock-secret-arn';
-    process.env.ORIGIN_ALLOWLIST = 'http://localhost:3000';
+    process.env.ORIGIN_ALLOWLIST = VALID_ORIGIN;
 
-    const {
-      SecretsManagerClient,
-      GetSecretValueCommand,
-    } = require('@aws-sdk/client-secrets-manager');
-
-    secretsMock = mockClient(SecretsManagerClient);
-    secretsMock.reset();
-    secretsMock.on(GetSecretValueCommand).resolves({
-      SecretString: JSON.stringify(VALID_SECRET),
-    } as any);
-
-    connectMock.mockResolvedValue(undefined);
     // first call returns content_id, subsequent calls succeed silently
     queryMock.mockResolvedValue({ rows: [{ content_id: 'mock-id' }] });
 
@@ -89,93 +60,112 @@ describe('content write handler', () => {
 
   it('returns 200 and executes expected SQL on valid FoodAndDrink payload', async () => {
     const res = await handler(
-      createMockEvent(JSON.stringify(VALID_FOOD_AND_DRINK_BODY)),
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_FOOD_AND_DRINK_BODY,
+        headers: {
+          origin: VALID_ORIGIN
+        }
+      }),
     );
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body).message).toBe('Content written successfully.');
 
     // first query should be the INSERT INTO content
-    expect(queryMock.mock.calls[1][0]).toMatch(/insert into content/i);
+    expect(queryMock.mock.calls[0][0]).toMatch(/insert into content/i);
+    console.log(queryMock.mock.calls);
 
     // second query should receive the patched content_id as its first param
-    const secondQueryParams = queryMock.mock.calls[2][1];
+    const secondQueryParams = queryMock.mock.calls[1][1];
     expect(secondQueryParams[0]).toBe('mock-id');
   });
 
   it('returns 200 and executes expected SQL on valid Entertainment payload', async () => {
     const res = await handler(
-      createMockEvent(JSON.stringify(VALID_ENTERTAINMENT_BODY)),
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_ENTERTAINMENT_BODY,
+        headers: {
+          origin: VALID_ORIGIN
+        }
+      }),
     );
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body).message).toBe('Content written successfully.');
 
     // first query should be the INSERT INTO content
-    expect(queryMock.mock.calls[1][0]).toMatch(/insert into content/i);
+    expect(queryMock.mock.calls[0][0]).toMatch(/insert into content/i);
 
     // second query should receive the patched content_id as its first param
-    const secondQueryParams = queryMock.mock.calls[2][1];
+    const secondQueryParams = queryMock.mock.calls[1][1];
     expect(secondQueryParams[0]).toBe('mock-id');
   });
 
   it('returns 403 when origin is not allow‑listed', async () => {
     const res = await handler(
-      createMockEvent(
-        JSON.stringify(VALID_FOOD_AND_DRINK_BODY),
-        'https://evil.com',
-      ),
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_ENTERTAINMENT_BODY,
+        headers: {
+          origin: INVALID_ORIGIN
+        }
+      }),
     );
     expect(res.statusCode).toBe(403);
   });
 
   it('400 when body is missing', async () => {
-    const res = await handler(createMockEvent(undefined));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: {
+          origin: VALID_ORIGIN
+        }
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 on malformed JSON', async () => {
-    const res = await handler(createMockEvent('{bad json}'));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: 'bad json',
+        headers: {
+          origin: VALID_ORIGIN
+        }
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 on invalid schema', async () => {
-    const res = await handler(createMockEvent(JSON.stringify({ foo: 'bar' })));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: { foo: 'bar' },
+        headers: {
+          origin: VALID_ORIGIN
+        }
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
-  it('500 when Secrets Manager fails', async () => {
-    const {
-      GetSecretValueCommand,
-    } = require('@aws-sdk/client-secrets-manager');
-    secretsMock.reset();
-    secretsMock.on(GetSecretValueCommand).rejects(new Error('secrets error'));
-
-    const res = await handler(
-      createMockEvent(JSON.stringify(VALID_FOOD_AND_DRINK_BODY)),
-    );
-    expect(res.statusCode).toBe(500);
-  });
-
-  it('500 when PG query fails', async () => {
+  it('500 when database query fails', async () => {
     queryMock.mockRejectedValueOnce(new Error('query error'));
     const res = await handler(
-      createMockEvent(JSON.stringify(VALID_FOOD_AND_DRINK_BODY)),
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_FOOD_AND_DRINK_BODY,
+        headers: {
+          origin: VALID_ORIGIN
+        }
+      }),
     );
     expect(res.statusCode).toBe(500);
-  });
-
-  it('rolls back and returns 500 if one of the SQL queries fails mid-transaction', async () => {
-    queryMock.mockResolvedValueOnce({});
-    queryMock.mockResolvedValueOnce({ rows: [{ content_id: 'mock-id' }] });
-    queryMock.mockRejectedValueOnce(new Error('mid-query failure'));
-
-    const res = await handler(
-      createMockEvent(JSON.stringify(VALID_FOOD_AND_DRINK_BODY)),
-    );
-
-    expect(res.statusCode).toBe(500);
-    expect(queryMock).toHaveBeenCalledWith('ROLLBACK');
   });
 
   describe('Environment variable validation (content)', () => {

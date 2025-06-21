@@ -1,23 +1,35 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
 import { encode } from '../../../../lambda/common/string';
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
-function createMockEvent(
-  queryStringParameters: any,
-): Partial<APIGatewayProxyEvent> {
+const dynamoDbSendMock = jest.fn();
+const QueryCommandMock = jest.fn();
+
+jest.mock('@aws-sdk/client-dynamodb', () => {
   return {
-    queryStringParameters,
-    httpMethod: 'GET',
-    headers: { Origin: 'http://localhost:3000' },
+    DynamoDBClient: jest.fn(),
   };
-}
+});
+
+jest.mock('@aws-sdk/lib-dynamodb', () => {
+  return {
+    DynamoDBDocumentClient: {
+      from: () => ({
+        send: dynamoDbSendMock,
+      }),
+    },
+    QueryCommand: QueryCommandMock.mockImplementation((params) => ({
+      input: params,
+    })),
+  };
+});
 
 describe('Read Lambda Function Tests', () => {
-  let dynamoDbSendMock: jest.Mock;
-
   let handler: any;
 
   beforeEach(() => {
     jest.resetModules();
+    jest.clearAllMocks();
 
     process.env.STACK_METADATA_TABLE = 'StackMetadataTable';
     process.env.STACK_METADATA_GSI = 'UploadTimestampIndex';
@@ -26,30 +38,7 @@ describe('Read Lambda Function Tests', () => {
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
     process.env.STACK_METADATA_GSI_PARTITION_KEY = 'ALL_STACKS';
-
-    dynamoDbSendMock = jest.fn();
-    const QueryCommandMock = jest.fn();
-
-    jest.mock('@aws-sdk/client-dynamodb', () => {
-      return {
-        DynamoDBClient: jest.fn(),
-      };
-    });
-
-    jest.mock('@aws-sdk/lib-dynamodb', () => {
-      return {
-        DynamoDBDocumentClient: {
-          from: () => ({
-            send: dynamoDbSendMock,
-          }),
-        },
-        QueryCommand: QueryCommandMock.mockImplementation((params) => ({
-          input: params,
-        })),
-      };
-    });
-
-    // Import the handler after mocking
+    
     handler = require('@lambda/stacks/read/index').handler;
   });
 
@@ -87,18 +76,22 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '2',
-      startTimestamp: '1609459200000',
-      endTimestamp: '1609459300000',
-      lastEvaluatedKey,
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackLimit: '2',
+          startTimestamp: '1609459200000',
+          endTimestamp: '1609459300000',
+          lastEvaluatedKey,
+        },
+      }),
+    );
 
-    const response = await handler(event);
+    expect(res.statusCode).toBe(200);
 
-    expect(response.statusCode).toBe(200);
-
-    const responseBody = JSON.parse(response.body);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.stackAndMediaData).toHaveLength(2);
     expect(responseBody.stackAndMediaData[0].stack).toEqual(stackItems[0]);
     expect(responseBody.stackAndMediaData[0].media).toEqual([
@@ -119,18 +112,34 @@ describe('Read Lambda Function Tests', () => {
       return { promise: () => Promise.resolve({ Items: [] }) };
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '2',
-      startTimestamp: '1609459200000',
-      endTimestamp: '1609459300000',
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackLimit: '2',
+          startTimestamp: '1609459200000',
+          endTimestamp: '1609459300000',
+        },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(200);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(200);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.stackAndMediaData).toHaveLength(0);
     expect(responseBody.lastEvaluatedKey).toEqual(null);
+  });
+
+  test('returns 403 when Origin is not allow‑listed', async () => {
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: INVALID_ORIGIN },
+      }),
+    );
+
+    expect(res.statusCode).toBe(403);
+    expect(JSON.parse(res.body).message).toBe('Forbidden: Invalid origin');
   });
 
   test('should return 500 error if stack item is missing stackId', async () => {
@@ -144,16 +153,20 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '1',
-      startTimestamp: '1609459200000',
-      endTimestamp: '1609459300000',
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackLimit: '1',
+          startTimestamp: '1609459200000',
+          endTimestamp: '1609459300000',
+        },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(500);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(500);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.message).toMatch(/Internal server error/);
   });
 
@@ -166,16 +179,20 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '2',
-      startTimestamp: '1609459200000',
-      endTimestamp: '1609459300000',
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackLimit: '2',
+          startTimestamp: '1609459200000',
+          endTimestamp: '1609459300000',
+        },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(500);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(500);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.message).toMatch(/Internal server error/);
   });
 
@@ -192,16 +209,20 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '1',
-      startTimestamp: '1609459200000',
-      endTimestamp: '1609459300000',
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackLimit: '1',
+          startTimestamp: '1609459200000',
+          endTimestamp: '1609459300000',
+        },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(500);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(500);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.message).toMatch(/Internal server error/);
   });
 
@@ -222,15 +243,19 @@ describe('Read Lambda Function Tests', () => {
       return Promise.resolve({ Items: [] });
     });
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '2',
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {
+          stackLimit: '2',
+        },
+      }),
+    );
 
-    const response = await handler(event);
+    expect(res.statusCode).toBe(200);
 
-    expect(response.statusCode).toBe(200);
-
-    const responseBody = JSON.parse(response.body);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.stackAndMediaData).toHaveLength(1);
     expect(responseBody.stackAndMediaData[0].stack).toEqual(stackItems[0]);
     expect(responseBody.stackAndMediaData[0].media).toEqual([
@@ -239,26 +264,33 @@ describe('Read Lambda Function Tests', () => {
   });
 
   test('should return 400 error if query parameters are missing', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: { origin: VALID_ORIGIN },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(400);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.message).toMatch('Query parameters are missing');
   });
 
   test('should return 400 error if request body fails validation', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent({
-      stackLimit: '-5',
-      startTimestamp: '1609459200000',
-      endTimestamp: '1609459300000',
-    });
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: {
+          stackLimit: '-5',
+          startTimestamp: '1609459200000',
+          endTimestamp: '1609459300000',
+        },
+        headers: { origin: VALID_ORIGIN },
+      }),
+    );
 
-    const response = await handler(event);
-
-    expect(response.statusCode).toBe(400);
-    const responseBody = JSON.parse(response.body);
+    expect(res.statusCode).toBe(400);
+    const responseBody = JSON.parse(res.body);
     expect(responseBody.message).toMatch(
       /Invalid request: stackLimit must be greater than 0/,
     );

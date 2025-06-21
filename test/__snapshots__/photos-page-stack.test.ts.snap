@@ -1,0 +1,1182 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PhotosPageStack Tests matches snapshot 1`] = `
+{
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "DeleteMediaLambdaLambdaNodeFunctionE0132D0C": {
+      "DependsOn": [
+        "DeleteMediaLambdaLambdaNodeFunctionServiceRoleDefaultPolicyD6C3C0AF",
+        "DeleteMediaLambdaLambdaNodeFunctionServiceRole7CA7102A",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "7334f708124facdf4eb8d2e204f1c3039959fc0d8cce3e6812a7cb73571933b5.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "MEDIA_METADATA_GSI": "StackIdIndex",
+            "MEDIA_METADATA_TABLE": "MediaMetadataTable",
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "S3_BUCKET_NAME": {
+              "Ref": "MediaBucketS3BucketBB2DC6FA",
+            },
+            "STACK_METADATA_GSI": "UploadTimestampIndex",
+            "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
+            "STACK_METADATA_TABLE": "StackMetadataTable",
+          },
+        },
+        "FunctionName": "DeleteMediaLambdaFunction",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "DeleteMediaLambdaLambdaNodeFunctionServiceRole7CA7102A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "DeleteMediaLambdaLambdaNodeFunctionServiceRole7CA7102A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DeleteMediaLambdaLambdaNodeFunctionServiceRoleDefaultPolicyD6C3C0AF": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StackMetadataTableDynamoDbTableDCD0ADAA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StackMetadataTableDynamoDbTableDCD0ADAA",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "MediaMetadataTableDynamoDbTable93530463",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "MediaMetadataTableDynamoDbTable93530463",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:DeleteObject*",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "MediaBucketS3BucketBB2DC6FA",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DeleteMediaLambdaLambdaNodeFunctionServiceRoleDefaultPolicyD6C3C0AF",
+        "Roles": [
+          {
+            "Ref": "DeleteMediaLambdaLambdaNodeFunctionServiceRole7CA7102A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EditStackMetadataLambdaLambdaNodeFunctionFAB5D4A8": {
+      "DependsOn": [
+        "EditStackMetadataLambdaLambdaNodeFunctionServiceRoleDefaultPolicy4A17123C",
+        "EditStackMetadataLambdaLambdaNodeFunctionServiceRole17E92FA4",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "cca6878ccdf8d6337b4c9d02821b720bf59a741a3ef03235efd7d9991dacfe5d.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "MEDIA_METADATA_GSI": "StackIdIndex",
+            "MEDIA_METADATA_TABLE": "MediaMetadataTable",
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "STACK_METADATA_GSI": "UploadTimestampIndex",
+            "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
+            "STACK_METADATA_TABLE": "StackMetadataTable",
+          },
+        },
+        "FunctionName": "EditStackMetadataLambdaFunction",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "EditStackMetadataLambdaLambdaNodeFunctionServiceRole17E92FA4",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "EditStackMetadataLambdaLambdaNodeFunctionServiceRole17E92FA4": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EditStackMetadataLambdaLambdaNodeFunctionServiceRoleDefaultPolicy4A17123C": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StackMetadataTableDynamoDbTableDCD0ADAA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StackMetadataTableDynamoDbTableDCD0ADAA",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EditStackMetadataLambdaLambdaNodeFunctionServiceRoleDefaultPolicy4A17123C",
+        "Roles": [
+          {
+            "Ref": "EditStackMetadataLambdaLambdaNodeFunctionServiceRole17E92FA4",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GenerateSignedMediaUrlLambdaLambdaNodeFunction1363B525": {
+      "DependsOn": [
+        "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDefaultPolicyC1DD0919",
+        "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDBFDD01B",
+        "MediaCdnCloudFrontDistributionOrigin1S3OriginAccessControl5287FDAB",
+        "MediaCdnCloudFrontDistribution2B521F97",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "68fa5f4a91f1a88301def70de5265e6e75f474ba0b15a732aa8e027bf8354802.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "S3_BUCKET_NAME": {
+              "Ref": "MediaBucketS3BucketBB2DC6FA",
+            },
+            "S3_URL_TTL": "300",
+          },
+        },
+        "FunctionName": "GenerateSignedMediaUrlLambdaFunction",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDBFDD01B",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDBFDD01B": {
+      "DependsOn": [
+        "MediaCdnCloudFrontDistributionOrigin1S3OriginAccessControl5287FDAB",
+        "MediaCdnCloudFrontDistribution2B521F97",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDefaultPolicyC1DD0919": {
+      "DependsOn": [
+        "MediaCdnCloudFrontDistributionOrigin1S3OriginAccessControl5287FDAB",
+        "MediaCdnCloudFrontDistribution2B521F97",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectLegalHold",
+                "s3:PutObjectRetention",
+                "s3:PutObjectTagging",
+                "s3:PutObjectVersionTagging",
+                "s3:Abort*",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "MediaBucketS3BucketBB2DC6FA",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDefaultPolicyC1DD0919",
+        "Roles": [
+          {
+            "Ref": "GenerateSignedMediaUrlLambdaLambdaNodeFunctionServiceRoleDBFDD01B",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "MediaBucketS3BucketBB2DC6FA": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256",
+              },
+            },
+          ],
+        },
+        "BucketName": "personal-website-photos-page-media-bucket-509399600387",
+        "CorsConfiguration": {
+          "CorsRules": [
+            {
+              "AllowedHeaders": [
+                "Content-Type",
+                "Authorization",
+                "x-amz-security-token",
+                "x-amz-content-sha256",
+              ],
+              "AllowedMethods": [
+                "PUT",
+              ],
+              "AllowedOrigins": [
+                "https://api.abhinnaadhikari.com",
+                "https://abhinnaadhikari.com",
+                "http://localhost:3000",
+              ],
+            },
+          ],
+        },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true,
+        },
+      },
+      "Type": "AWS::S3::Bucket",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "MediaBucketS3BucketPolicyE61B4484": {
+      "Properties": {
+        "Bucket": {
+          "Ref": "MediaBucketS3BucketBB2DC6FA",
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": "false",
+                },
+              },
+              "Effect": "Deny",
+              "Principal": {
+                "AWS": "*",
+              },
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "MediaBucketS3BucketBB2DC6FA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "MediaBucketS3BucketBB2DC6FA",
+                          "Arn",
+                        ],
+                      },
+                      "/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": "s3:GetObject",
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceArn": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition",
+                        },
+                        ":cloudfront::",
+                        {
+                          "Ref": "AWS::AccountId",
+                        },
+                        ":distribution/",
+                        {
+                          "Ref": "MediaCdnCloudFrontDistribution2B521F97",
+                        },
+                      ],
+                    ],
+                  },
+                },
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "cloudfront.amazonaws.com",
+              },
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "MediaBucketS3BucketBB2DC6FA",
+                        "Arn",
+                      ],
+                    },
+                    "/*",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::S3::BucketPolicy",
+    },
+    "MediaCdnCloudFrontDistribution2B521F97": {
+      "Properties": {
+        "DistributionConfig": {
+          "DefaultCacheBehavior": {
+            "CachePolicyId": "658327ea-f89d-4fab-a63d-7e88639e58f6",
+            "Compress": true,
+            "TargetOriginId": "TestPhotosPageStackMediaCdnCloudFrontDistributionOrigin16F77EB56",
+            "ViewerProtocolPolicy": "redirect-to-https",
+          },
+          "Enabled": true,
+          "HttpVersion": "http2",
+          "IPV6Enabled": true,
+          "Origins": [
+            {
+              "DomainName": {
+                "Fn::GetAtt": [
+                  "MediaBucketS3BucketBB2DC6FA",
+                  "RegionalDomainName",
+                ],
+              },
+              "Id": "TestPhotosPageStackMediaCdnCloudFrontDistributionOrigin16F77EB56",
+              "OriginAccessControlId": {
+                "Fn::GetAtt": [
+                  "MediaCdnCloudFrontDistributionOrigin1S3OriginAccessControl5287FDAB",
+                  "Id",
+                ],
+              },
+              "S3OriginConfig": {
+                "OriginAccessIdentity": "",
+              },
+            },
+          ],
+        },
+      },
+      "Type": "AWS::CloudFront::Distribution",
+    },
+    "MediaCdnCloudFrontDistributionOrigin1S3OriginAccessControl5287FDAB": {
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": "TestPhotosPageStackMediaCdnCOrigin1S3OriginAccessControl042D56A0",
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4",
+        },
+      },
+      "Type": "AWS::CloudFront::OriginAccessControl",
+    },
+    "MediaMetadataTableDynamoDbTable93530463": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "mediaId",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "stackId",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "StackIdIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "stackId",
+                "KeyType": "HASH",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "mediaId",
+            "KeyType": "HASH",
+          },
+        ],
+        "TableName": "MediaMetadataTable",
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "ReadStackLambdaLambdaNodeFunctionF3A738F1": {
+      "DependsOn": [
+        "ReadStackLambdaLambdaNodeFunctionServiceRoleDefaultPolicyF48BC509",
+        "ReadStackLambdaLambdaNodeFunctionServiceRole2DBB560D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "bc8c048c1cb4cf9dcb7de9ee6a38d7923869ab2ed5f7f9c6924698f3bb88af65.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "MEDIA_METADATA_GSI": "StackIdIndex",
+            "MEDIA_METADATA_TABLE": "MediaMetadataTable",
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "STACK_METADATA_GSI": "UploadTimestampIndex",
+            "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
+            "STACK_METADATA_TABLE": "StackMetadataTable",
+          },
+        },
+        "FunctionName": "photos_page_read_stack_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReadStackLambdaLambdaNodeFunctionServiceRole2DBB560D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ReadStackLambdaLambdaNodeFunctionServiceRole2DBB560D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ReadStackLambdaLambdaNodeFunctionServiceRoleDefaultPolicyF48BC509": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StackMetadataTableDynamoDbTableDCD0ADAA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StackMetadataTableDynamoDbTableDCD0ADAA",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "MediaMetadataTableDynamoDbTable93530463",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "MediaMetadataTableDynamoDbTable93530463",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ReadStackLambdaLambdaNodeFunctionServiceRoleDefaultPolicyF48BC509",
+        "Roles": [
+          {
+            "Ref": "ReadStackLambdaLambdaNodeFunctionServiceRole2DBB560D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ReadStacksLambdaLambdaNodeFunction7483E2A3": {
+      "DependsOn": [
+        "ReadStacksLambdaLambdaNodeFunctionServiceRoleDefaultPolicy196CFC94",
+        "ReadStacksLambdaLambdaNodeFunctionServiceRoleBA737AD0",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "503104ac93cfc7991dbe839dc840f07907aab4e95a9b9b68faa7ad98e02a2c79.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "MEDIA_METADATA_GSI": "StackIdIndex",
+            "MEDIA_METADATA_TABLE": "MediaMetadataTable",
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "STACK_METADATA_GSI": "UploadTimestampIndex",
+            "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
+            "STACK_METADATA_TABLE": "StackMetadataTable",
+          },
+        },
+        "FunctionName": "photos_page_read_stacks_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReadStacksLambdaLambdaNodeFunctionServiceRoleBA737AD0",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ReadStacksLambdaLambdaNodeFunctionServiceRoleBA737AD0": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ReadStacksLambdaLambdaNodeFunctionServiceRoleDefaultPolicy196CFC94": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StackMetadataTableDynamoDbTableDCD0ADAA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StackMetadataTableDynamoDbTableDCD0ADAA",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "MediaMetadataTableDynamoDbTable93530463",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "MediaMetadataTableDynamoDbTable93530463",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ReadStacksLambdaLambdaNodeFunctionServiceRoleDefaultPolicy196CFC94",
+        "Roles": [
+          {
+            "Ref": "ReadStacksLambdaLambdaNodeFunctionServiceRoleBA737AD0",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "StackMetadataTableDynamoDbTableDCD0ADAA": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "stackId",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "staticKey",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "uploadTimestamp",
+            "AttributeType": "N",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "GlobalSecondaryIndexes": [
+          {
+            "IndexName": "UploadTimestampIndex",
+            "KeySchema": [
+              {
+                "AttributeName": "staticKey",
+                "KeyType": "HASH",
+              },
+              {
+                "AttributeName": "uploadTimestamp",
+                "KeyType": "RANGE",
+              },
+            ],
+            "Projection": {
+              "ProjectionType": "ALL",
+            },
+          },
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "stackId",
+            "KeyType": "HASH",
+          },
+        ],
+        "TableName": "StackMetadataTable",
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "WriteStackLambdaLambdaNodeFunction68AC7CA2": {
+      "DependsOn": [
+        "WriteStackLambdaLambdaNodeFunctionServiceRoleDefaultPolicy1E03A6E1",
+        "WriteStackLambdaLambdaNodeFunctionServiceRoleEE19AE51",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "2da5f2e3ea62fb92b53df98191142c6a908ab20c38da0fec2bf9363b0d5c77a9.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "CDN_DOMAIN_URL": {
+              "Fn::GetAtt": [
+                "MediaCdnCloudFrontDistribution2B521F97",
+                "DomainName",
+              ],
+            },
+            "MEDIA_METADATA_GSI": "StackIdIndex",
+            "MEDIA_METADATA_TABLE": "MediaMetadataTable",
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "STACK_METADATA_GSI": "UploadTimestampIndex",
+            "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
+            "STACK_METADATA_TABLE": "StackMetadataTable",
+          },
+        },
+        "FunctionName": "photos_page_write_stack_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriteStackLambdaLambdaNodeFunctionServiceRoleEE19AE51",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "WriteStackLambdaLambdaNodeFunctionServiceRoleDefaultPolicy1E03A6E1": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "StackMetadataTableDynamoDbTableDCD0ADAA",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "StackMetadataTableDynamoDbTableDCD0ADAA",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+            {
+              "Action": [
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "MediaMetadataTableDynamoDbTable93530463",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "MediaMetadataTableDynamoDbTable93530463",
+                          "Arn",
+                        ],
+                      },
+                      "/index/*",
+                    ],
+                  ],
+                },
+              ],
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteStackLambdaLambdaNodeFunctionServiceRoleDefaultPolicy1E03A6E1",
+        "Roles": [
+          {
+            "Ref": "WriteStackLambdaLambdaNodeFunctionServiceRoleEE19AE51",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "WriteStackLambdaLambdaNodeFunctionServiceRoleEE19AE51": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

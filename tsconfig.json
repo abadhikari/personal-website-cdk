@@ -22,7 +22,9 @@
     "typeRoots": ["./node_modules/@types"],
     "baseUrl": ".",
     "paths": {
-      "@lambda/*": ["lambda/*"]
+      "@lambda/*": ["lambda/*"],
+      "@test-helpers/*": ["test/test-helpers/*"]
+
     }
   },
   "exclude": ["node_modules", "cdk.out", "build"]

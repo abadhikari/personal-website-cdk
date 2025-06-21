@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { createResponse } from '../../common/createResponse';
-import { ValidationError } from '../../common/errors';
-import { getConfig } from './config';
+import { createResponse } from '@lambda/common/createResponse';
+import { ValidationError } from '@lambda/common/errors';
+import { getConfig } from '@lambda/common/config/publicDatabase';
 import { queryParamSchema } from './schemas';
 import { QueryWithParams } from '@lambda/common/types';
 import { getDbClient, getDbCredentials } from '@lambda/common/db';

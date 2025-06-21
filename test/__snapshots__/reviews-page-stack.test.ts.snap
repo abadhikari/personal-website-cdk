@@ -1,0 +1,1073 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReviewsPageStack Tests matches snapshot 1`] = `
+{
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "DatabaseAdminQueryLambdaLambdaNodeFunction890F3B1D": {
+      "DependsOn": [
+        "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleDefaultPolicy0A7E5CC3",
+        "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleA0654011",
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "325e602e6184b2d9324fbed97af785c3fbc61f9f05769f5f558c579c56883cec.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DB_SECRET_ARN": {
+              "Ref": "ReviewsSecret87760034",
+            },
+          },
+        },
+        "FunctionName": "reviews_page_database_admin_query_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleA0654011",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "LambdaToRdsSG5075E23A",
+                "GroupId",
+              ],
+            },
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+            },
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleA0654011": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleDefaultPolicy0A7E5CC3": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "rds-db:connect",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":rds-db:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":dbuser:",
+                    {
+                      "Fn::GetAtt": [
+                        "ReviewsDbRds8FD0AF40",
+                        "DbiResourceId",
+                      ],
+                    },
+                    "/{{resolve:secretsmanager:",
+                    {
+                      "Ref": "ReviewsSecretAttachmentBA23178B",
+                    },
+                    ":SecretString:username::}}",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "ReviewsSecret87760034",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleDefaultPolicy0A7E5CC3",
+        "Roles": [
+          {
+            "Ref": "DatabaseAdminQueryLambdaLambdaNodeFunctionServiceRoleA0654011",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "LambdaToRdsSG5075E23A": {
+      "Properties": {
+        "GroupDescription": "Security group for Lambdas accessing the reviews RDS",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "ReadContentsLambdaLambdaNodeFunction9F79202C": {
+      "DependsOn": [
+        "ReadContentsLambdaLambdaNodeFunctionServiceRoleDefaultPolicy97217AAD",
+        "ReadContentsLambdaLambdaNodeFunctionServiceRoleE2EDF75A",
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "0f0c1390b186ecf2661f238e0dc203b7e88c0bf2b6570d6c6e48bde2e8a05944.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DB_SECRET_ARN": {
+              "Ref": "ReviewsSecret87760034",
+            },
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+          },
+        },
+        "FunctionName": "reviews_page_read_contents_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReadContentsLambdaLambdaNodeFunctionServiceRoleE2EDF75A",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "LambdaToRdsSG5075E23A",
+                "GroupId",
+              ],
+            },
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+            },
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ReadContentsLambdaLambdaNodeFunctionServiceRoleDefaultPolicy97217AAD": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "rds-db:connect",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":rds-db:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":dbuser:",
+                    {
+                      "Fn::GetAtt": [
+                        "ReviewsDbRds8FD0AF40",
+                        "DbiResourceId",
+                      ],
+                    },
+                    "/{{resolve:secretsmanager:",
+                    {
+                      "Ref": "ReviewsSecretAttachmentBA23178B",
+                    },
+                    ":SecretString:username::}}",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "ReviewsSecret87760034",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ReadContentsLambdaLambdaNodeFunctionServiceRoleDefaultPolicy97217AAD",
+        "Roles": [
+          {
+            "Ref": "ReadContentsLambdaLambdaNodeFunctionServiceRoleE2EDF75A",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "ReadContentsLambdaLambdaNodeFunctionServiceRoleE2EDF75A": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ReviewsDbRds8FD0AF40": {
+      "DeletionPolicy": "Snapshot",
+      "Properties": {
+        "AllocatedStorage": "20",
+        "BackupRetentionPeriod": 7,
+        "CopyTagsToSnapshot": true,
+        "DBInstanceClass": "db.t4g.micro",
+        "DBName": "reviews_database",
+        "DBSubnetGroupName": {
+          "Ref": "ReviewsDbRdsSubnetGroup831B9FE0",
+        },
+        "DeletionProtection": true,
+        "EnableIAMDatabaseAuthentication": true,
+        "Engine": "postgres",
+        "MasterUserPassword": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "ReviewsSecret87760034",
+              },
+              ":SecretString:password::}}",
+            ],
+          ],
+        },
+        "MasterUsername": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "ReviewsSecret87760034",
+              },
+              ":SecretString:username::}}",
+            ],
+          ],
+        },
+        "MultiAZ": false,
+        "PubliclyAccessible": false,
+        "StorageType": "gp2",
+        "VPCSecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "ReviewsDbRdsSecurityGroup56A7B2B5",
+              "GroupId",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBInstance",
+      "UpdateReplacePolicy": "Snapshot",
+    },
+    "ReviewsDbRdsSecurityGroup56A7B2B5": {
+      "Properties": {
+        "GroupDescription": "Security group for Rds database",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "ReviewsDbRdsSecurityGroupfromTestReviewsPageStackLambdaToRdsSG22A2623554323CCB789C": {
+      "Properties": {
+        "Description": "Allow all review Lambdas to connect to RDS",
+        "FromPort": 5432,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "ReviewsDbRdsSecurityGroup56A7B2B5",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "LambdaToRdsSG5075E23A",
+            "GroupId",
+          ],
+        },
+        "ToPort": 5432,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "ReviewsDbRdsSubnetGroup831B9FE0": {
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnet group for Rds database",
+        "SubnetIds": [
+          {
+            "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+          },
+          {
+            "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBSubnetGroup",
+    },
+    "ReviewsSecret87760034": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {
+          "ExcludeCharacters": "/@" ",
+          "GenerateStringKey": "password",
+          "PasswordLength": 16,
+          "SecretStringTemplate": "{"username":"dbadmin"}",
+        },
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "ReviewsSecretAttachmentBA23178B": {
+      "Properties": {
+        "SecretId": {
+          "Ref": "ReviewsSecret87760034",
+        },
+        "TargetId": {
+          "Ref": "ReviewsDbRds8FD0AF40",
+        },
+        "TargetType": "AWS::RDS::DBInstance",
+      },
+      "Type": "AWS::SecretsManager::SecretTargetAttachment",
+    },
+    "ReviewsVpcVPC59315E9D": {
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "ReviewsVpcVPCIsolatedSubnet1RouteTableB6517E68",
+        },
+        "SubnetId": {
+          "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "ReviewsVpcVPCIsolatedSubnet1RouteTableB6517E68": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.0.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "ReviewsVpcVPCIsolatedSubnet2RouteTableE8D40EC7",
+        },
+        "SubnetId": {
+          "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "ReviewsVpcVPCIsolatedSubnet2RouteTableE8D40EC7": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.1.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "ReviewsVpcVPCSecretsManagerEndpointEB91BA6A": {
+      "Properties": {
+        "PrivateDnsEnabled": true,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "ReviewsVpcVPCSecretsManagerEndpointSecurityGroupFD2D2AFB",
+              "GroupId",
+            ],
+          },
+        ],
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".secretsmanager",
+            ],
+          ],
+        },
+        "SubnetIds": [
+          {
+            "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+          },
+          {
+            "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC",
+          },
+        ],
+        "VpcEndpointType": "Interface",
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "ReviewsVpcVPCSecretsManagerEndpointSecurityGroupFD2D2AFB": {
+      "Properties": {
+        "GroupDescription": "TestReviewsPageStack/ReviewsVpc/VPC/SecretsManagerEndpoint/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": {
+              "Fn::GetAtt": [
+                "ReviewsVpcVPC59315E9D",
+                "CidrBlock",
+              ],
+            },
+            "Description": {
+              "Fn::Join": [
+                "",
+                [
+                  "from ",
+                  {
+                    "Fn::GetAtt": [
+                      "ReviewsVpcVPC59315E9D",
+                      "CidrBlock",
+                    ],
+                  },
+                  ":443",
+                ],
+              ],
+            },
+            "FromPort": 443,
+            "IpProtocol": "tcp",
+            "ToPort": 443,
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "TestReviewsPageStack/ReviewsVpc/VPC",
+          },
+        ],
+        "VpcId": {
+          "Ref": "ReviewsVpcVPC59315E9D",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "WriteContentLambdaLambdaNodeFunction72021AF0": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+        "WriteContentLambdaLambdaNodeFunctionServiceRoleDefaultPolicy59EAEF92",
+        "WriteContentLambdaLambdaNodeFunctionServiceRole7D08E402",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "f1e27484ae8f1c550f3d36f6ec55d0b78d5565a7dfdc9dacdfaadf18ac5259e7.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DB_SECRET_ARN": {
+              "Ref": "ReviewsSecret87760034",
+            },
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+          },
+        },
+        "FunctionName": "reviews_page_write_content_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriteContentLambdaLambdaNodeFunctionServiceRole7D08E402",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "LambdaToRdsSG5075E23A",
+                "GroupId",
+              ],
+            },
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+            },
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "WriteContentLambdaLambdaNodeFunctionServiceRole7D08E402": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "WriteContentLambdaLambdaNodeFunctionServiceRoleDefaultPolicy59EAEF92": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "rds-db:connect",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":rds-db:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":dbuser:",
+                    {
+                      "Fn::GetAtt": [
+                        "ReviewsDbRds8FD0AF40",
+                        "DbiResourceId",
+                      ],
+                    },
+                    "/{{resolve:secretsmanager:",
+                    {
+                      "Ref": "ReviewsSecretAttachmentBA23178B",
+                    },
+                    ":SecretString:username::}}",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "ReviewsSecret87760034",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteContentLambdaLambdaNodeFunctionServiceRoleDefaultPolicy59EAEF92",
+        "Roles": [
+          {
+            "Ref": "WriteContentLambdaLambdaNodeFunctionServiceRole7D08E402",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "WriteReviewLambdaLambdaNodeFunction24079AA1": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+        "WriteReviewLambdaLambdaNodeFunctionServiceRoleDefaultPolicy2B9B0EBA",
+        "WriteReviewLambdaLambdaNodeFunctionServiceRole57641F45",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "08041571823de552e6af57ffa4c2745018c368c2082684f02cac9cb068d6f819.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DB_SECRET_ARN": {
+              "Ref": "ReviewsSecret87760034",
+            },
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+          },
+        },
+        "FunctionName": "reviews_page_write_review_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "WriteReviewLambdaLambdaNodeFunctionServiceRole57641F45",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "LambdaToRdsSG5075E23A",
+                "GroupId",
+              ],
+            },
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+            },
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "WriteReviewLambdaLambdaNodeFunctionServiceRole57641F45": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "WriteReviewLambdaLambdaNodeFunctionServiceRoleDefaultPolicy2B9B0EBA": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "rds-db:connect",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":rds-db:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":dbuser:",
+                    {
+                      "Fn::GetAtt": [
+                        "ReviewsDbRds8FD0AF40",
+                        "DbiResourceId",
+                      ],
+                    },
+                    "/{{resolve:secretsmanager:",
+                    {
+                      "Ref": "ReviewsSecretAttachmentBA23178B",
+                    },
+                    ":SecretString:username::}}",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "ReviewsSecret87760034",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "WriteReviewLambdaLambdaNodeFunctionServiceRoleDefaultPolicy2B9B0EBA",
+        "Roles": [
+          {
+            "Ref": "WriteReviewLambdaLambdaNodeFunctionServiceRole57641F45",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

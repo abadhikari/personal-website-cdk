@@ -1,64 +1,41 @@
-import { APIGatewayProxyEvent } from 'aws-lambda';
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
-function createMockEvent(
-  body: any,
-  origin?: string,
-): Partial<APIGatewayProxyEvent> {
+// Mock the system time to ensure consistent test results
+jest.useFakeTimers().setSystemTime(new Date('2023-01-15T00:00:00Z'));
+
+const S3ClientMock = jest.fn();
+const PutObjectCommandMock = jest.fn((input) => input);
+const getSignedUrlMock = jest.fn();
+
+jest.mock('@aws-sdk/client-s3', () => ({
+  S3Client: S3ClientMock,
+  PutObjectCommand: PutObjectCommandMock,
+}));
+
+jest.mock('@aws-sdk/s3-request-presigner', () => {
   return {
-    body: body,
-    httpMethod: 'POST',
-    headers: {
-      Origin: origin || 'http://localhost:3000',
-    },
-    requestContext: {
-      authorizer: {
-        claims: {
-          sub: 'user123',
-        },
-      },
-    } as any,
+    getSignedUrl: getSignedUrlMock,
   };
-}
+});
+
+// Mock uuidv4 to return a fixed UUID
+jest.mock('uuid', () => ({
+  v4: jest.fn().mockReturnValue('mock-uuid'),
+}));
 
 describe('GenerateSignedUrls Lambda Function Tests', () => {
-  let getSignedUrlMock: jest.Mock;
-  let S3ClientMock: jest.Mock;
-  let PutObjectCommandMock: jest.Mock;
   let handler: any;
 
   beforeEach(() => {
     jest.resetModules();
+    jest.clearAllMocks();
 
     process.env.S3_BUCKET_NAME = 'personal-website-photos-page-media-bucket';
     process.env.S3_URL_TTL = '300';
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
 
-    // Mock the system time to ensure consistent test results
-    jest.useFakeTimers().setSystemTime(new Date('2023-01-15T00:00:00Z'));
-
-    // Mock AWS SDK v3 clients and methods
-    S3ClientMock = jest.fn();
-    PutObjectCommandMock = jest.fn((input) => input);
-    getSignedUrlMock = jest.fn();
-
-    jest.mock('@aws-sdk/client-s3', () => ({
-      S3Client: S3ClientMock,
-      PutObjectCommand: PutObjectCommandMock,
-    }));
-
-    jest.mock('@aws-sdk/s3-request-presigner', () => {
-      return {
-        getSignedUrl: getSignedUrlMock,
-      };
-    });
-
-    // Mock uuidv4 to return a fixed UUID
-    jest.mock('uuid', () => ({
-      v4: jest.fn().mockReturnValue('mock-uuid'),
-    }));
-
-    // Import the handler after mocking
     handler = require('@lambda/media/generate-signed-urls/index').handler;
   });
 
@@ -78,9 +55,18 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       ],
     };
 
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(requestBody),
-    );
+    const event = createMockEvent({
+      httpMethod: 'POST',
+      headers: { origin: VALID_ORIGIN },
+      body: requestBody,
+      requestContext: {
+        authorizer: {
+          claims: {
+            sub: 'user123',
+          },
+        },
+      },
+    });
 
     // Mock the S3 getSignedUrl method to return a signed URL
     getSignedUrlMock.mockResolvedValue('https://example.com/signed-url');
@@ -111,20 +97,19 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 403 when origin in request is invalid', async () => {
-    const requestBody = {
-      filesMetadata: [
-        {
-          fileName: 'testfile.jpg',
-          contentType: 'image/jpeg',
-          type: 'thumbnail',
-        },
-      ],
-    };
-
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(requestBody),
-      'invalid',
-    );
+    const event = createMockEvent({
+      httpMethod: 'POST',
+      headers: { origin: INVALID_ORIGIN },
+      body: {
+        filesMetadata: [
+          {
+            fileName: 'testfile.jpg',
+            contentType: 'image/jpeg',
+            type: 'thumbnail',
+          },
+        ],
+      },
+    });
 
     const response = await handler(event);
 
@@ -134,7 +119,10 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 400 when request body is missing', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(null);
+    const event = createMockEvent({
+      httpMethod: 'POST',
+      headers: { origin: VALID_ORIGIN },
+    });
 
     const response = await handler(event);
 
@@ -144,9 +132,11 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 400 when request body is invalid JSON', async () => {
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      'Invalid JSON String',
-    );
+    const event = createMockEvent({
+      httpMethod: 'POST',
+      headers: { origin: VALID_ORIGIN },
+      body: 'Invalid JSON String',
+    });
 
     const response = await handler(event);
 
@@ -155,19 +145,17 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
     expect(body.message).toBe('Invalid JSON format.');
   });
 
-  test('should return 400 when request body fails schema validation', async () => {
-    const invalidRequestBody = {
-      filesMetadata: [
-        {
-          // Missing 'fileName' field
-          contentType: 'image/jpeg',
-        },
-      ],
-    };
-
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(invalidRequestBody),
-    );
+  test('should return 400 when request body fails schema validation with missing file name', async () => {
+    const event = createMockEvent({
+      httpMethod: 'POST',
+      headers: { origin: VALID_ORIGIN },
+      body: {
+        filesMetadata: [{ contentType: 'image/jpeg' }],
+      },
+      requestContext: {
+        authorizer: { claims: { sub: 'user123' } },
+      },
+    });
 
     const response = await handler(event);
 
@@ -177,22 +165,25 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
   });
 
   test('should return 500 when an internal error occurs', async () => {
-    const requestBody = {
-      filesMetadata: [
-        {
-          fileName: 'testfile.jpg',
-          contentType: 'image/jpeg',
-          type: 'thumbnail',
-        },
-      ],
-    };
-
-    const event: Partial<APIGatewayProxyEvent> = createMockEvent(
-      JSON.stringify(requestBody),
-    );
-
-    // Mock the S3 getSignedUrl method to throw an error
     getSignedUrlMock.mockRejectedValue(new Error('S3 error'));
+
+    const event = createMockEvent({
+      httpMethod: 'POST',
+      headers: { origin: VALID_ORIGIN },
+      body: {
+        filesMetadata: [
+          {
+            fileName: 'testfile.jpg',
+            contentType: 'image/jpeg',
+            type: 'thumbnail',
+          },
+        ],
+      },
+      requestContext: {
+        authorizer: { claims: { sub: 'user123' } },
+      },
+    });
+
 
     const response = await handler(event);
 

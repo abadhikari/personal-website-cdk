@@ -1,4 +1,4 @@
-import { deserializeOriginAllowlist } from '../../common/cors';
+import { deserializeOriginAllowlist } from '@lambda/common/cors';
 
 /**
  * Interface for the configuration object.

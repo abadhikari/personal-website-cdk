@@ -1,0 +1,152 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuthStack Tests matches snapshot 1`] = `
+{
+  "Outputs": {
+    "AdminAuthCognitoDomain2DA99CB2": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AdminAuthCognitoUserPoolBC6FC715",
+          "ProviderURL",
+        ],
+      },
+    },
+    "AdminAuthCognitoUserPoolClientId3C21A9A3": {
+      "Value": {
+        "Ref": "AdminAuthCognitoUserPoolClientFA49CF36",
+      },
+    },
+    "AdminAuthCognitoUserPoolId119758D6": {
+      "Value": {
+        "Ref": "AdminAuthCognitoUserPoolBC6FC715",
+      },
+    },
+  },
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+  },
+  "Resources": {
+    "AdminAuthCognitoUserPoolBC6FC715": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AccountRecoverySetting": {
+          "RecoveryMechanisms": [
+            {
+              "Name": "verified_email",
+              "Priority": 1,
+            },
+          ],
+        },
+        "AdminCreateUserConfig": {
+          "AllowAdminCreateUserOnly": true,
+        },
+        "AliasAttributes": [
+          "email",
+        ],
+        "AutoVerifiedAttributes": [
+          "email",
+        ],
+        "EmailVerificationMessage": "The verification code to your new account is {####}",
+        "EmailVerificationSubject": "Verify your new account",
+        "Schema": [
+          {
+            "Mutable": true,
+            "Name": "email",
+            "Required": true,
+          },
+        ],
+        "SmsVerificationMessage": "The verification code to your new account is {####}",
+        "UserPoolName": "abhinnaadhikari-admin-user-pool",
+        "VerificationMessageTemplate": {
+          "DefaultEmailOption": "CONFIRM_WITH_CODE",
+          "EmailMessage": "The verification code to your new account is {####}",
+          "EmailSubject": "Verify your new account",
+          "SmsMessage": "The verification code to your new account is {####}",
+        },
+      },
+      "Type": "AWS::Cognito::UserPool",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "AdminAuthCognitoUserPoolClientFA49CF36": {
+      "Properties": {
+        "AllowedOAuthFlows": [
+          "implicit",
+          "code",
+        ],
+        "AllowedOAuthFlowsUserPoolClient": true,
+        "AllowedOAuthScopes": [
+          "profile",
+          "phone",
+          "email",
+          "openid",
+          "aws.cognito.signin.user.admin",
+        ],
+        "CallbackURLs": [
+          "https://abhinnaadhikari.com/callback",
+          "http://localhost:3000/callback",
+        ],
+        "ExplicitAuthFlows": [
+          "ALLOW_USER_SRP_AUTH",
+          "ALLOW_REFRESH_TOKEN_AUTH",
+        ],
+        "LogoutURLs": [
+          "https://abhinnaadhikari.com",
+          "http://localhost:3000",
+        ],
+        "PreventUserExistenceErrors": "ENABLED",
+        "RefreshTokenValidity": 60,
+        "SupportedIdentityProviders": [
+          "COGNITO",
+        ],
+        "TokenValidityUnits": {
+          "RefreshToken": "minutes",
+        },
+        "UserPoolId": {
+          "Ref": "AdminAuthCognitoUserPoolBC6FC715",
+        },
+      },
+      "Type": "AWS::Cognito::UserPoolClient",
+    },
+    "AdminAuthCognitoUserPoolCognitoDomainE9ADCF9A": {
+      "Properties": {
+        "Domain": "abhinnaadhikari-admin",
+        "UserPoolId": {
+          "Ref": "AdminAuthCognitoUserPoolBC6FC715",
+        },
+      },
+      "Type": "AWS::Cognito::UserPoolDomain",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;
