@@ -369,7 +369,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "5bac34233de2b5b6b202b3ce29453f2dee3f3cd7fc1b6e91e6fcf686cf21f3d6.zip",
+          "S3Key": "82018654c2b67928d850b3942269b0d2750f42657c1ccbbaa2b7be29e81b2cd7.zip",
         },
         "Environment": {
           "Variables": {

@@ -23,7 +23,9 @@ describe('reviews read handler', () => {
 
   it('200 + expected SQL (search present)', async () => {
     const mockCreatedAt = '2023-12-30T15:00:00.000Z';
-    queryMock.mockResolvedValueOnce({ rows: [{ review_id: 1, title: 'Test', created_at: mockCreatedAt }] });
+    queryMock.mockResolvedValueOnce({
+      rows: [{ review_id: 1, title: 'Test', created_at: mockCreatedAt }],
+    });
 
     const res = await handler(
       createMockEvent({
@@ -45,7 +47,9 @@ describe('reviews read handler', () => {
   });
 
   it('200 + expected SQL (no search)', async () => {
-    queryMock.mockResolvedValueOnce({ rows: [{ created_at: '2024-01-01T00:00:00.000Z' }] });
+    queryMock.mockResolvedValueOnce({
+      rows: [{ created_at: '2024-01-01T00:00:00.000Z' }],
+    });
 
     const res = await handler(
       createMockEvent({

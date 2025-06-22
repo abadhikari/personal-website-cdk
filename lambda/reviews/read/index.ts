@@ -51,9 +51,10 @@ export const handler = async (
     const result = await db.query(query.sql, query.values);
 
     const rows = result.rows;
-    const nextCursor = rows.length > 0
-      ? new Date(rows[rows.length - 1].created_at).toISOString()
-      : null;
+    const nextCursor =
+      rows.length > 0
+        ? new Date(rows[rows.length - 1].created_at).toISOString()
+        : null;
 
     return createResponse(200, { results: rows, nextCursor }, origin);
   } catch (error) {
