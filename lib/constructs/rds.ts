@@ -1,12 +1,12 @@
-import { Construct } from 'constructs';
+import { Duration } from 'aws-cdk-lib';
+import { InstanceType, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
 import {
   Credentials,
   DatabaseInstance,
   IInstanceEngine,
 } from 'aws-cdk-lib/aws-rds';
-import { InstanceType, SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { Duration } from 'aws-cdk-lib';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
+import { Construct } from 'constructs';
 
 export interface RdsProps {
   /**

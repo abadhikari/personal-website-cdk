@@ -1,10 +1,10 @@
-import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
 import { IVpc, ISecurityGroup } from 'aws-cdk-lib/aws-ec2';
 import {
   NodejsFunction,
   NodejsFunctionProps,
 } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Construct } from 'constructs';
 
 export interface LambdaNodeFunctionProps extends NodejsFunctionProps {
   /**

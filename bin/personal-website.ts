@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { ApiStack } from '../lib/stacks/api-stack';
-import { AuthStack } from '../lib/stacks/auth-stack';
-import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
+
 import {
   ACCOUNT_ID,
   ACCOUNT_REGION,
 } from '../lib/configuration/account-config';
+import { ApiStack } from '../lib/stacks/api-stack';
+import { AuthStack } from '../lib/stacks/auth-stack';
+import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
 import { ReviewsPageStack } from '../lib/stacks/reviews-page-stack';
 
 const app = new cdk.App();

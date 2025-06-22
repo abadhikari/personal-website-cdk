@@ -1,11 +1,11 @@
 import { RemovalPolicy } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 import {
   AttributeType,
   BillingMode,
   ProjectionType,
   Table,
 } from 'aws-cdk-lib/aws-dynamodb';
+import { Construct } from 'constructs';
 
 interface DynamoDbTableProps {
   /**

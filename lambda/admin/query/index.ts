@@ -1,9 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
 import { createResponse } from '@lambda/common/createResponse';
+import { getDbClient, getDbCredentials } from '@lambda/common/db';
 import { ValidationError } from '@lambda/common/errors';
+
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
-import { getDbClient, getDbCredentials } from '@lambda/common/db';
+
 
 const { DB_SECRET_ARN } = getConfig();
 

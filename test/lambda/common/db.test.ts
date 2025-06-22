@@ -75,7 +75,7 @@ describe('lambda/common/db utilities', () => {
       const client2 = await getDbClient(creds);
 
       // Cached instance
-      expect(client1).toBe(client2); 
+      expect(client1).toBe(client2);
       expect(mockConnect).toHaveBeenCalledTimes(1);
     });
   });
@@ -102,7 +102,9 @@ describe('lambda/common/db utilities', () => {
       const queries = [{ sql: 'SQL', values: [] }];
       const fn = jest.fn().mockRejectedValue(new Error('boom'));
 
-      await expect(executeAtomicTransaction(db, queries, fn)).rejects.toThrow('boom');
+      await expect(executeAtomicTransaction(db, queries, fn)).rejects.toThrow(
+        'boom',
+      );
 
       expect(mockQuery).toHaveBeenCalledWith('BEGIN');
       expect(mockQuery).toHaveBeenCalledWith('ROLLBACK');

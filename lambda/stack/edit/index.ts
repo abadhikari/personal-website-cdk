@@ -1,9 +1,11 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
 import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
 import { createResponse } from '@lambda/common/createResponse';
 import { ValidationError } from '@lambda/common/errors';
+
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
 

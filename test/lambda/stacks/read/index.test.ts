@@ -1,6 +1,7 @@
-import { encode } from '../../../../lambda/common/string';
 import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
 import createMockEvent from '@test-helpers/createMockEvent';
+
+import { encode } from '../../../../lambda/common/string';
 
 const dynamoDbSendMock = jest.fn();
 const QueryCommandMock = jest.fn();
@@ -38,7 +39,7 @@ describe('Read Lambda Function Tests', () => {
     process.env.ORIGIN_ALLOWLIST =
       'http://localhost:3000,https://abhinnaadhikari.com';
     process.env.STACK_METADATA_GSI_PARTITION_KEY = 'ALL_STACKS';
-    
+
     handler = require('@lambda/stacks/read/index').handler;
   });
 

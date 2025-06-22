@@ -1,13 +1,15 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { v4 as uuidv4 } from 'uuid';
-import { createResponse } from '@lambda/common/createResponse';
-import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
-import { ValidationError } from '@lambda/common/errors';
-import { requestBodySchema } from './schemas';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { v4 as uuidv4 } from 'uuid';
+
+import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
+import { createResponse } from '@lambda/common/createResponse';
+import { ValidationError } from '@lambda/common/errors';
+
 import { getConfig } from './config';
 import { sanitizeFileName } from './sanitizeFileName';
+import { requestBodySchema } from './schemas';
 
 const s3Client = new S3Client({ region: process.env.AWS_REGION });
 

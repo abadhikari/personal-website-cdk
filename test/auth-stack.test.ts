@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+
 import { AuthStack } from '../lib/stacks/auth-stack';
 
 describe('AuthStack Tests', () => {

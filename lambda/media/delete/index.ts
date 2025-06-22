@@ -1,17 +1,19 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import {
   DynamoDBDocumentClient,
   TransactWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
 import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
 import { createResponse } from '@lambda/common/createResponse';
 import { ValidationError } from '@lambda/common/errors';
-import { getConfig } from './config';
-import { queryParametersSchema } from './schemas';
 import { queryMediaMetadataTable } from '@lambda/common/queryMediaMetadataTable';
 import { ImagePath } from '@lambda/common/types';
+
+import { getConfig } from './config';
+import { queryParametersSchema } from './schemas';
 
 const dynamoDbClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3Client = new S3Client({ region: process.env.AWS_REGION });

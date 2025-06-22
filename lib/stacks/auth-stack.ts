@@ -1,11 +1,12 @@
 import { Duration, StackProps, Stack } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import { CognitoPool } from '../constructs/cognito-pool';
 import { AccountRecovery } from 'aws-cdk-lib/aws-cognito';
+import { Construct } from 'constructs';
+
 import {
   LOCALHOST_DOMAIN,
   WEBSITE_DOMAIN,
 } from '../configuration/website-config';
+import { CognitoPool } from '../constructs/cognito-pool';
 
 /**
  * AuthStack sets up the backend infrastructure for all things

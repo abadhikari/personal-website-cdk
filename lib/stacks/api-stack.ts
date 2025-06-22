@@ -8,8 +8,9 @@ import {
 } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate, ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
 import { Construct } from 'constructs';
-import { CognitoPool } from '../constructs/cognito-pool';
+
 import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
+import { CognitoPool } from '../constructs/cognito-pool';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 
 export interface ApiStackProps extends StackProps {

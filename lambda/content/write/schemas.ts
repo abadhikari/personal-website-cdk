@@ -1,5 +1,6 @@
-import { ContentCategory } from '@lambda/common/types';
 import * as Joi from 'joi';
+
+import { ContentCategory } from '@lambda/common/types';
 
 export const baseRequestSchema = Joi.object({
   category_id: Joi.number()

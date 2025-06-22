@@ -1,5 +1,5 @@
-import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
-import createMockEvent from "@test-helpers/createMockEvent";
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
 const queryMock = jest.fn();
 
@@ -24,13 +24,15 @@ describe('content read handler', () => {
   });
 
   it('200 + expected SQL (search present)', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'GET', 
-      queryStringParameters: { limit: '10', search: 'Sushi' },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '10', search: 'Sushi' },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
@@ -43,13 +45,15 @@ describe('content read handler', () => {
   });
 
   it('200 + expected SQL (no search)', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'GET', 
-      queryStringParameters: { limit: '5' },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '5' },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(200);
     const [sql, params] = queryMock.mock.calls[0];
@@ -58,47 +62,55 @@ describe('content read handler', () => {
   });
 
   it('403 when origin not allow-listed', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'GET', 
-      queryStringParameters: { limit: '5' },
-      headers: {
-        origin: INVALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '5' },
+        headers: {
+          origin: INVALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(403);
   });
 
   it('400 when query params missing', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'GET', 
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 on invalid schema (limit out of range)', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'GET', 
-      queryStringParameters: { limit: '0' },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '0' },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('500 when database query fails', async () => {
     queryMock.mockRejectedValueOnce(new Error('query err'));
 
-    const res = await handler(createMockEvent({
-      httpMethod: 'GET', 
-      queryStringParameters: { limit: '5' },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '5' },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(500);
   });
 

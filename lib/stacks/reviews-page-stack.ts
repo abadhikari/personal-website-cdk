@@ -1,23 +1,24 @@
 import { StackProps, Stack, Duration } from 'aws-cdk-lib';
-import { Runtime } from 'aws-cdk-lib/aws-lambda';
-import { Construct } from 'constructs';
-import { Vpc } from '../constructs/vpc';
-import { SecretsManager } from '../constructs/secrets-manager';
-import { Rds } from '../constructs/rds';
-import { DatabaseInstanceEngine } from 'aws-cdk-lib/aws-rds';
 import {
   InstanceClass,
   InstanceSize,
   InstanceType,
   SubnetType,
 } from 'aws-cdk-lib/aws-ec2';
-import { LambdaNodeFunction } from '../constructs/lambda-node-function';
 import {
   InterfaceVpcEndpointAwsService,
   Port,
   SecurityGroup,
 } from 'aws-cdk-lib/aws-ec2';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
+import { DatabaseInstanceEngine } from 'aws-cdk-lib/aws-rds';
+import { Construct } from 'constructs';
+
 import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
+import { LambdaNodeFunction } from '../constructs/lambda-node-function';
+import { Rds } from '../constructs/rds';
+import { SecretsManager } from '../constructs/secrets-manager';
+import { Vpc } from '../constructs/vpc';
 
 /**
  * ReviewsPageStack sets up the backend infrastructure for the reviews page

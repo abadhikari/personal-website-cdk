@@ -184,7 +184,6 @@ describe('GenerateSignedUrls Lambda Function Tests', () => {
       },
     });
 
-
     const response = await handler(event);
 
     expect(response.statusCode).toBe(500);

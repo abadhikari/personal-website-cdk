@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+
 import { PhotosPageStack } from '../lib/stacks/photos-page-stack';
 
 describe('PhotosPageStack Tests', () => {

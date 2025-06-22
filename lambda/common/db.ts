@@ -3,6 +3,7 @@ import {
   GetSecretValueCommand,
 } from '@aws-sdk/client-secrets-manager';
 import { Client as PgClient } from 'pg';
+
 import { QueryWithParams } from './types';
 
 const secretsClient = new SecretsManagerClient({});

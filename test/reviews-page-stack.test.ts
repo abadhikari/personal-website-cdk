@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+
 import { ReviewsPageStack } from '../lib/stacks/reviews-page-stack';
 
 describe('ReviewsPageStack Tests', () => {
@@ -23,7 +24,9 @@ describe('ReviewsPageStack Tests', () => {
 
     for (const subnet of Object.values(subnets)) {
       const tags = subnet.Properties.Tags;
-      const subnetTypeTag = tags?.find((tag: any) => tag.Key === 'aws-cdk:subnet-type');
+      const subnetTypeTag = tags?.find(
+        (tag: any) => tag.Key === 'aws-cdk:subnet-type',
+      );
       expect(subnetTypeTag?.Value).toEqual('Isolated');
     }
   });

@@ -1,5 +1,4 @@
 import { RemovalPolicy } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 import {
   BlockPublicAccess,
   Bucket,
@@ -7,6 +6,7 @@ import {
   CorsRule,
   IBucket,
 } from 'aws-cdk-lib/aws-s3';
+import { Construct } from 'constructs';
 
 export interface S3BucketProps {
   /**

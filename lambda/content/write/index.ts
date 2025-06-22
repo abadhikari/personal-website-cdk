@@ -1,21 +1,23 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { createResponse } from '@lambda/common/createResponse';
-import { ValidationError } from '@lambda/common/errors';
+import { Client as PgClient } from 'pg';
+
 import { getConfig } from '@lambda/common/config/publicDatabase';
-import { baseRequestSchema, retrieveSchemaForCategory } from './schemas';
-import {
-  ContentCategory,
-  ContentCategoryType,
-  QueryWithParams,
-} from '@lambda/common/types';
+import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
+import { createResponse } from '@lambda/common/createResponse';
 import {
   executeAtomicTransaction,
   getDbClient,
   getDbCredentials,
   replacePlaceholders,
 } from '@lambda/common/db';
-import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
-import { Client as PgClient } from 'pg';
+import { ValidationError } from '@lambda/common/errors';
+import {
+  ContentCategory,
+  ContentCategoryType,
+  QueryWithParams,
+} from '@lambda/common/types';
+
+import { baseRequestSchema, retrieveSchemaForCategory } from './schemas';
 
 const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
 

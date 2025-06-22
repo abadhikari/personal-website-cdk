@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
+
 import { createResponse } from './createResponse';
 
 /**

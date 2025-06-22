@@ -1,11 +1,14 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { createResponse } from '@lambda/common/createResponse';
-import { ValidationError } from '@lambda/common/errors';
+
 import { getConfig } from '@lambda/common/config/publicDatabase';
-import { requestSchema } from './schemas';
-import { QueryWithParams } from '@lambda/common/types';
-import { getDbClient, getDbCredentials } from '@lambda/common/db';
 import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
+import { createResponse } from '@lambda/common/createResponse';
+import { getDbClient, getDbCredentials } from '@lambda/common/db';
+import { ValidationError } from '@lambda/common/errors';
+import { QueryWithParams } from '@lambda/common/types';
+
+import { requestSchema } from './schemas';
+
 
 const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
 

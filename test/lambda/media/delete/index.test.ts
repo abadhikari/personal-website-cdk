@@ -1,5 +1,5 @@
-import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
-import createMockEvent from "@test-helpers/createMockEvent";
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
 const dynamoDbSendMock = jest.fn();
 const s3SendMock = jest.fn();
@@ -62,35 +62,39 @@ describe('Delete Lambda Handler Tests', () => {
     // S3 delete (called twice: full + thumbnail)
     s3SendMock.mockResolvedValue({});
 
-    const res = await handler(createMockEvent({
-      httpMethod: 'DELETE', 
-      queryStringParameters: {
-        stackId: 'stack123',
-        mediaId: 'media123',
-      },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        queryStringParameters: {
+          stackId: 'stack123',
+          mediaId: 'media123',
+        },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.body).message).toBe(
-      'Data deleted successfully!',
-    );
+    expect(JSON.parse(res.body).message).toBe('Data deleted successfully!');
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(2);
     expect(s3SendMock).toHaveBeenCalledTimes(2);
   });
 
   test('validation error – missing stackId', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'DELETE', 
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(400);
-    expect(JSON.parse(res.body).message).toMatch('Query parameters are missing.');
+    expect(JSON.parse(res.body).message).toMatch(
+      'Query parameters are missing.',
+    );
 
     // should not hit Dynamo or S3
     expect(dynamoDbSendMock).not.toHaveBeenCalled();
@@ -98,11 +102,13 @@ describe('Delete Lambda Handler Tests', () => {
   });
 
   test('validation error – missing stackId', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: VALID_ORIGIN },
-      queryStringParameters: { invalid: 'schema' },
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { invalid: 'schema' },
+      }),
+    );
 
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).message).toMatch(/invalid request/i);
@@ -114,15 +120,17 @@ describe('Delete Lambda Handler Tests', () => {
     // First send() = QueryCommand → empty Items
     dynamoDbSendMock.mockResolvedValueOnce({ Items: [] });
 
-    const res = await handler(createMockEvent({
-      httpMethod: 'DELETE', 
-      queryStringParameters: {
-        stackId: 'stack123',
-      },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        queryStringParameters: {
+          stackId: 'stack123',
+        },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(500);
     expect(JSON.parse(res.body).message).toBe('Internal server error.');
@@ -133,15 +141,17 @@ describe('Delete Lambda Handler Tests', () => {
   });
 
   test('returns 403 when Origin is not allow‑listed', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'DELETE', 
-      queryStringParameters: {
-        stackId: 'stack123',
-      },
-      headers: {
-        origin: INVALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'DELETE',
+        queryStringParameters: {
+          stackId: 'stack123',
+        },
+        headers: {
+          origin: INVALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(403);
     expect(JSON.parse(res.body).message).toBe('Forbidden: Invalid origin');
@@ -183,7 +193,10 @@ describe('Delete Lambda Handler Tests', () => {
     expect(transactCmd.input.TransactItems).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          Delete: { TableName: 'StackMetadataTable', Key: { stackId: 'soloStack' } },
+          Delete: {
+            TableName: 'StackMetadataTable',
+            Key: { stackId: 'soloStack' },
+          },
         }),
       ]),
     );

@@ -1,6 +1,6 @@
 import { Duration } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 import { Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Construct } from 'constructs';
 
 export interface LambdaFunctionProps {
   /**

@@ -1,5 +1,5 @@
-import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
-import createMockEvent from "@test-helpers/createMockEvent";
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
 const queryMock = jest.fn();
 
@@ -31,13 +31,15 @@ describe('review write handler', () => {
   });
 
   it('returns 200 and runs correct INSERT on valid body', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: VALID_BODY,
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_BODY,
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body).message).toBe('Review written successfully.');
@@ -54,57 +56,67 @@ describe('review write handler', () => {
   });
 
   it('returns 403 when origin not allow-listed', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: VALID_BODY,
-      headers: {
-        origin: INVALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_BODY,
+        headers: {
+          origin: INVALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(403);
   });
 
   it('400 when body is missing', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 on malformed JSON', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: 'bad json',
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: 'bad json',
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 on invalid schema', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: { ...VALID_BODY, ratingx2: 42 },
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: { ...VALID_BODY, ratingx2: 42 },
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('500 when database query fails', async () => {
     queryMock.mockRejectedValueOnce(new Error('query error'));
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: VALID_BODY,
-      headers: {
-        origin: VALID_ORIGIN
-      }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: VALID_BODY,
+        headers: {
+          origin: VALID_ORIGIN,
+        },
+      }),
+    );
     expect(res.statusCode).toBe(500);
   });
 

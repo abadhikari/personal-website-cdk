@@ -1,5 +1,4 @@
 import { RemovalPolicy, StackProps, Stack } from 'aws-cdk-lib';
-import { Construct } from 'constructs';
 import {
   AttributeType,
   BillingMode,
@@ -7,13 +6,15 @@ import {
 } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { HttpMethods } from 'aws-cdk-lib/aws-s3';
-import { CloudFrontDistribution } from '../constructs/cloudfront-distribution';
-import { S3Bucket } from '../constructs/s3-bucket';
+import { Construct } from 'constructs';
+
 import { ACCOUNT_ID } from '../configuration/account-config';
-import { DynamoDbTable } from '../constructs/dynamodb-table';
-import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
 import { PhotosPageDynamoDbTables } from '../configuration/dynamodb-config';
+import { ORIGIN_ALLOWLIST } from '../configuration/website-config';
+import { CloudFrontDistribution } from '../constructs/cloudfront-distribution';
+import { DynamoDbTable } from '../constructs/dynamodb-table';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
+import { S3Bucket } from '../constructs/s3-bucket';
 
 /**
  * PhotosPageStack sets up the backend infrastructure for the photo page

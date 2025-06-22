@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 /**
  * Creates a mock API Gateway event object for use in unit tests.
@@ -35,7 +35,11 @@ export default function createMockEvent({
     headers,
     queryStringParameters,
     pathParameters,
-    body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+    body: body
+      ? typeof body === 'string'
+        ? body
+        : JSON.stringify(body)
+      : undefined,
     requestContext,
   };
 }

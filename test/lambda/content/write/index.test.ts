@@ -1,5 +1,5 @@
-import createMockEvent from "@test-helpers/createMockEvent";
-import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
 const queryMock = jest.fn();
 
@@ -9,7 +9,9 @@ jest.mock('@lambda/common/db', () => {
     ...actual,
     getDbCredentials: jest.fn(),
     getDbClient: jest.fn().mockResolvedValue({ query: queryMock }),
-    executeAtomicTransaction: jest.fn((client, queries, fn) => fn(client, queries)),
+    executeAtomicTransaction: jest.fn((client, queries, fn) =>
+      fn(client, queries),
+    ),
   };
 });
 
@@ -64,8 +66,8 @@ describe('content write handler', () => {
         httpMethod: 'POST',
         body: VALID_FOOD_AND_DRINK_BODY,
         headers: {
-          origin: VALID_ORIGIN
-        }
+          origin: VALID_ORIGIN,
+        },
       }),
     );
 
@@ -87,8 +89,8 @@ describe('content write handler', () => {
         httpMethod: 'POST',
         body: VALID_ENTERTAINMENT_BODY,
         headers: {
-          origin: VALID_ORIGIN
-        }
+          origin: VALID_ORIGIN,
+        },
       }),
     );
 
@@ -109,8 +111,8 @@ describe('content write handler', () => {
         httpMethod: 'POST',
         body: VALID_ENTERTAINMENT_BODY,
         headers: {
-          origin: INVALID_ORIGIN
-        }
+          origin: INVALID_ORIGIN,
+        },
       }),
     );
     expect(res.statusCode).toBe(403);
@@ -121,8 +123,8 @@ describe('content write handler', () => {
       createMockEvent({
         httpMethod: 'POST',
         headers: {
-          origin: VALID_ORIGIN
-        }
+          origin: VALID_ORIGIN,
+        },
       }),
     );
     expect(res.statusCode).toBe(400);
@@ -134,8 +136,8 @@ describe('content write handler', () => {
         httpMethod: 'POST',
         body: 'bad json',
         headers: {
-          origin: VALID_ORIGIN
-        }
+          origin: VALID_ORIGIN,
+        },
       }),
     );
     expect(res.statusCode).toBe(400);
@@ -147,8 +149,8 @@ describe('content write handler', () => {
         httpMethod: 'POST',
         body: { foo: 'bar' },
         headers: {
-          origin: VALID_ORIGIN
-        }
+          origin: VALID_ORIGIN,
+        },
       }),
     );
     expect(res.statusCode).toBe(400);
@@ -161,8 +163,8 @@ describe('content write handler', () => {
         httpMethod: 'POST',
         body: VALID_FOOD_AND_DRINK_BODY,
         headers: {
-          origin: VALID_ORIGIN
-        }
+          origin: VALID_ORIGIN,
+        },
       }),
     );
     expect(res.statusCode).toBe(500);

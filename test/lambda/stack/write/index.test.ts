@@ -1,5 +1,5 @@
-import { INVALID_ORIGIN, VALID_ORIGIN } from "@test-helpers/constants";
-import createMockEvent from "@test-helpers/createMockEvent";
+import { INVALID_ORIGIN, VALID_ORIGIN } from '@test-helpers/constants';
+import createMockEvent from '@test-helpers/createMockEvent';
 
 const dynamoDbSendMock = jest.fn();
 const PutCommandMock = jest.fn();
@@ -141,7 +141,7 @@ describe('Write Lambda Handler Tests', () => {
       createMockEvent({
         httpMethod: 'POST',
         headers: { origin: VALID_ORIGIN },
-        body:  {
+        body: {
           stackId: 'stack123',
         },
       }),

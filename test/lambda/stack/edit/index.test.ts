@@ -4,12 +4,12 @@ import createMockEvent from '@test-helpers/createMockEvent';
 const dynamoDbSendMock = jest.fn();
 
 jest.mock('@aws-sdk/client-dynamodb', () => ({
-DynamoDBClient: jest.fn(),
+  DynamoDBClient: jest.fn(),
 }));
 
 jest.mock('@aws-sdk/lib-dynamodb', () => ({
-DynamoDBDocumentClient: { from: () => ({ send: dynamoDbSendMock }) },
-UpdateCommand: jest.fn((input) => ({ input })),
+  DynamoDBDocumentClient: { from: () => ({ send: dynamoDbSendMock }) },
+  UpdateCommand: jest.fn((input) => ({ input })),
 }));
 
 describe('Edit Lambda Handler Tests', () => {
@@ -33,30 +33,32 @@ describe('Edit Lambda Handler Tests', () => {
   test('happy path – updates caption and location', async () => {
     dynamoDbSendMock.mockResolvedValueOnce({});
 
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: VALID_ORIGIN },
-      queryStringParameters: { stackId: 'stack123' },
-      body: {
-        caption: 'Updated Caption',
-        location: 'New York',
-      },
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'stack123' },
+        body: {
+          caption: 'Updated Caption',
+          location: 'New York',
+        },
+      }),
+    );
 
     expect(res.statusCode).toBe(200);
-    expect(JSON.parse(res.body).message).toBe(
-      'Data updated successfully!',
-    );
+    expect(JSON.parse(res.body).message).toBe('Data updated successfully!');
     expect(dynamoDbSendMock).toHaveBeenCalledTimes(1);
   });
 
   test('validation error – missing stackId', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: VALID_ORIGIN },
-      queryStringParameters: {},
-      body: { caption: 'New Caption' },
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: {},
+        body: { caption: 'New Caption' },
+      }),
+    );
 
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).message).toMatch(/invalid request/i);
@@ -64,12 +66,14 @@ describe('Edit Lambda Handler Tests', () => {
   });
 
   test('validation error – neither caption nor location provided', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: VALID_ORIGIN },
-      queryStringParameters: { stackId: 'stack123' },
-      body: {},
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'stack123' },
+        body: {},
+      }),
+    );
 
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).message).toMatch(
@@ -79,12 +83,14 @@ describe('Edit Lambda Handler Tests', () => {
   });
 
   test('returns 403 when Origin is not allow‑listed', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: INVALID_ORIGIN },
-      queryStringParameters: { stackId: 'stack123' },
-      body: { caption: 'Unsafe' },
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: INVALID_ORIGIN },
+        queryStringParameters: { stackId: 'stack123' },
+        body: { caption: 'Unsafe' },
+      }),
+    );
 
     expect(res.statusCode).toBe(403);
     expect(JSON.parse(res.body).message).toBe('Forbidden: Invalid origin');
@@ -92,12 +98,14 @@ describe('Edit Lambda Handler Tests', () => {
   });
 
   test('handler returns 400 when request body is missing', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: VALID_ORIGIN },
-      queryStringParameters: { stackId: 'stack123' },
-      body: undefined,
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'stack123' },
+        body: undefined,
+      }),
+    );
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).message).toBe('Request body is missing.');
   });
@@ -116,12 +124,14 @@ describe('Edit Lambda Handler Tests', () => {
   });
 
   test('handler returns 400 when validation fails (missing caption/location)', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'PATCH',
-      headers: { origin: VALID_ORIGIN },
-      queryStringParameters: { stackId: 'stack123' },
-      body: {},
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'PATCH',
+        headers: { origin: VALID_ORIGIN },
+        queryStringParameters: { stackId: 'stack123' },
+        body: {},
+      }),
+    );
     expect(res.statusCode).toBe(400);
     expect(JSON.parse(res.body).message).toMatch(/Invalid request:/);
   });

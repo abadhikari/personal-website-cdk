@@ -24,7 +24,6 @@
     "paths": {
       "@lambda/*": ["lambda/*"],
       "@test-helpers/*": ["test/test-helpers/*"]
-
     }
   },
   "exclude": ["node_modules", "cdk.out", "build"]

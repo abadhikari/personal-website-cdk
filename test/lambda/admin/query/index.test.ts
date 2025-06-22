@@ -26,10 +26,12 @@ describe('admin/query handler', () => {
   });
 
   it('returns 200 on valid query', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: { query: VALID_QUERY } 
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: { query: VALID_QUERY },
+      }),
+    );
 
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body).message).toBe('Query executed successfully.');
@@ -37,34 +39,42 @@ describe('admin/query handler', () => {
   });
 
   it('400 when body missing', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 when invalid JSON', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: 'bad-json'
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: 'bad-json',
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('400 when schema fails', async () => {
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: { foo: 'bar' }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: { foo: 'bar' },
+      }),
+    );
     expect(res.statusCode).toBe(400);
   });
 
   it('500 on database query throw', async () => {
     queryMock.mockRejectedValueOnce(new Error('db broke'));
-    const res = await handler(createMockEvent({
-      httpMethod: 'POST', 
-      body: { query: VALID_QUERY }
-    }));
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'POST',
+        body: { query: VALID_QUERY },
+      }),
+    );
     expect(res.statusCode).toBe(500);
   });
 
