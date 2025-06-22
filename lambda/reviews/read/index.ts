@@ -12,11 +12,11 @@ import { queryParamSchema } from './schemas';
 const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
 
 /**
- * Interface representing the structure of the parsed request body.
+ * Interface representing the validated query parameters for the reviews read request.
  *
- * @template T - Type of the payload object.
- * @property category_id - The category of the content (used for routing logic).
- * @property payload - The validated content-specific payload to write.
+ * @property limit - Maximum number of results to return (validated upstream via Joi).
+ * @property search - Optional case-insensitive substring to filter reviews by title.
+ * @property cursor - Optional ISO 8601 timestamp string used for pagination. Filters reviews created before this timestamp.
  */
 export interface QueryParameters {
   limit: number;
@@ -50,7 +50,12 @@ export const handler = async (
     const query = createReviewQuery(limit, search, cursor);
     const result = await db.query(query.sql, query.values);
 
-    return createResponse(200, { results: result.rows }, origin);
+    const rows = result.rows;
+    const nextCursor = rows.length > 0
+      ? new Date(rows[rows.length - 1].created_at).toISOString()
+      : null;
+
+    return createResponse(200, { results: rows, nextCursor }, origin);
   } catch (error) {
     if (error instanceof ValidationError) {
       return createResponse(

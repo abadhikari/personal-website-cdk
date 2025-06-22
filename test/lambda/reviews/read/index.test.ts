@@ -18,12 +18,13 @@ describe('reviews read handler', () => {
     process.env.DB_SECRET_ARN = 'mock-secret-arn';
     process.env.ORIGIN_ALLOWLIST = 'http://localhost:3000';
 
-    queryMock.mockResolvedValue({ rows: [{ foo: 'bar' }] });
-
     handler = require('@lambda/reviews/read/index').handler;
   });
 
   it('200 + expected SQL (search present)', async () => {
+    const mockCreatedAt = '2023-12-30T15:00:00.000Z';
+    queryMock.mockResolvedValueOnce({ rows: [{ review_id: 1, title: 'Test', created_at: mockCreatedAt }] });
+
     const res = await handler(
       createMockEvent({
         httpMethod: 'GET',
@@ -35,15 +36,17 @@ describe('reviews read handler', () => {
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.body);
     expect(Array.isArray(body.results)).toBe(true);
+    expect(body.nextCursor).toBe(mockCreatedAt);
 
     expect(queryMock).toHaveBeenCalledTimes(1);
     const [sql, params] = queryMock.mock.calls[0];
-
     expect(sql).toMatch(/select\s+review_id/i);
     expect(params).toEqual(['%sushi%', 10]);
   });
 
   it('200 + expected SQL (no search)', async () => {
+    queryMock.mockResolvedValueOnce({ rows: [{ created_at: '2024-01-01T00:00:00.000Z' }] });
+
     const res = await handler(
       createMockEvent({
         httpMethod: 'GET',
@@ -53,13 +56,23 @@ describe('reviews read handler', () => {
     );
 
     expect(res.statusCode).toBe(200);
-    const [sql, params] = queryMock.mock.calls[0];
+    const body = JSON.parse(res.body);
+    expect(body.nextCursor).toBe('2024-01-01T00:00:00.000Z');
 
+    const [sql, params] = queryMock.mock.calls[0];
     expect(sql).toMatch(/select\s+review_id/i);
     expect(params).toEqual([5]);
   });
 
   it('200 + expected SQL (search + cursor)', async () => {
+    const createdAt = '2025-01-01T00:00:00.000Z';
+    queryMock.mockResolvedValueOnce({
+      rows: [
+        { created_at: createdAt },
+        { created_at: '2024-12-30T00:00:00.000Z' },
+      ],
+    });
+
     const res = await handler(
       createMockEvent({
         httpMethod: 'GET',
@@ -73,10 +86,30 @@ describe('reviews read handler', () => {
     );
 
     expect(res.statusCode).toBe(200);
-    const [sql, params] = queryMock.mock.calls[0];
+    const body = JSON.parse(res.body);
+    expect(body.nextCursor).toBe('2024-12-30T00:00:00.000Z');
 
+    const [sql, params] = queryMock.mock.calls[0];
     expect(sql).toMatch(/select\s+review_id/i);
     expect(params).toEqual(['%jazz%', '2025-01-01T00:00:00.000Z', 7]);
+  });
+
+  it('200 + nextCursor null when no results', async () => {
+    queryMock.mockResolvedValueOnce({ rows: [] });
+
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '5' },
+        headers: { origin: VALID_ORIGIN },
+      }),
+    );
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.nextCursor).toBe(null);
+    expect(Array.isArray(body.results)).toBe(true);
+    expect(body.results.length).toBe(0);
   });
 
   it('403 when origin not allow-listed', async () => {
