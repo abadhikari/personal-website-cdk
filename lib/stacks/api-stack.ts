@@ -36,6 +36,9 @@ export interface ApiStackProps extends StackProps {
   review: {
     writeLambda: LambdaNodeFunction;
   };
+  reviews: {
+    readLambda: LambdaNodeFunction;
+  };
 }
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -119,6 +122,9 @@ export class ApiStack extends Stack {
 
     // review
     this.addLambdaRoute(props.review.writeLambda, '/v1/review', 'POST');
+
+    // reviews
+    this.addLambdaRoute(props.reviews.readLambda, '/v1/reviews', 'GET');
   }
 
   /**

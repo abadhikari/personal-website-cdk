@@ -7,7 +7,6 @@ import { ValidationError } from '@lambda/common/errors';
 import { getConfig } from './config';
 import { requestBodySchema } from './schemas';
 
-
 const { DB_SECRET_ARN } = getConfig();
 
 /**

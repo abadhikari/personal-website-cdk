@@ -66,6 +66,11 @@ export class ReviewsPageStack extends Stack {
    */
   public readonly writeReviewLambda: LambdaNodeFunction;
 
+  /**
+   * The Lambda function responsible for reading reviews from database.
+   */
+  public readonly readReviewsLambda: LambdaNodeFunction;
+
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
@@ -193,6 +198,21 @@ export class ReviewsPageStack extends Stack {
     });
 
     this.grantLambdaDbAccess(this.writeReviewLambda);
+
+    this.readReviewsLambda = new LambdaNodeFunction(this, 'ReadReviewsLambda', {
+      functionName: 'reviews_page_read_reviews_v1',
+      runtime: Runtime.NODEJS_20_X,
+      entry: 'lambda/reviews/read/index.ts',
+      handler: 'handler',
+      securityGroups: [lambdaToRdsSecurityGroup],
+      vpc: this.reviewsVpc.vpc,
+      environment: {
+        DB_SECRET_ARN: this.rdsCredentialsSecret.secret.secretArn,
+        ORIGIN_ALLOWLIST: serializedOriginAllowList,
+      },
+    });
+
+    this.grantLambdaDbAccess(this.readReviewsLambda);
   }
 
   /**

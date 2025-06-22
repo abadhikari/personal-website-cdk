@@ -22,7 +22,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "325e602e6184b2d9324fbed97af785c3fbc61f9f05769f5f558c579c56883cec.zip",
+          "S3Key": "7a8f2a305837163dae59a1cf6ae0c3af2f506fd5e652dad31321ce2ab83d15c3.zip",
         },
         "Environment": {
           "Variables": {
@@ -203,7 +203,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "0f0c1390b186ecf2661f238e0dc203b7e88c0bf2b6570d6c6e48bde2e8a05944.zip",
+          "S3Key": "8808165859da73165dfb32140fd9bb17010bcacaf299baed6b3cb72b4091fb05.zip",
         },
         "Environment": {
           "Variables": {
@@ -356,6 +356,172 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
         ],
       },
       "Type": "AWS::IAM::Role",
+    },
+    "ReadReviewsLambdaLambdaNodeFunction1DD95C46": {
+      "DependsOn": [
+        "ReadReviewsLambdaLambdaNodeFunctionServiceRoleDefaultPolicy6D3C8342",
+        "ReadReviewsLambdaLambdaNodeFunctionServiceRole0C23DD2C",
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "5bac34233de2b5b6b202b3ce29453f2dee3f3cd7fc1b6e91e6fcf686cf21f3d6.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "DB_SECRET_ARN": {
+              "Ref": "ReviewsSecret87760034",
+            },
+            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+          },
+        },
+        "FunctionName": "reviews_page_read_reviews_v1",
+        "Handler": "index.handler",
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "ReadReviewsLambdaLambdaNodeFunctionServiceRole0C23DD2C",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+        "Timeout": 3,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "LambdaToRdsSG5075E23A",
+                "GroupId",
+              ],
+            },
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet1Subnet28C9951D",
+            },
+            {
+              "Ref": "ReviewsVpcVPCIsolatedSubnet2Subnet8B1C9CBC",
+            },
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "ReadReviewsLambdaLambdaNodeFunctionServiceRole0C23DD2C": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "ReadReviewsLambdaLambdaNodeFunctionServiceRoleDefaultPolicy6D3C8342": {
+      "DependsOn": [
+        "ReviewsVpcVPCIsolatedSubnet1RouteTableAssociationED4484C3",
+        "ReviewsVpcVPCIsolatedSubnet2RouteTableAssociationE3C45F79",
+      ],
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "rds-db:connect",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":rds-db:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":dbuser:",
+                    {
+                      "Fn::GetAtt": [
+                        "ReviewsDbRds8FD0AF40",
+                        "DbiResourceId",
+                      ],
+                    },
+                    "/{{resolve:secretsmanager:",
+                    {
+                      "Ref": "ReviewsSecretAttachmentBA23178B",
+                    },
+                    ":SecretString:username::}}",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "ReviewsSecret87760034",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "ReadReviewsLambdaLambdaNodeFunctionServiceRoleDefaultPolicy6D3C8342",
+        "Roles": [
+          {
+            "Ref": "ReadReviewsLambdaLambdaNodeFunctionServiceRole0C23DD2C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
     },
     "ReviewsDbRds8FD0AF40": {
       "DeletionPolicy": "Snapshot",
@@ -721,7 +887,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "f1e27484ae8f1c550f3d36f6ec55d0b78d5565a7dfdc9dacdfaadf18ac5259e7.zip",
+          "S3Key": "a0e62bdc3d6fff8e96e34c88a52f5e10f8090d50af25fd3d465ea5ca3f537836.zip",
         },
         "Environment": {
           "Variables": {
@@ -887,7 +1053,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "08041571823de552e6af57ffa4c2745018c368c2082684f02cac9cb068d6f819.zip",
+          "S3Key": "577fbe293d7dd89bf5aa5029a2517cbcc5436058e3406fb8959c6eea5c1d13b3.zip",
         },
         "Environment": {
           "Variables": {

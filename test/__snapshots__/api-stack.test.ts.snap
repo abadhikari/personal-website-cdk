@@ -137,7 +137,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "SiteApiApiGatewayRestApiDeployment4249AC8A0f73af245f323864b27674df56a24f37": {
+    "SiteApiApiGatewayRestApiDeployment4249AC8A9048e264707428fcadf30f43f659fb31": {
       "DependsOn": [
         "SiteApiApiGatewayRestApiOPTIONSE33872A9",
         "SiteApiApiGatewayRestApiv1contentOPTIONS35E15A34",
@@ -157,6 +157,9 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
         "SiteApiApiGatewayRestApiv1reviewOPTIONS4E76A7DC",
         "SiteApiApiGatewayRestApiv1reviewPOST4412C7E5",
         "SiteApiApiGatewayRestApiv1reviewDE44FEFE",
+        "SiteApiApiGatewayRestApiv1reviewsGET384EFA4D",
+        "SiteApiApiGatewayRestApiv1reviewsOPTIONS4873DCE8",
+        "SiteApiApiGatewayRestApiv1reviewsABC2E4E4",
         "SiteApiApiGatewayRestApiv1stackGET433914F7",
         "SiteApiApiGatewayRestApiv1stackOPTIONS434E5E8F",
         "SiteApiApiGatewayRestApiv1stackPATCHBB6B17E7",
@@ -180,7 +183,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "SiteApiApiGatewayRestApiDeployment4249AC8A0f73af245f323864b27674df56a24f37",
+          "Ref": "SiteApiApiGatewayRestApiDeployment4249AC8A9048e264707428fcadf30f43f659fb31",
         },
         "MethodSettings": [
           {
@@ -1112,6 +1115,167 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
         },
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1reviewsABC2E4E4": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "reviews",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1reviewsGET384EFA4D": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadReviewsLambdaLambdaNodeFunction1DD95C46Arn45732C5A",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1reviewsABC2E4E4",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1reviewsGETApiPermissionApiSiteApiApiGatewayRestApi966AF9F8GETv1reviews496E899C": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadReviewsLambdaLambdaNodeFunction1DD95C46Arn45732C5A",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/GET/v1/reviews",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1reviewsGETApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8GETv1reviewsF9176AA4": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadReviewsLambdaLambdaNodeFunction1DD95C46Arn45732C5A",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/GET/v1/reviews",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1reviewsOPTIONS4873DCE8": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1reviewsABC2E4E4",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
     },
     "SiteApiApiGatewayRestApiv1stack2EC88AE9": {
       "Properties": {

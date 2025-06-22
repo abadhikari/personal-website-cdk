@@ -9,7 +9,6 @@ import { QueryWithParams } from '@lambda/common/types';
 
 import { requestSchema } from './schemas';
 
-
 const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
 
 /**

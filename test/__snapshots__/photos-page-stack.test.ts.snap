@@ -20,7 +20,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "7334f708124facdf4eb8d2e204f1c3039959fc0d8cce3e6812a7cb73571933b5.zip",
+          "S3Key": "7cb5b0f106a74e583f017662ea98bc1997b92920a45d73e9492ec17dbcf19a95.zip",
         },
         "Environment": {
           "Variables": {
@@ -319,7 +319,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "68fa5f4a91f1a88301def70de5265e6e75f474ba0b15a732aa8e027bf8354802.zip",
+          "S3Key": "cbf6d15359079671520495ccd7de14f0348ee6625f9856b30e15318808762c74.zip",
         },
         "Environment": {
           "Variables": {
@@ -654,7 +654,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "bc8c048c1cb4cf9dcb7de9ee6a38d7923869ab2ed5f7f9c6924698f3bb88af65.zip",
+          "S3Key": "6dfd88122db29bd784225665ac358a4cd0142daef6c7e2660a42a0d59b4da767.zip",
         },
         "Environment": {
           "Variables": {
@@ -807,7 +807,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "503104ac93cfc7991dbe839dc840f07907aab4e95a9b9b68faa7ad98e02a2c79.zip",
+          "S3Key": "fb239e288c50eb9f246cecd23da81a22b934e06a9f251b3760b7220e388ba908.zip",
         },
         "Environment": {
           "Variables": {
