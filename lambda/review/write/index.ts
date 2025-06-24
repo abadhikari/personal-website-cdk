@@ -5,6 +5,7 @@ import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
 import { createResponse } from '@lambda/common/createResponse';
 import { getDbClient, getDbCredentials } from '@lambda/common/db';
 import { ValidationError } from '@lambda/common/errors';
+import { retrieveUserIdFromEvent } from '@lambda/common/retrieveUserIdFromEvent';
 import { QueryWithParams } from '@lambda/common/types';
 
 import { requestSchema } from './schemas';
@@ -15,13 +16,11 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
  * Interface representing the structure of the parsed review request body.
  *
  * @property contentId - UUID of the associated content.
- * @property userId - UUID of the user submitting the review.
  * @property ratingx2 - Rating from 1.0 to 5.0 in 0.5 steps (stored as 2–10).
  * @property reviewText - Non-empty string representing the review content.
  */
 export interface RequestBody {
   contentId: string;
-  userId: string;
   ratingx2: number;
   reviewText: string;
 }
@@ -45,11 +44,13 @@ export const handler = async (
 
   try {
     requestBody = parseRequestBody(event);
+    const { contentId, ratingx2, reviewText } = requestBody;
+    const userId = retrieveUserIdFromEvent(event);
 
     const credentials = await getDbCredentials(DB_SECRET_ARN);
     const db = await getDbClient(credentials);
 
-    const query = createReviewInsertQuery(requestBody);
+    const query = createReviewInsertQuery(contentId, userId, ratingx2, reviewText);
     await db.query(query.sql, query.values);
 
     return createResponse(
@@ -108,12 +109,12 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
  * @param request - The validated review request body containing contentId, userId, ratingx2, and reviewText.
  * @returns A parameterized SQL query object for inserting the review.
  */
-function createReviewInsertQuery({
-  contentId,
-  userId,
-  ratingx2,
-  reviewText,
-}: RequestBody): QueryWithParams {
+function createReviewInsertQuery(
+  contentId: string,
+  userId: string,
+  ratingx2: number,
+  reviewText: string,
+): QueryWithParams {
   const sql = `
     INSERT INTO reviews (content_id, user_id, rating_x2, review_text)
     VALUES ($1, $2, $3, $4)

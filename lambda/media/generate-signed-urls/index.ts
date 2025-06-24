@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
 import { createResponse } from '@lambda/common/createResponse';
 import { ValidationError } from '@lambda/common/errors';
+import { retrieveUserIdFromEvent } from '@lambda/common/retrieveUserIdFromEvent';
 
 import { getConfig } from './config';
 import { sanitizeFileName } from './sanitizeFileName';
@@ -142,16 +143,6 @@ async function getSignedUrlPromiseAndKey(
   });
 
   return { uploadUrl, key, type };
-}
-
-function retrieveUserIdFromEvent(event: APIGatewayProxyEvent): string {
-  const claims = event.requestContext.authorizer?.claims;
-
-  if (!claims || !claims.sub) {
-    throw new Error('User identity not found in request context.');
-  }
-
-  return claims.sub;
 }
 
 /**

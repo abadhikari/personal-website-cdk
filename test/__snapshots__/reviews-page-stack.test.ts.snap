@@ -22,7 +22,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "7a8f2a305837163dae59a1cf6ae0c3af2f506fd5e652dad31321ce2ab83d15c3.zip",
+          "S3Key": "<ZIP_ASSET>",
         },
         "Environment": {
           "Variables": {
@@ -203,7 +203,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "8808165859da73165dfb32140fd9bb17010bcacaf299baed6b3cb72b4091fb05.zip",
+          "S3Key": "<ZIP_ASSET>",
         },
         "Environment": {
           "Variables": {
@@ -369,7 +369,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "82018654c2b67928d850b3942269b0d2750f42657c1ccbbaa2b7be29e81b2cd7.zip",
+          "S3Key": "<ZIP_ASSET>",
         },
         "Environment": {
           "Variables": {
@@ -887,7 +887,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "a0e62bdc3d6fff8e96e34c88a52f5e10f8090d50af25fd3d465ea5ca3f537836.zip",
+          "S3Key": "<ZIP_ASSET>",
         },
         "Environment": {
           "Variables": {
@@ -1053,7 +1053,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
           "S3Bucket": {
             "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
           },
-          "S3Key": "577fbe293d7dd89bf5aa5029a2517cbcc5436058e3406fb8959c6eea5c1d13b3.zip",
+          "S3Key": "<ZIP_ASSET>",
         },
         "Environment": {
           "Variables": {

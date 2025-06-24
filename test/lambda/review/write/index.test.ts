@@ -11,9 +11,10 @@ jest.mock('@lambda/common/db', () => ({
 describe('review write handler', () => {
   let handler: any;
 
+  const USER_ID = '22222222-2222-4222-8222-222222222222';
+
   const VALID_BODY = {
     contentId: '11111111-1111-4111-8111-111111111111',
-    userId: '22222222-2222-4222-8222-222222222222',
     ratingx2: 8,
     reviewText: 'Great spot, would return!',
   };
@@ -38,6 +39,13 @@ describe('review write handler', () => {
         headers: {
           origin: VALID_ORIGIN,
         },
+        requestContext: {
+          authorizer: {
+            claims: {
+              sub: USER_ID,
+            },
+          },
+        },
       }),
     );
 
@@ -49,7 +57,7 @@ describe('review write handler', () => {
     const [, params] = queryMock.mock.calls[0];
     expect(params).toEqual([
       VALID_BODY.contentId,
-      VALID_BODY.userId,
+      USER_ID,
       VALID_BODY.ratingx2,
       VALID_BODY.reviewText,
     ]);
@@ -62,6 +70,13 @@ describe('review write handler', () => {
         body: VALID_BODY,
         headers: {
           origin: INVALID_ORIGIN,
+        },
+        requestContext: {
+          authorizer: {
+            claims: {
+              sub: USER_ID,
+            },
+          },
         },
       }),
     );
@@ -114,6 +129,13 @@ describe('review write handler', () => {
         body: VALID_BODY,
         headers: {
           origin: VALID_ORIGIN,
+        },
+        requestContext: {
+          authorizer: {
+            claims: {
+              sub: USER_ID,
+            },
+          },
         },
       }),
     );

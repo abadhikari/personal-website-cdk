@@ -5,10 +5,6 @@ export const requestSchema = Joi.object({
     'string.guid': 'content_id must be a valid UUID',
     'any.required': 'content_id is required',
   }),
-  userId: Joi.string().guid().required().messages({
-    'string.guid': 'user_id must be a valid UUID',
-    'any.required': 'user_id is required',
-  }),
   ratingx2: Joi.number()
     .integer()
     .valid(...[2, 3, 4, 5, 6, 7, 8, 9, 10])
