@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent } from "aws-lambda";
+import { APIGatewayProxyEvent } from 'aws-lambda';
 
 /**
  * Extracts the authenticated user's unique identifier (sub) from the request context.

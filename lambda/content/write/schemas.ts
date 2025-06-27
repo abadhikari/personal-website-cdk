@@ -19,19 +19,19 @@ export const baseRequestSchema = Joi.object({
 });
 
 export const experienceSchema = Joi.object({
-  title: Joi.string().required().messages({
+  title: Joi.string().trim().required().messages({
     'string.base': 'title must be a string',
     'any.required': 'title is required',
   }),
-  address: Joi.string().required().messages({
+  address: Joi.string().trim().required().messages({
     'string.base': 'address must be a string',
     'any.required': 'address is required',
   }),
-  city: Joi.string().required().messages({
+  city: Joi.string().trim().required().messages({
     'string.base': 'city must be a string',
     'any.required': 'city is required',
   }),
-  state: Joi.string().optional().messages({
+  state: Joi.string().trim().optional().messages({
     'string.base': 'state must be a string',
   }),
   venue_id: Joi.number().integer().positive().required().messages({
@@ -40,7 +40,7 @@ export const experienceSchema = Joi.object({
     'number.positive': 'venue_id must be a positive number',
     'any.required': 'venue_id is required',
   }),
-  country: Joi.string().required().messages({
+  country: Joi.string().trim().required().messages({
     'string.base': 'country must be a string',
     'any.required': 'country is required',
   }),

@@ -50,7 +50,12 @@ export const handler = async (
     const credentials = await getDbCredentials(DB_SECRET_ARN);
     const db = await getDbClient(credentials);
 
-    const query = createReviewInsertQuery(contentId, userId, ratingx2, reviewText);
+    const query = createReviewInsertQuery(
+      contentId,
+      userId,
+      ratingx2,
+      reviewText,
+    );
     await db.query(query.sql, query.values);
 
     return createResponse(

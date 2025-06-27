@@ -14,7 +14,7 @@
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run format && npm run build && npm run test",
     "prepare": "npm run format && npm run check && npm run cdk diff",
-    "deploy": "npm run check && npm run cdk synth && npm run cdk deploy",
+    "deploy": "npm run check && npm run cdk synth && npm run cdk deploy --",
     "deployall": "npm run check && npm run cdk synth && npm run cdk deploy -- --all"
   },
   "devDependencies": {
