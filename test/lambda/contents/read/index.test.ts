@@ -41,7 +41,7 @@ describe('content read handler', () => {
     expect(queryMock).toHaveBeenCalledTimes(1);
     const [sql, params] = queryMock.mock.calls[0];
     expect(sql).toMatch(/select content_id/i);
-    expect(params).toEqual(['%sushi%', 10]);
+    expect(params).toEqual(['sushi%', 10]);
   });
 
   it('200 + expected SQL (no search)', async () => {

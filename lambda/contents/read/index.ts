@@ -105,7 +105,7 @@ export function createContentQuery(
 
   if (search) {
     sql += ' WHERE LOWER(title) LIKE $1';
-    values.push(`%${search.toLowerCase()}%`);
+    values.push(`${search.toLowerCase()}%`);
   }
 
   sql += ` ORDER BY created_at DESC LIMIT $${values.length + 1}`;
