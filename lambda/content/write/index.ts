@@ -217,7 +217,7 @@ function buildEntertainmentQuery(
 }
 
 /**
- * Creates the SQL query to insert a new content row and return its ID.
+ * Creates the SQL query to insert a new contents row and return its ID.
  *
  * @param category_id - The content category (e.g., FOOD_AND_DRINK).
  * @returns A parameterized SQL insert query with RETURNING clause.
@@ -227,7 +227,7 @@ function createContentInsertQuery(
   title: string,
 ): QueryWithParams {
   return {
-    sql: `INSERT INTO content (category_id, title) VALUES ($1, $2) RETURNING content_id`,
+    sql: `INSERT INTO contents (category_id, title) VALUES ($1, $2) RETURNING content_id`,
     values: [category_id, title],
   };
 }
@@ -281,7 +281,7 @@ function createExperiencesInsertQuery(
  */
 function createCuisineInsertQuery(cuisine_ids: number[]): QueryWithParams {
   return {
-    sql: `INSERT INTO experience_cuisines (content_id, cuisine_id)
+    sql: `INSERT INTO experiences_cuisines (content_id, cuisine_id)
             VALUES ${cuisine_ids.map((_, i) => `($1, $${i + 2})`).join(', ')}
             ON CONFLICT DO NOTHING`,
     values: [CONTENT_ID_PLACEHOLDER, ...cuisine_ids],

@@ -5,15 +5,15 @@ export const requestSchema = Joi.object({
     'string.guid': 'content_id must be a valid UUID',
     'any.required': 'content_id is required',
   }),
-  ratingx2: Joi.number()
+  rating: Joi.number()
     .integer()
-    .valid(...[2, 3, 4, 5, 6, 7, 8, 9, 10])
+    .valid(...[1, 2, 3, 4, 5])
     .required()
     .messages({
-      'number.base': 'rating_x2 must be a number',
-      'number.integer': 'rating_x2 must be an integer',
-      'any.only': 'rating_x2 must be between 2 and 10 (in steps of 1)',
-      'any.required': 'rating_x2 is required',
+      'number.base': 'rating must be a number',
+      'number.integer': 'rating must be an integer',
+      'any.only': 'rating must be between 1 and 5',
+      'any.required': 'rating is required',
     }),
   reviewText: Joi.string().trim().empty('').required().messages({
     'string.base': 'review_text must be a string',

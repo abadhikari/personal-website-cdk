@@ -88,7 +88,7 @@ function parseQueryParameters(event: APIGatewayProxyEvent): QueryParameters {
 }
 
 /**
- * Builds a SQL query to retrieve content records from the database,
+ * Builds a SQL query to retrieve contents records from the database,
  * optionally filtered by a search string on the title and limited by a result count.
  *
  * @param limit - The maximum number of results to return (validated upstream via Joi).
@@ -101,7 +101,7 @@ export function createContentQuery(
 ): QueryWithParams {
   const values: any[] = [];
   let sql =
-    'SELECT content_id, title, category_id, created_at, parent_id FROM content';
+    'SELECT content_id, title, category_id, created_at, parent_id FROM contents';
 
   if (search) {
     sql += ' WHERE LOWER(title) LIKE $1';

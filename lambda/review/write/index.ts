@@ -16,12 +16,12 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
  * Interface representing the structure of the parsed review request body.
  *
  * @property contentId - UUID of the associated content.
- * @property ratingx2 - Rating from 1.0 to 5.0 in 0.5 steps (stored as 2–10).
+ * @property rating - Rating from 1 to 5.
  * @property reviewText - Non-empty string representing the review content.
  */
 export interface RequestBody {
   contentId: string;
-  ratingx2: number;
+  rating: number;
   reviewText: string;
 }
 
@@ -44,7 +44,7 @@ export const handler = async (
 
   try {
     requestBody = parseRequestBody(event);
-    const { contentId, ratingx2, reviewText } = requestBody;
+    const { contentId, rating, reviewText } = requestBody;
     const userId = retrieveUserIdFromEvent(event);
 
     const credentials = await getDbCredentials(DB_SECRET_ARN);
@@ -53,7 +53,7 @@ export const handler = async (
     const query = createReviewInsertQuery(
       contentId,
       userId,
-      ratingx2,
+      rating,
       reviewText,
     );
     await db.query(query.sql, query.values);
@@ -111,20 +111,20 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
 /**
  * Builds a SQL query to insert a review record into the database.
  *
- * @param request - The validated review request body containing contentId, userId, ratingx2, and reviewText.
+ * @param request - The validated review request body containing contentId, userId, rating, and reviewText.
  * @returns A parameterized SQL query object for inserting the review.
  */
 function createReviewInsertQuery(
   contentId: string,
   userId: string,
-  ratingx2: number,
+  rating: number,
   reviewText: string,
 ): QueryWithParams {
   const sql = `
-    INSERT INTO reviews (content_id, user_id, rating_x2, review_text)
+    INSERT INTO reviews (content_id, user_id, rating, review_text)
     VALUES ($1, $2, $3, $4)
   `;
-  const values = [contentId, userId, ratingx2, reviewText];
+  const values = [contentId, userId, rating, reviewText];
 
   return { sql, values };
 }

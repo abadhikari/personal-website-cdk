@@ -15,7 +15,7 @@ describe('review write handler', () => {
 
   const VALID_BODY = {
     contentId: '11111111-1111-4111-8111-111111111111',
-    ratingx2: 8,
+    rating: 3,
     reviewText: 'Great spot, would return!',
   };
 
@@ -58,7 +58,7 @@ describe('review write handler', () => {
     expect(params).toEqual([
       VALID_BODY.contentId,
       USER_ID,
-      VALID_BODY.ratingx2,
+      VALID_BODY.rating,
       VALID_BODY.reviewText,
     ]);
   });
@@ -112,7 +112,7 @@ describe('review write handler', () => {
     const res = await handler(
       createMockEvent({
         httpMethod: 'POST',
-        body: { ...VALID_BODY, ratingx2: 42 },
+        body: { ...VALID_BODY, rating: 42 },
         headers: {
           origin: VALID_ORIGIN,
         },
