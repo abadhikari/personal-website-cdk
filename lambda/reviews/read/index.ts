@@ -83,10 +83,9 @@ function parseQueryParameters(event: APIGatewayProxyEvent): QueryParameters {
     throw new ValidationError('Query parameters are missing.');
   }
 
-  const queryParameters = event.queryStringParameters || {};
-
-  const { error, value } = queryParamSchema.validate(queryParameters);
-
+  const { error, value } = queryParamSchema.validate(
+    event.queryStringParameters,
+  );
   if (error) {
     throw new ValidationError('Invalid request: ' + error.details[0].message);
   }
@@ -95,58 +94,146 @@ function parseQueryParameters(event: APIGatewayProxyEvent): QueryParameters {
 }
 
 /**
- * Builds a SQL query to retrieve review records from the database,
- * optionally filtered by a search string on the title and limited by a result count.
- *
- * @param limit - The maximum number of results to return (validated upstream via Joi).
- * @param search - Optional case-insensitive substring to filter by title.
- * @param cursor - Optional ISO timestamp string to paginate results. Only reviews
- *              created *before* this timestamp will be returned. Used for
- *              infinite scroll or cursor-based pagination.
- * @returns A parameterized SQL query object for reading reviews.
+ * Builds a single SQL query that:
+ *   1. Pages/searches the reviews table (`base` CTE)
+ *   2. Adds one sibling CTE per category (books, movies, experiences, shows…)
+ *   3. COALESCEs the category-specific JSON blob into `subcontent`
+ * @param limit  The number of reviews to return (max 1000)
+ * @param search Optional full-text search query
+ * @param cursor Optional ISO timestamp string for pagination (reviews created before this)
+ * @returns QueryWithParams object with:
+ * - `sql`: the generated SQL string
+ * - `values`: [search, cursor, limit] parameter bindings
  */
 export function createReviewQuery(
   limit: number,
   search?: string,
   cursor?: string,
 ): QueryWithParams {
-  let sql = 'SELECT review_id, title, rating, created_at FROM reviews';
+  const sql = `
+WITH base AS (
+    SELECT
+        r.review_id,
+        r.content_id,
+        r.rating,
+        r.review_text,
+        r.created_at,
+        c.category_id
+    FROM reviews r
+    JOIN contents c USING (content_id)
+    WHERE ($1::text        IS NULL OR LOWER(r.review_text) LIKE '%'||LOWER($1)||'%')
+      AND ($2::timestamptz IS NULL OR r.created_at < $2)
+    ORDER BY r.created_at DESC
+    LIMIT $3
+),
 
-  const { whereClause, values } = createWhereClause(search, cursor);
+experience_rows AS (
+    SELECT
+        e.content_id,
+        jsonb_build_object(
+            'title',       e.title,
+            'address',     e.address,
+            'city',        e.city,
+            'state',       e.state,
+            'country',     e.country,
+            'latitude',    e.latitude,
+            'longitude',   e.longitude,
+            'price_level', e.price_level,
+            'venue',       v.name,
+            'cuisines',    COALESCE(
+                             jsonb_agg(DISTINCT cu.name)
+                             FILTER (WHERE cu.name IS NOT NULL), '[]')
+        ) AS subcontent
+    FROM   base b
+    JOIN   experiences e        USING (content_id)
+    JOIN   venue       v        ON v.venue_id = e.venue_id
+    LEFT   JOIN experiences_cuisines ec USING (content_id)
+    LEFT   JOIN cuisine cu      ON cu.cuisine_id = ec.cuisine_id
+    GROUP  BY e.content_id, v.name
+),
 
-  sql += whereClause;
-  sql += ` ORDER BY created_at DESC LIMIT $${values.length + 1}`;
-  values.push(limit);
+book_rows AS (
+    SELECT
+        bo.content_id,
+        jsonb_build_object(
+            'title',          bo.title,
+            'author',         bo.author,
+            'pages',          bo.pages,
+            'year_published', bo.year_published,
+            'isbn',           bo.isbn,
+            'genres',         COALESCE(
+                                jsonb_agg(DISTINCT g.name)
+                                FILTER (WHERE g.name IS NOT NULL), '[]')
+        ) AS subcontent
+    FROM   base b
+    JOIN   books bo             USING (content_id)
+    LEFT   JOIN contents_genres cg USING (content_id)
+    LEFT   JOIN genre g         USING (genre_id)
+    GROUP  BY bo.content_id
+),
 
-  return { sql, values };
-}
+movie_rows AS (
+    SELECT
+        mo.content_id,
+        jsonb_build_object(
+            'title',          mo.title,
+            'director',       mo.director,
+            'duration_min',   mo.duration_min,
+            'year_released',  mo.year_released,
+            'country',        mo.country,
+            'studio',         mo.studio,
+            'imdb_rating_x10',mo.imdb_rating_x10,
+            'genres',         COALESCE(
+                                jsonb_agg(DISTINCT g.name)
+                                FILTER (WHERE g.name IS NOT NULL), '[]')
+        ) AS subcontent
+    FROM   base b
+    JOIN   movies mo            USING (content_id)
+    LEFT   JOIN contents_genres cg USING (content_id)
+    LEFT   JOIN genre g         USING (genre_id)
+    GROUP  BY mo.content_id
+),
 
-/**
- * Constructs a dynamic SQL WHERE clause and corresponding parameter values
- * based on optional search and cursor filters.
- *
- * @param search - Optional case-insensitive substring to match against the title field.
- *                 Converted to lowercase and wrapped with wildcards for partial matching.
- * @param cursor - Optional ISO timestamp string to filter out records created after this point.
- *
- * @returns An object containing:
- *   - `whereClause`: A SQL WHERE clause string (empty if no filters provided),
- *   - `values`: An ordered array of parameter values that match the placeholders in the clause.
- */
-function createWhereClause(search?: string, cursor?: string) {
-  const conditions = [];
-  const values: any[] = [];
+show_rows AS (
+    SELECT
+        s.content_id,
+        jsonb_build_object(
+            'title',          s.title,
+            'year_released',  s.year_released,
+            'country',        s.country,
+            'studio',         s.studio,
+            'imdb_rating_x10',s.imdb_rating_x10,
+            'genres',         COALESCE(
+                                jsonb_agg(DISTINCT g.name)
+                                FILTER (WHERE g.name IS NOT NULL), '[]')
+        ) AS subcontent
+    FROM   base b
+    JOIN   shows s             USING (content_id)
+    LEFT   JOIN contents_genres cg USING (content_id)
+    LEFT   JOIN genre g        USING (genre_id)
+    GROUP  BY s.content_id
+)
 
-  if (search) {
-    values.push(`%${search.toLowerCase()}%`);
-    conditions.push(`LOWER(title) LIKE $${values.length}`);
-  }
+SELECT
+    b.review_id,
+    b.rating,
+    b.review_text,
+    b.created_at,
+    b.category_id,
+    COALESCE(er.subcontent,
+             br.subcontent,
+             mr.subcontent,
+             sr.subcontent) AS subcontent
+FROM base b
+LEFT JOIN experience_rows er USING (content_id)
+LEFT JOIN book_rows       br USING (content_id)
+LEFT JOIN movie_rows      mr USING (content_id)
+LEFT JOIN show_rows       sr USING (content_id)
+ORDER BY b.created_at DESC;
+`;
 
-  if (cursor) {
-    values.push(cursor);
-    conditions.push(`created_at < $${values.length}`);
-  }
-
-  const whereClause = values.length ? ` WHERE ${conditions.join(' AND ')}` : '';
-  return { whereClause, values };
+  return {
+    sql,
+    values: [search ?? null, cursor ?? null, limit],
+  };
 }

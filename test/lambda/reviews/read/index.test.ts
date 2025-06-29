@@ -42,8 +42,8 @@ describe('reviews read handler', () => {
 
     expect(queryMock).toHaveBeenCalledTimes(1);
     const [sql, params] = queryMock.mock.calls[0];
-    expect(sql).toMatch(/select\s+review_id/i);
-    expect(params).toEqual(['%sushi%', 10]);
+    expect(sql).toMatch(/review_id/i);
+    expect(params).toEqual(['Sushi', null, 10]);
   });
 
   it('200 + expected SQL (no search)', async () => {
@@ -64,8 +64,8 @@ describe('reviews read handler', () => {
     expect(body.nextCursor).toBe('2024-01-01T00:00:00.000Z');
 
     const [sql, params] = queryMock.mock.calls[0];
-    expect(sql).toMatch(/select\s+review_id/i);
-    expect(params).toEqual([5]);
+    expect(sql).toMatch(/review_id/i);
+    expect(params).toEqual([null, null, 5]);
   });
 
   it('200 + expected SQL (search + cursor)', async () => {
@@ -94,8 +94,8 @@ describe('reviews read handler', () => {
     expect(body.nextCursor).toBe('2024-12-30T00:00:00.000Z');
 
     const [sql, params] = queryMock.mock.calls[0];
-    expect(sql).toMatch(/select\s+review_id/i);
-    expect(params).toEqual(['%jazz%', '2025-01-01T00:00:00.000Z', 7]);
+    expect(sql).toMatch(/review_id/i);
+    expect(params).toEqual(['Jazz', '2025-01-01T00:00:00.000Z', 7]);
   });
 
   it('200 + nextCursor null when no results', async () => {
