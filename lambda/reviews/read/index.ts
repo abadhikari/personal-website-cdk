@@ -98,6 +98,7 @@ function parseQueryParameters(event: APIGatewayProxyEvent): QueryParameters {
  *   1. Pages/searches the reviews table (`base` CTE)
  *   2. Adds one sibling CTE per category (books, movies, experiences, shows…)
  *   3. COALESCEs the category-specific JSON blob into `subcontent`
+ *
  * @param limit  The number of reviews to return (max 1000)
  * @param search Optional full-text search query
  * @param cursor Optional ISO timestamp string for pagination (reviews created before this)
@@ -127,7 +128,28 @@ WITH base AS (
     LIMIT $3
 ),
 
-experience_rows AS (
+entertainment_rows AS (
+    SELECT
+        e.content_id,
+        jsonb_build_object(
+            'title',       e.title,
+            'address',     e.address,
+            'city',        e.city,
+            'state',       e.state,
+            'country',     e.country,
+            'latitude',    e.latitude,
+            'longitude',   e.longitude,
+            'price_level', e.price_level,
+            'venue',       v.name
+        ) AS subcontent
+    FROM   base b
+    JOIN   experiences e        USING (content_id)
+    JOIN   venue       v        ON v.venue_id = e.venue_id
+    WHERE  b.category_id = 5
+    GROUP  BY e.content_id, v.name
+),
+
+food_and_drink_rows AS (
     SELECT
         e.content_id,
         jsonb_build_object(
@@ -149,6 +171,7 @@ experience_rows AS (
     JOIN   venue       v        ON v.venue_id = e.venue_id
     LEFT   JOIN experiences_cuisines ec USING (content_id)
     LEFT   JOIN cuisine cu      ON cu.cuisine_id = ec.cuisine_id
+    WHERE  b.category_id = 4
     GROUP  BY e.content_id, v.name
 ),
 
@@ -169,6 +192,7 @@ book_rows AS (
     JOIN   books bo             USING (content_id)
     LEFT   JOIN contents_genres cg USING (content_id)
     LEFT   JOIN genre g         USING (genre_id)
+    WHERE  b.category_id = 3
     GROUP  BY bo.content_id
 ),
 
@@ -191,6 +215,7 @@ movie_rows AS (
     JOIN   movies mo            USING (content_id)
     LEFT   JOIN contents_genres cg USING (content_id)
     LEFT   JOIN genre g         USING (genre_id)
+    WHERE  b.category_id = 1
     GROUP  BY mo.content_id
 ),
 
@@ -211,6 +236,7 @@ show_rows AS (
     JOIN   shows s             USING (content_id)
     LEFT   JOIN contents_genres cg USING (content_id)
     LEFT   JOIN genre g        USING (genre_id)
+    WHERE  b.category_id = 2
     GROUP  BY s.content_id
 )
 
@@ -220,15 +246,18 @@ SELECT
     b.review_text,
     b.created_at,
     b.category_id,
-    COALESCE(er.subcontent,
+    COALESCE(mr.subcontent,
+             sr.subcontent,
              br.subcontent,
-             mr.subcontent,
-             sr.subcontent) AS subcontent
+             fdr.subcontent,
+             er.subcontent
+    ) AS subcontent
 FROM base b
-LEFT JOIN experience_rows er USING (content_id)
-LEFT JOIN book_rows       br USING (content_id)
 LEFT JOIN movie_rows      mr USING (content_id)
 LEFT JOIN show_rows       sr USING (content_id)
+LEFT JOIN book_rows       br USING (content_id)
+LEFT JOIN food_and_drink_rows fdr USING (content_id)
+LEFT JOIN entertainment_rows er USING (content_id)
 ORDER BY b.created_at DESC;
 `;
 
