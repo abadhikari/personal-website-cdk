@@ -46,6 +46,15 @@ interface ExperiencePayload {
   cuisine_ids?: number[];
 }
 
+interface BookPayload {
+  title: string;
+  author: string;
+  pages: number;
+  year_published: number;
+  isbn?: string;
+  genres: number[];
+}
+
 const CONTENT_ID_PLACEHOLDER = ':CONTENT_ID';
 
 /**
@@ -157,6 +166,8 @@ export function createWriteContentQueries(
   payload: any,
 ): QueryWithParams[] {
   switch (category_id) {
+    case ContentCategory.BOOK:
+      return buildBookQuery(category_id, payload as BookPayload);
     case ContentCategory.FOOD_AND_DRINK:
       return buildFoodAndDrinkQuery(category_id, payload as ExperiencePayload);
     case ContentCategory.ENTERTAINMENT:
@@ -165,6 +176,53 @@ export function createWriteContentQueries(
     default:
       throw new ValidationError(`Unsupported category_id: ${category_id}`);
   }
+}
+
+function buildBookQuery(
+  category_id: ContentCategoryType,
+  payload: BookPayload,
+): QueryWithParams[] {
+  const { title, genres = [] } = payload;
+  const queries: QueryWithParams[] = [];
+
+  const contentInsert = createContentInsertQuery(category_id, title);
+  queries.push(contentInsert);
+
+  const bookInsert = createBooksInsertQuery(payload);
+  queries.push(bookInsert);
+
+  if (genres.length) {
+    const genreInsert = createBooksGenresInsertQuery(genres);
+    queries.push(genreInsert);
+  }
+
+  return queries;
+}
+
+function createBooksInsertQuery(payload: BookPayload): QueryWithParams {
+  const { title, author, pages, year_published, isbn } = payload;
+  return {
+    sql: `INSERT INTO books (
+             content_id, title, author, pages, year_published, isbn
+           ) VALUES ($1, $2, $3, $4, $5, $6)`,
+    values: [
+      CONTENT_ID_PLACEHOLDER,
+      title,
+      author,
+      pages,
+      year_published,
+      isbn ?? null,
+    ],
+  };
+}
+
+function createBooksGenresInsertQuery(genreIds: number[]): QueryWithParams {
+  return {
+    sql: `INSERT INTO contents_genres (content_id, genre_id)
+          VALUES ${genreIds.map((_, i) => `($1, $${i + 2})`).join(', ')}
+          ON CONFLICT DO NOTHING`,
+    values: [CONTENT_ID_PLACEHOLDER, ...genreIds],
+  };
 }
 
 /**

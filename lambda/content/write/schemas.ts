@@ -76,10 +76,50 @@ export const experienceSchema = Joi.object({
     }),
 });
 
+export const bookSchema = Joi.object({
+  title: Joi.string().trim().required().messages({
+    'string.base': 'title must be a string',
+    'any.required': 'title is required',
+  }),
+  author: Joi.string().trim().required().messages({
+    'string.base': 'author must be a string',
+    'any.required': 'author is required',
+  }),
+  pages: Joi.number().integer().positive().required().messages({
+    'number.base': 'pages must be a number',
+    'number.integer': 'pages must be an integer',
+    'number.positive': 'pages must be greater than 0',
+    'any.required': 'pages is required',
+  }),
+  year_published: Joi.number().integer().min(1400).required().messages({
+    'number.base': 'year_published must be a number',
+    'number.integer': 'year_published must be an integer',
+    'number.min': 'year_published must be after 1400',
+    'any.required': 'year_published is required',
+  }),
+  isbn: Joi.string().trim().optional().messages({
+    'string.base': 'isbn must be a string',
+  }),
+  genres: Joi.array()
+    .items(Joi.number().integer().positive())
+    .min(1)
+    .required()
+    .messages({
+      'array.base': 'genres must be an array',
+      'array.min': 'at least one genre must be selected',
+      'number.base': 'each genre must be a number',
+      'number.integer': 'each genre must be an integer',
+      'number.positive': 'each genre must be a positive number',
+      'any.required': 'genres is required',
+    }),
+});
+
 export function retrieveSchemaForCategory(
   category: number,
 ): Joi.ObjectSchema | null {
   switch (category) {
+    case ContentCategory.BOOK:
+      return bookSchema;
     case ContentCategory.FOOD_AND_DRINK:
     case ContentCategory.ENTERTAINMENT:
       return experienceSchema;
