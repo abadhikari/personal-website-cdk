@@ -119,10 +119,12 @@ WITH base AS (
         r.rating,
         r.review_text,
         r.created_at,
-        c.category_id
+        c.category_id,
+        c.title
     FROM reviews r
     JOIN contents c USING (content_id)
-    WHERE ($1::text        IS NULL OR LOWER(r.review_text) LIKE '%'||LOWER($1)||'%')
+    WHERE ($1::text        IS NULL OR LOWER(r.review_text) LIKE '%'||LOWER($1)||'%'
+           OR LOWER(c.title) LIKE '%'||LOWER($1)||'%')
       AND ($2::timestamptz IS NULL OR r.created_at < $2)
     ORDER BY r.created_at DESC
     LIMIT $3
