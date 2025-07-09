@@ -142,11 +142,16 @@ entertainment_rows AS (
             'latitude',    e.latitude,
             'longitude',   e.longitude,
             'price_level', e.price_level,
-            'venue',       v.name
+            'venue',       v.name,
+            'genres',      COALESCE(
+                             jsonb_agg(DISTINCT eg.name)
+                             FILTER (WHERE eg.name IS NOT NULL), '[]')
         ) AS subcontent
     FROM   base b
     JOIN   experiences e        USING (content_id)
     JOIN   venue       v        ON v.venue_id = e.venue_id
+    LEFT   JOIN experiences_genres egj USING (content_id)
+    LEFT   JOIN experience_genre eg   ON eg.experience_genre_id = egj.experience_genre_id
     WHERE  b.category_id = 5
     GROUP  BY e.content_id, v.name
 ),
@@ -166,13 +171,18 @@ food_and_drink_rows AS (
             'venue',       v.name,
             'cuisines',    COALESCE(
                              jsonb_agg(DISTINCT cu.name)
-                             FILTER (WHERE cu.name IS NOT NULL), '[]')
+                             FILTER (WHERE cu.name IS NOT NULL), '[]'),
+            'dishes',      COALESCE(
+                             jsonb_agg(DISTINCT d.name)
+                             FILTER (WHERE d.name IS NOT NULL), '[]')
         ) AS subcontent
     FROM   base b
     JOIN   experiences e        USING (content_id)
     JOIN   venue       v        ON v.venue_id = e.venue_id
     LEFT   JOIN experiences_cuisines ec USING (content_id)
     LEFT   JOIN cuisine cu      ON cu.cuisine_id = ec.cuisine_id
+    LEFT   JOIN experiences_dishes ed USING (content_id)
+    LEFT   JOIN dish d               ON d.dish_id = ed.dish_id
     WHERE  b.category_id = 4
     GROUP  BY e.content_id, v.name
 ),
@@ -192,8 +202,8 @@ book_rows AS (
         ) AS subcontent
     FROM   base b
     JOIN   books bo             USING (content_id)
-    LEFT   JOIN contents_genres cg USING (content_id)
-    LEFT   JOIN genre g         USING (genre_id)
+    LEFT   JOIN media_genres cg USING (content_id)
+    LEFT   JOIN media_genre g         USING (media_genre_id)
     WHERE  b.category_id = 3
     GROUP  BY bo.content_id
 ),
@@ -215,8 +225,8 @@ movie_rows AS (
         ) AS subcontent
     FROM   base b
     JOIN   movies mo            USING (content_id)
-    LEFT   JOIN contents_genres cg USING (content_id)
-    LEFT   JOIN genre g         USING (genre_id)
+    LEFT   JOIN media_genres cg USING (content_id)
+    LEFT   JOIN media_genre g         USING (media_genre_id)
     WHERE  b.category_id = 1
     GROUP  BY mo.content_id
 ),
@@ -236,8 +246,8 @@ show_rows AS (
         ) AS subcontent
     FROM   base b
     JOIN   shows s             USING (content_id)
-    LEFT   JOIN contents_genres cg USING (content_id)
-    LEFT   JOIN genre g        USING (genre_id)
+    LEFT   JOIN media_genres cg USING (content_id)
+    LEFT   JOIN media_genre g         USING (media_genre_id)
     WHERE  b.category_id = 2
     GROUP  BY s.content_id
 )
