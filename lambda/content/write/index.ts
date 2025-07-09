@@ -24,12 +24,12 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
 /**
  * Interface representing the structure of the parsed request body.
  *
- * @template T - Type of the payload object.
- * @property category_id - The category of the content (used for routing logic).
- * @property payload - The validated content-specific payload to write.
+ * @template T - Type of the content-specific payload.
+ * @property categoryId - The content category identifier.
+ * @property payload - The content-specific validated payload.
  */
 export interface RequestBody<T = any> {
-  category_id: ContentCategoryType;
+  categoryId: ContentCategoryType;
   payload: T;
 }
 
@@ -38,21 +38,23 @@ interface ExperiencePayload {
   address: string;
   city: string;
   state?: string;
-  venue_id: number;
+  venueId: number;
   country: string;
   latitude: number;
   longitude: number;
-  price_level: number;
-  cuisine_ids?: number[];
+  priceLevel: number;
+  cuisineIds?: number[];
+  dishIds?: number[];
+  genreIds?: number[];
 }
 
 interface BookPayload {
   title: string;
   author: string;
   pages: number;
-  year_published: number;
+  yearPublished: number;
   isbn?: string;
-  genres: number[];
+  genreIds: number[];
 }
 
 const CONTENT_ID_PLACEHOLDER = ':CONTENT_ID';
@@ -75,12 +77,12 @@ export const handler = async (
 
   try {
     requestBody = parseRequestBody(event);
-    const { category_id, payload } = requestBody;
+    const { categoryId, payload } = requestBody;
 
     const credentials = await getDbCredentials(DB_SECRET_ARN);
     const db = await getDbClient(credentials);
 
-    const queries = await createWriteContentQueries(category_id, payload);
+    const queries = await createWriteContentQueries(categoryId, payload);
 
     await executeAtomicTransaction(db, queries, executeContentTransaction);
 
@@ -100,7 +102,7 @@ export const handler = async (
       );
     }
 
-    console.error('Error to write content:', error, requestBody);
+    console.error('Error writing content:', error, requestBody);
     return createResponse(500, { message: 'Failed to write content.' }, origin);
   }
 };
@@ -128,11 +130,11 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
       );
     }
 
-    const { category_id, payload } = baseValue;
+    const { categoryId, payload } = baseValue;
 
-    const payloadSchema = retrieveSchemaForCategory(category_id);
+    const payloadSchema = retrieveSchemaForCategory(categoryId);
     if (!payloadSchema) {
-      throw new ValidationError(`Unsupported category: ${category_id}`);
+      throw new ValidationError(`Unsupported category: ${categoryId}`);
     }
 
     const { error: payloadError, value: validatedPayload } =
@@ -143,7 +145,7 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
       );
     }
 
-    return { category_id, payload: validatedPayload };
+    return { categoryId, payload: validatedPayload };
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new ValidationError('Invalid JSON format.');
@@ -156,43 +158,44 @@ function parseRequestBody(event: APIGatewayProxyEvent): RequestBody {
  * Builds a list of SQL queries needed to persist content to the database
  * based on the provided content category and payload.
  *
- * @param category_id - The category of the content being written.
+ * @param categoryId - The category of the content being written.
  * @param payload - The validated payload object for the content.
  * @returns An ordered list of parameterized SQL queries.
  * @throws ValidationError - If the category is unsupported.
  */
 export function createWriteContentQueries(
-  category_id: ContentCategoryType,
+  categoryId: ContentCategoryType,
   payload: any,
 ): QueryWithParams[] {
-  switch (category_id) {
+  switch (categoryId) {
     case ContentCategory.BOOK:
-      return buildBookQuery(category_id, payload as BookPayload);
+      return buildBookQuery(categoryId, payload as BookPayload);
     case ContentCategory.FOOD_AND_DRINK:
-      return buildFoodAndDrinkQuery(category_id, payload as ExperiencePayload);
+      return buildFoodAndDrinkQuery(categoryId, payload as ExperiencePayload);
     case ContentCategory.ENTERTAINMENT:
-      return buildEntertainmentQuery(category_id, payload as ExperiencePayload);
+      return buildEntertainmentQuery(categoryId, payload as ExperiencePayload);
 
     default:
-      throw new ValidationError(`Unsupported category_id: ${category_id}`);
+      throw new ValidationError(`Unsupported categoryId: ${categoryId}`);
   }
 }
 
 function buildBookQuery(
-  category_id: ContentCategoryType,
+  categoryId: ContentCategoryType,
   payload: BookPayload,
 ): QueryWithParams[] {
-  const { title, genres = [] } = payload;
+  const { title, genreIds = [] } = payload;
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category_id, title);
+  const contentInsert = createContentInsertQuery(categoryId, title);
   queries.push(contentInsert);
 
   const bookInsert = createBooksInsertQuery(payload);
   queries.push(bookInsert);
 
-  if (genres.length) {
-    const genreInsert = createBooksGenresInsertQuery(genres);
+  if (genreIds.length) {
+    const genreInsert = createIdsInsertQuery('media_genres', 'media_genre_id', genreIds);
+
     queries.push(genreInsert);
   }
 
@@ -200,7 +203,7 @@ function buildBookQuery(
 }
 
 function createBooksInsertQuery(payload: BookPayload): QueryWithParams {
-  const { title, author, pages, year_published, isbn } = payload;
+  const { title, author, pages, yearPublished: yearPublished, isbn } = payload;
   return {
     sql: `INSERT INTO books (
              content_id, title, author, pages, year_published, isbn
@@ -210,44 +213,40 @@ function createBooksInsertQuery(payload: BookPayload): QueryWithParams {
       title,
       author,
       pages,
-      year_published,
+      yearPublished,
       isbn ?? null,
     ],
-  };
-}
-
-function createBooksGenresInsertQuery(genreIds: number[]): QueryWithParams {
-  return {
-    sql: `INSERT INTO contents_genres (content_id, genre_id)
-          VALUES ${genreIds.map((_, i) => `($1, $${i + 2})`).join(', ')}
-          ON CONFLICT DO NOTHING`,
-    values: [CONTENT_ID_PLACEHOLDER, ...genreIds],
   };
 }
 
 /**
  * Builds queries for FOOD_AND_DRINK content.
  *
- * @param category_id - Content category, should be FOOD_AND_DRINK.
+ * @param categoryId - Content category, should be FOOD_AND_DRINK.
  * @param payload - Experience payload object.
  * @returns Query list for content, experience, and cuisine inserts.
  */
 function buildFoodAndDrinkQuery(
-  category_id: ContentCategoryType,
+  categoryId: ContentCategoryType,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
-  const { cuisine_ids = [], title } = payload;
+  const { cuisineIds = [], dishIds = [], title } = payload;
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category_id, title);
+  const contentInsert = createContentInsertQuery(categoryId, title);
   queries.push(contentInsert);
 
   const experienceInsert = createExperiencesInsertQuery(payload);
   queries.push(experienceInsert);
 
-  if (cuisine_ids.length) {
-    const cuisineInsert = createCuisineInsertQuery(cuisine_ids);
+  if (cuisineIds.length) {
+    const cuisineInsert = createIdsInsertQuery('experiences_cuisines', 'cuisine_id', cuisineIds);
     queries.push(cuisineInsert);
+  }
+
+  if (dishIds.length) {
+    const dishInsert = createIdsInsertQuery('experiences_dishes', 'dish_id', dishIds);
+    queries.push(dishInsert);
   }
 
   return queries;
@@ -256,18 +255,24 @@ function buildFoodAndDrinkQuery(
 /**
  * Builds queries for ENTERTAINMENT content.
  *
- * @param category_id - Content category, should be ENTERTAINMENT.
+ * @param categoryId - Content category, should be ENTERTAINMENT.
  * @param payload - Experience payload object.
  * @returns Query list for content and experience inserts.
  */
 function buildEntertainmentQuery(
-  category_id: ContentCategoryType,
+  categoryId: ContentCategoryType,
   payload: ExperiencePayload,
 ): QueryWithParams[] {
+  const { genreIds = [] } = payload;
   const queries: QueryWithParams[] = [];
 
-  const contentInsert = createContentInsertQuery(category_id, payload.title);
+  const contentInsert = createContentInsertQuery(categoryId, payload.title);
   queries.push(contentInsert);
+
+  if (genreIds.length) {
+    const genreInsert = createIdsInsertQuery('experiences_genres', 'experience_genre_id', genreIds);
+    queries.push(genreInsert);
+  }
 
   const experienceInsert = createExperiencesInsertQuery(payload);
   queries.push(experienceInsert);
@@ -277,16 +282,16 @@ function buildEntertainmentQuery(
 /**
  * Creates the SQL query to insert a new contents row and return its ID.
  *
- * @param category_id - The content category (e.g., FOOD_AND_DRINK).
- * @returns A parameterized SQL insert query with RETURNING clause.
+ * @param categoryId - The content category (e.g., FOOD_AND_DRINK).
+ * @returns A parameterized SQL insert query to create a content row with RETURNING content_id.
  */
 function createContentInsertQuery(
-  category_id: ContentCategoryType,
+  categoryId: ContentCategoryType,
   title: string,
 ): QueryWithParams {
   return {
     sql: `INSERT INTO contents (category_id, title) VALUES ($1, $2) RETURNING content_id`,
-    values: [category_id, title],
+    values: [categoryId, title],
   };
 }
 
@@ -305,11 +310,11 @@ function createExperiencesInsertQuery(
     address,
     city,
     state,
-    venue_id,
+    venueId,
     country,
     latitude,
     longitude,
-    price_level,
+    priceLevel,
   } = payload;
   return {
     sql: `INSERT INTO experiences (
@@ -321,28 +326,38 @@ function createExperiencesInsertQuery(
       address,
       city,
       state ?? null,
-      venue_id,
+      venueId,
       country,
       latitude,
       longitude,
-      price_level,
+      priceLevel,
     ],
   };
 }
 
 /**
- * Creates a bulk SQL insert query for associated cuisines in an experience.
- * The content_id is patched later in the transaction.
+ * Creates a bulk SQL insert query for associating a list of IDs with a content_id
+ * in a many-to-many join table.
  *
- * @param cuisines - Array of cuisine strings.
- * @returns A parameterized SQL insert query for the experience_cuisines table.
+ * This function dynamically generates a parameterized SQL query to insert rows
+ * into a join table. The `content_id` placeholder patched in a later 
+ * transaction step.
+ *
+ * @param {string} table - The name of the join table (e.g., "experiences_cuisines").
+ * @param {string} column - The name of the column representing the associated ID (e.g., "cuisine_id").
+ * @param {number[]} ids - An array of numeric IDs to associate with the content.
+ * @returns {QueryWithParams} A parameterized SQL insert query object.
  */
-function createCuisineInsertQuery(cuisine_ids: number[]): QueryWithParams {
+function createIdsInsertQuery(
+  table: string,
+  column: string,
+  ids: number[]
+): QueryWithParams {
   return {
-    sql: `INSERT INTO experiences_cuisines (content_id, cuisine_id)
-            VALUES ${cuisine_ids.map((_, i) => `($1, $${i + 2})`).join(', ')}
+    sql: `INSERT INTO ${table} (content_id, ${column})
+            VALUES ${ids.map((_, i) => `($1, $${i + 2})`).join(', ')}
             ON CONFLICT DO NOTHING`,
-    values: [CONTENT_ID_PLACEHOLDER, ...cuisine_ids],
+    values: [CONTENT_ID_PLACEHOLDER, ...ids],
   };
 }
 

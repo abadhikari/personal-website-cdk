@@ -3,14 +3,14 @@ import * as Joi from 'joi';
 import { ContentCategory } from '@lambda/common/types';
 
 export const baseRequestSchema = Joi.object({
-  category_id: Joi.number()
+  categoryId: Joi.number()
     .integer()
     .valid(...Object.values(ContentCategory))
     .required()
     .messages({
-      'number.base': 'category_id must be a number',
-      'any.required': 'category_id is required',
-      'any.only': `category_id must be one of: ${Object.values(ContentCategory).join(', ')}`,
+      'number.base': 'categoryId must be a number',
+      'any.required': 'categoryId is required',
+      'any.only': `categoryId must be one of: ${Object.values(ContentCategory).join(', ')}`,
     }),
   payload: Joi.object().required().messages({
     'object.base': 'payload must be an object',
@@ -34,11 +34,11 @@ export const experienceSchema = Joi.object({
   state: Joi.string().trim().optional().messages({
     'string.base': 'state must be a string',
   }),
-  venue_id: Joi.number().integer().positive().required().messages({
-    'number.base': 'venue_id must be a number',
-    'number.integer': 'venue_id must be an integer',
-    'number.positive': 'venue_id must be a positive number',
-    'any.required': 'venue_id is required',
+  venueId: Joi.number().integer().positive().required().messages({
+    'number.base': 'venueId must be a number',
+    'number.integer': 'venueId must be an integer',
+    'number.positive': 'venueId must be a positive number',
+    'any.required': 'venueId is required',
   }),
   country: Joi.string().trim().required().messages({
     'string.base': 'country must be a string',
@@ -56,24 +56,46 @@ export const experienceSchema = Joi.object({
     'number.max': 'longitude must be at most 180',
     'any.required': 'longitude is required',
   }),
-  price_level: Joi.number().integer().min(1).max(5).required().messages({
-    'number.base': 'price_level must be a number',
-    'number.integer': 'price_level must be an integer',
-    'number.min': 'price_level must be between 1 and 5',
-    'number.max': 'price_level must be between 1 and 5',
-    'any.required': 'price_level is required',
+  priceLevel: Joi.number().integer().min(1).max(5).required().messages({
+    'number.base': 'priceLevel must be a number',
+    'number.integer': 'priceLevel must be an integer',
+    'number.min': 'priceLevel must be between 1 and 5',
+    'number.max': 'priceLevel must be between 1 and 5',
+    'any.required': 'priceLevel is required',
   }),
-  cuisine_ids: Joi.array()
+  cuisineIds: Joi.array()
     .items(Joi.number().integer().positive())
     .min(1)
     .optional()
     .messages({
-      'array.base': 'cuisine_ids must be an array',
-      'array.min': 'at least one cuisine_id is required if provided',
-      'number.base': 'each cuisine_id must be a number',
-      'number.integer': 'each cuisine_id must be an integer',
-      'number.positive': 'each cuisine_id must be a positive number',
-    }),
+      'array.base': 'cuisineIds must be an array',
+      'array.min': 'at least one cuisineId is required if provided',
+      'number.base': 'each cuisineId must be a number',
+      'number.integer': 'each cuisineId must be an integer',
+      'number.positive': 'each cuisineId must be a positive number',
+  }),
+  dishIds: Joi.array()
+    .items(Joi.number().integer().positive())
+    .min(1)
+    .optional()
+    .messages({
+      'array.base': 'dishIds must be an array',
+      'array.min': 'at least one dishId is required if provided',
+      'number.base': 'each dishId must be a number',
+      'number.integer': 'each dishId must be an integer',
+      'number.positive': 'each dishId must be a positive number',
+  }),
+  genreIds: Joi.array()
+    .items(Joi.number().integer().positive())
+    .min(1)
+    .optional()
+    .messages({
+      'array.base': 'genreIds must be an array',
+      'array.min': 'at least one genreId is required if provided',
+      'number.base': 'each genreId must be a number',
+      'number.integer': 'each genreId must be an integer',
+      'number.positive': 'each genreId must be a positive number',
+  }),
 });
 
 export const bookSchema = Joi.object({
@@ -91,26 +113,26 @@ export const bookSchema = Joi.object({
     'number.positive': 'pages must be greater than 0',
     'any.required': 'pages is required',
   }),
-  year_published: Joi.number().integer().min(1400).required().messages({
-    'number.base': 'year_published must be a number',
-    'number.integer': 'year_published must be an integer',
-    'number.min': 'year_published must be after 1400',
-    'any.required': 'year_published is required',
+  yearPublished: Joi.number().integer().min(1400).required().messages({
+    'number.base': 'yearPublished must be a number',
+    'number.integer': 'yearPublished must be an integer',
+    'number.min': 'yearPublished must be after 1400',
+    'any.required': 'yearPublished is required',
   }),
   isbn: Joi.string().trim().optional().messages({
     'string.base': 'isbn must be a string',
   }),
-  genres: Joi.array()
+  genreIds: Joi.array()
     .items(Joi.number().integer().positive())
     .min(1)
     .required()
     .messages({
-      'array.base': 'genres must be an array',
-      'array.min': 'at least one genre must be selected',
-      'number.base': 'each genre must be a number',
-      'number.integer': 'each genre must be an integer',
-      'number.positive': 'each genre must be a positive number',
-      'any.required': 'genres is required',
+      'array.base': 'genreIds must be an array',
+      'array.min': 'at least one genreId must be selected',
+      'number.base': 'each genreId must be a number',
+      'number.integer': 'each genreId must be an integer',
+      'number.positive': 'each genreId must be a positive number',
+      'any.required': 'genreIds is required',
     }),
 });
 
