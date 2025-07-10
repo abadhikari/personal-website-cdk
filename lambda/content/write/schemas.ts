@@ -73,7 +73,7 @@ export const experienceSchema = Joi.object({
       'number.base': 'each cuisineId must be a number',
       'number.integer': 'each cuisineId must be an integer',
       'number.positive': 'each cuisineId must be a positive number',
-  }),
+    }),
   dishIds: Joi.array()
     .items(Joi.number().integer().positive())
     .min(1)
@@ -84,7 +84,7 @@ export const experienceSchema = Joi.object({
       'number.base': 'each dishId must be a number',
       'number.integer': 'each dishId must be an integer',
       'number.positive': 'each dishId must be a positive number',
-  }),
+    }),
   genreIds: Joi.array()
     .items(Joi.number().integer().positive())
     .min(1)
@@ -95,7 +95,7 @@ export const experienceSchema = Joi.object({
       'number.base': 'each genreId must be a number',
       'number.integer': 'each genreId must be an integer',
       'number.positive': 'each genreId must be a positive number',
-  }),
+    }),
 });
 
 export const bookSchema = Joi.object({

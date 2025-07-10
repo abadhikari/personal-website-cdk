@@ -19,31 +19,31 @@ describe('content write handler', () => {
   let handler: any;
 
   const VALID_FOOD_AND_DRINK_BODY = {
-    category_id: 4,
+    categoryId: 4,
     payload: {
       title: 'Sushi Place',
       address: '123 Main St',
       city: 'NYC',
-      venue_id: 1,
+      venueId: 1,
       country: 'USA',
       latitude: 40.7128,
       longitude: -74.006,
-      price_level: 2,
-      cuisine_ids: [1, 2],
+      priceLevel: 2,
+      cuisineIds: [1, 2],
     },
   };
 
   const VALID_ENTERTAINMENT_BODY = {
-    category_id: 5,
+    categoryId: 5,
     payload: {
       title: 'Carnegie Hall',
       address: '123 Main St',
       city: 'NYC',
-      venue_id: 3,
+      venueId: 3,
       country: 'USA',
       latitude: 40.7128,
       longitude: -74.006,
-      price_level: 3,
+      priceLevel: 3,
     },
   };
 

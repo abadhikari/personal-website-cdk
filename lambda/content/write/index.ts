@@ -194,7 +194,11 @@ function buildBookQuery(
   queries.push(bookInsert);
 
   if (genreIds.length) {
-    const genreInsert = createIdsInsertQuery('media_genres', 'media_genre_id', genreIds);
+    const genreInsert = createIdsInsertQuery(
+      'media_genres',
+      'media_genre_id',
+      genreIds,
+    );
 
     queries.push(genreInsert);
   }
@@ -240,12 +244,20 @@ function buildFoodAndDrinkQuery(
   queries.push(experienceInsert);
 
   if (cuisineIds.length) {
-    const cuisineInsert = createIdsInsertQuery('experiences_cuisines', 'cuisine_id', cuisineIds);
+    const cuisineInsert = createIdsInsertQuery(
+      'experiences_cuisines',
+      'cuisine_id',
+      cuisineIds,
+    );
     queries.push(cuisineInsert);
   }
 
   if (dishIds.length) {
-    const dishInsert = createIdsInsertQuery('experiences_dishes', 'dish_id', dishIds);
+    const dishInsert = createIdsInsertQuery(
+      'experiences_dishes',
+      'dish_id',
+      dishIds,
+    );
     queries.push(dishInsert);
   }
 
@@ -270,7 +282,11 @@ function buildEntertainmentQuery(
   queries.push(contentInsert);
 
   if (genreIds.length) {
-    const genreInsert = createIdsInsertQuery('experiences_genres', 'experience_genre_id', genreIds);
+    const genreInsert = createIdsInsertQuery(
+      'experiences_genres',
+      'experience_genre_id',
+      genreIds,
+    );
     queries.push(genreInsert);
   }
 
@@ -340,7 +356,7 @@ function createExperiencesInsertQuery(
  * in a many-to-many join table.
  *
  * This function dynamically generates a parameterized SQL query to insert rows
- * into a join table. The `content_id` placeholder patched in a later 
+ * into a join table. The `content_id` placeholder patched in a later
  * transaction step.
  *
  * @param {string} table - The name of the join table (e.g., "experiences_cuisines").
@@ -351,7 +367,7 @@ function createExperiencesInsertQuery(
 function createIdsInsertQuery(
   table: string,
   column: string,
-  ids: number[]
+  ids: number[],
 ): QueryWithParams {
   return {
     sql: `INSERT INTO ${table} (content_id, ${column})
