@@ -137,7 +137,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
       "Type": "AWS::IAM::Role",
       "UpdateReplacePolicy": "Retain",
     },
-    "SiteApiApiGatewayRestApiDeployment4249AC8A9048e264707428fcadf30f43f659fb31": {
+    "SiteApiApiGatewayRestApiDeployment4249AC8A0aea9fcc9b2165c1d59f709ab5496c4d": {
       "DependsOn": [
         "SiteApiApiGatewayRestApiOPTIONSE33872A9",
         "SiteApiApiGatewayRestApiv1contentOPTIONS35E15A34",
@@ -146,6 +146,10 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
         "SiteApiApiGatewayRestApiv1contentsGET15701874",
         "SiteApiApiGatewayRestApiv1contentsOPTIONS2B5397A7",
         "SiteApiApiGatewayRestApiv1contents0641FA01",
+        "SiteApiApiGatewayRestApiv1lookupsGETFC997619",
+        "SiteApiApiGatewayRestApiv1lookupsOPTIONS785DA9CE",
+        "SiteApiApiGatewayRestApiv1lookupsPOST7B4E32DD",
+        "SiteApiApiGatewayRestApiv1lookupsC543F4F1",
         "SiteApiApiGatewayRestApiv1mediaDELETEC15FA4D9",
         "SiteApiApiGatewayRestApiv1mediaOPTIONSBDDA2514",
         "SiteApiApiGatewayRestApiv1mediaD83F5FBB",
@@ -183,7 +187,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
       ],
       "Properties": {
         "DeploymentId": {
-          "Ref": "SiteApiApiGatewayRestApiDeployment4249AC8A9048e264707428fcadf30f43f659fb31",
+          "Ref": "SiteApiApiGatewayRestApiDeployment4249AC8A0aea9fcc9b2165c1d59f709ab5496c4d",
         },
         "MethodSettings": [
           {
@@ -623,6 +627,279 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
         },
       },
       "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsC543F4F1": {
+      "Properties": {
+        "ParentId": {
+          "Ref": "SiteApiApiGatewayRestApiv1ACCB980D",
+        },
+        "PathPart": "lookups",
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsGETApiPermissionApiSiteApiApiGatewayRestApi966AF9F8GETv1lookupsFBE690B5": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadLookupsLambdaLambdaNodeFunction06A1B87BArn56F96AC7",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/GET/v1/lookups",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsGETApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8GETv1lookupsF32D908D": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadLookupsLambdaLambdaNodeFunction06A1B87BArn56F96AC7",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/GET/v1/lookups",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsGETFC997619": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "GET",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttReadLookupsLambdaLambdaNodeFunction06A1B87BArn56F96AC7",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1lookupsC543F4F1",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsOPTIONS785DA9CE": {
+      "Properties": {
+        "ApiKeyRequired": false,
+        "AuthorizationType": "NONE",
+        "HttpMethod": "OPTIONS",
+        "Integration": {
+          "IntegrationResponses": [
+            {
+              "ResponseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+                "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'",
+              },
+              "StatusCode": "204",
+            },
+          ],
+          "RequestTemplates": {
+            "application/json": "{ statusCode: 200 }",
+          },
+          "Type": "MOCK",
+        },
+        "MethodResponses": [
+          {
+            "ResponseParameters": {
+              "method.response.header.Access-Control-Allow-Headers": true,
+              "method.response.header.Access-Control-Allow-Methods": true,
+              "method.response.header.Access-Control-Allow-Origin": true,
+            },
+            "StatusCode": "204",
+          },
+        ],
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1lookupsC543F4F1",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsPOST7B4E32DD": {
+      "Properties": {
+        "AuthorizationType": "COGNITO_USER_POOLS",
+        "AuthorizerId": {
+          "Ref": "ApiAuthorizer68095F41",
+        },
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttWriteLookupsLambdaLambdaNodeFunctionB9D16E49ArnEF23F981",
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "SiteApiApiGatewayRestApiv1lookupsC543F4F1",
+        },
+        "RestApiId": {
+          "Ref": "SiteApiApiGatewayRestApi2686602D",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsPOSTApiPermissionApiSiteApiApiGatewayRestApi966AF9F8POSTv1lookups0D0856CD": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttWriteLookupsLambdaLambdaNodeFunctionB9D16E49ArnEF23F981",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/",
+              {
+                "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
+              },
+              "/POST/v1/lookups",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "SiteApiApiGatewayRestApiv1lookupsPOSTApiPermissionTestApiSiteApiApiGatewayRestApi966AF9F8POSTv1lookups5FBBA1C9": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::ImportValue": "Reviews:ExportsOutputFnGetAttWriteLookupsLambdaLambdaNodeFunctionB9D16E49ArnEF23F981",
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "SiteApiApiGatewayRestApi2686602D",
+              },
+              "/test-invoke-stage/POST/v1/lookups",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
     },
     "SiteApiApiGatewayRestApiv1mediaD83F5FBB": {
       "Properties": {

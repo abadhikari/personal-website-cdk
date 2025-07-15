@@ -71,6 +71,16 @@ export class ReviewsPageStack extends Stack {
    */
   public readonly readReviewsLambda: LambdaNodeFunction;
 
+  /**
+   * The Lambda function responsible for writing a lookup value to database.
+   */
+  public readonly writeLookupsLambda: LambdaNodeFunction;
+
+  /**
+   * The Lambda function responsible for reading lookup values from database.
+   */
+  public readonly readLookupsLambda: LambdaNodeFunction;
+
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
 
@@ -213,6 +223,40 @@ export class ReviewsPageStack extends Stack {
     });
 
     this.grantLambdaDbAccess(this.readReviewsLambda);
+
+    this.writeLookupsLambda = new LambdaNodeFunction(
+      this,
+      'WriteLookupsLambda',
+      {
+        functionName: 'reviews_page_write_lookups_v1',
+        runtime: Runtime.NODEJS_20_X,
+        entry: 'lambda/lookups/write/index.ts',
+        handler: 'handler',
+        securityGroups: [lambdaToRdsSecurityGroup],
+        vpc: this.reviewsVpc.vpc,
+        environment: {
+          DB_SECRET_ARN: this.rdsCredentialsSecret.secret.secretArn,
+          ORIGIN_ALLOWLIST: serializedOriginAllowList,
+        },
+      },
+    );
+
+    this.grantLambdaDbAccess(this.writeLookupsLambda);
+
+    this.readLookupsLambda = new LambdaNodeFunction(this, 'ReadLookupsLambda', {
+      functionName: 'reviews_page_read_lookups_v1',
+      runtime: Runtime.NODEJS_20_X,
+      entry: 'lambda/lookups/read/index.ts',
+      handler: 'handler',
+      securityGroups: [lambdaToRdsSecurityGroup],
+      vpc: this.reviewsVpc.vpc,
+      environment: {
+        DB_SECRET_ARN: this.rdsCredentialsSecret.secret.secretArn,
+        ORIGIN_ALLOWLIST: serializedOriginAllowList,
+      },
+    });
+
+    this.grantLambdaDbAccess(this.readLookupsLambda);
   }
 
   /**

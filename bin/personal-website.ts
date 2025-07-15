@@ -52,4 +52,8 @@ new ApiStack(app, 'ApiStack', {
   reviews: {
     readLambda: reviewsPageStack.readReviewsLambda,
   },
+  lookups: {
+    readLambda: reviewsPageStack.readLookupsLambda,
+    writeLambda: reviewsPageStack.writeLookupsLambda,
+  },
 });

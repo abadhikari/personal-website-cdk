@@ -32,6 +32,10 @@ describe('ApiStack – single snapshot + invariants', () => {
     contents: { readLambda: reviews.readContentsLambda },
     review: { writeLambda: reviews.writeReviewLambda },
     reviews: { readLambda: reviews.readReviewsLambda },
+    lookups: {
+      readLambda: reviews.readLookupsLambda,
+      writeLambda: reviews.writeLookupsLambda,
+    },
   });
 
   const template = Template.fromStack(api);
