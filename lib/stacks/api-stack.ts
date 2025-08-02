@@ -1,4 +1,4 @@
-import { StackProps, Stack } from 'aws-cdk-lib';
+import { StackProps, Stack, Aws } from 'aws-cdk-lib';
 import {
   AuthorizationType,
   BasePathMapping,
@@ -7,8 +7,17 @@ import {
   DomainName,
 } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate, ICertificate } from 'aws-cdk-lib/aws-certificatemanager';
+import {
+  AllowedMethods,
+  OriginRequestCookieBehavior,
+  OriginRequestHeaderBehavior,
+  OriginRequestPolicy,
+  OriginRequestQueryStringBehavior,
+} from 'aws-cdk-lib/aws-cloudfront';
 import { Construct } from 'constructs';
 
+import { ApiCachePolicy } from '../constructs/api-cache-policy';
+import { ApiCloudFrontDistribution } from '../constructs/api-cloudfront-distribution';
 import { ApiGatewayRestApi } from '../constructs/api-gateway-rest-api';
 import { CognitoPool } from '../constructs/cognito-pool';
 import { LambdaNodeFunction } from '../constructs/lambda-node-function';
@@ -133,6 +142,50 @@ export class ApiStack extends Stack {
     // lookups
     this.addLambdaRoute(props.lookups.readLambda, '/v1/lookups', 'GET');
     this.addLambdaRoute(props.lookups.writeLambda, '/v1/lookups', 'POST');
+
+    // CloudFront
+    const apiGatewayRegionalDomain = `${this.restApi.restApi.restApiId}.execute-api.${Stack.of(this).region}.${Aws.URL_SUFFIX}`;
+
+    // Setup custom domain for cloudfront cache
+    const cacheCertificate = Certificate.fromCertificateArn(
+      this,
+      'ApiCloudFrontCacheCert',
+      'arn:aws:acm:us-east-1:509399600387:certificate/ee155ed3-9db8-4e21-b206-f2c97a40be47',
+    );
+
+    const cacheDistribution = new ApiCloudFrontDistribution(
+      this,
+      'ApiGatewayCache',
+      {
+        apiGatewayRegionalDomain,
+        certificate: cacheCertificate,
+        publicApiDomain: 'api-cache.abhinnaadhikari.com',
+        stagePath: '/prod',
+      },
+    );
+
+    // Setup Reviews path Cache
+    const reviewsQueryParams = ['search', 'limit', 'cursor'];
+    this.addCachedGetBehavior(
+      cacheDistribution,
+      '/v1/reviews*',
+      reviewsQueryParams,
+      600,
+    );
+
+    // Setup Stacks path Cache
+    const stacksQueryParams = [
+      'startTimestamp',
+      'stackLimit',
+      'endTimestamp',
+      'lastEvaluatedKey',
+    ];
+    this.addCachedGetBehavior(
+      cacheDistribution,
+      '/v1/stacks*',
+      stacksQueryParams,
+      600,
+    );
   }
 
   /**
@@ -160,5 +213,55 @@ export class ApiStack extends Stack {
         }
       : {};
     this.restApi.addLambdaIntegration(lambda.function, path, method, options);
+  }
+
+  /**
+   * Adds a cached GET/HEAD behavior at CloudFront for a specific path.
+   *
+   * Creates a matching CachePolicy (TTL + query-string allow-list) and
+   * OriginRequestPolicy (forwards the same query strings; no headers/cookies),
+   * then wires them to the distribution.
+   *
+   * @param cacheDistribution - The CloudFront wrapper construct to attach the behavior to.
+   * @param pathPattern - Viewer path pattern (e.g. '/v1/reviews*'). Must match the public URL.
+   * @param queryStrings - Query params that change the response (used in both cache key and origin forward).
+   * @param ttlSeconds - TTL for cached responses in seconds (default: 600).
+   */
+  private addCachedGetBehavior(
+    cacheDistribution: ApiCloudFrontDistribution,
+    pathPattern: string,
+    queryStrings: string[],
+    ttlSeconds = 600,
+  ): void {
+    const safePathId = pathPattern.replace(/[^\w]/g, '_');
+
+    const cachePolicy = new ApiCachePolicy(
+      this,
+      `ApiCache10MinPolicy_${safePathId}`,
+      {
+        defaultTtlSeconds: ttlSeconds,
+        maxTtlSeconds: ttlSeconds,
+        queryParams: queryStrings,
+      },
+    );
+
+    const originRequest = new OriginRequestPolicy(
+      this,
+      `OriginReq_${safePathId}`,
+      {
+        headerBehavior: OriginRequestHeaderBehavior.none(),
+        cookieBehavior: OriginRequestCookieBehavior.none(),
+        queryStringBehavior: queryStrings.length
+          ? OriginRequestQueryStringBehavior.allowList(...queryStrings)
+          : OriginRequestQueryStringBehavior.none(),
+      },
+    );
+
+    cacheDistribution.addSimpleBehavior(
+      pathPattern,
+      cachePolicy.cachePolicy,
+      originRequest,
+      AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+    );
   }
 }
