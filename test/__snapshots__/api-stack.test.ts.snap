@@ -78,7 +78,10 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
             "EnableAcceptEncodingBrotli": false,
             "EnableAcceptEncodingGzip": false,
             "HeadersConfig": {
-              "HeaderBehavior": "none",
+              "HeaderBehavior": "whitelist",
+              "Headers": [
+                "Origin",
+              ],
             },
             "QueryStringsConfig": {
               "QueryStringBehavior": "whitelist",
@@ -117,7 +120,10 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
             "EnableAcceptEncodingBrotli": false,
             "EnableAcceptEncodingGzip": false,
             "HeadersConfig": {
-              "HeaderBehavior": "none",
+              "HeaderBehavior": "whitelist",
+              "Headers": [
+                "Origin",
+              ],
             },
             "QueryStringsConfig": {
               "QueryStringBehavior": "whitelist",
@@ -267,7 +273,10 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
             "CookieBehavior": "none",
           },
           "HeadersConfig": {
-            "HeaderBehavior": "none",
+            "HeaderBehavior": "whitelist",
+            "Headers": [
+              "Origin",
+            ],
           },
           "Name": "ApiOriginReqv1reviews1E0269B4",
           "QueryStringsConfig": {
@@ -289,7 +298,10 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
             "CookieBehavior": "none",
           },
           "HeadersConfig": {
-            "HeaderBehavior": "none",
+            "HeaderBehavior": "whitelist",
+            "Headers": [
+              "Origin",
+            ],
           },
           "Name": "ApiOriginReqv1stacks7307B9B6",
           "QueryStringsConfig": {

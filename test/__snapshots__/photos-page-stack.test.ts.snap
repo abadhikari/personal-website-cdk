@@ -26,7 +26,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "Variables": {
             "MEDIA_METADATA_GSI": "StackIdIndex",
             "MEDIA_METADATA_TABLE": "MediaMetadataTable",
-            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "ORIGIN_ALLOWLIST": "https://abhinnaadhikari.com,http://localhost:3000,https://preview.abhinnaadhikari.com",
             "S3_BUCKET_NAME": {
               "Ref": "MediaBucketS3BucketBB2DC6FA",
             },
@@ -208,7 +208,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "Variables": {
             "MEDIA_METADATA_GSI": "StackIdIndex",
             "MEDIA_METADATA_TABLE": "MediaMetadataTable",
-            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "ORIGIN_ALLOWLIST": "https://abhinnaadhikari.com,http://localhost:3000,https://preview.abhinnaadhikari.com",
             "STACK_METADATA_GSI": "UploadTimestampIndex",
             "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
             "STACK_METADATA_TABLE": "StackMetadataTable",
@@ -323,7 +323,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
         },
         "Environment": {
           "Variables": {
-            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "ORIGIN_ALLOWLIST": "https://abhinnaadhikari.com,http://localhost:3000,https://preview.abhinnaadhikari.com",
             "S3_BUCKET_NAME": {
               "Ref": "MediaBucketS3BucketBB2DC6FA",
             },
@@ -450,9 +450,9 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
                 "PUT",
               ],
               "AllowedOrigins": [
-                "https://api.abhinnaadhikari.com",
                 "https://abhinnaadhikari.com",
                 "http://localhost:3000",
+                "https://preview.abhinnaadhikari.com",
               ],
             },
           ],
@@ -660,7 +660,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "Variables": {
             "MEDIA_METADATA_GSI": "StackIdIndex",
             "MEDIA_METADATA_TABLE": "MediaMetadataTable",
-            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "ORIGIN_ALLOWLIST": "https://abhinnaadhikari.com,http://localhost:3000,https://preview.abhinnaadhikari.com",
             "STACK_METADATA_GSI": "UploadTimestampIndex",
             "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
             "STACK_METADATA_TABLE": "StackMetadataTable",
@@ -813,7 +813,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           "Variables": {
             "MEDIA_METADATA_GSI": "StackIdIndex",
             "MEDIA_METADATA_TABLE": "MediaMetadataTable",
-            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "ORIGIN_ALLOWLIST": "https://abhinnaadhikari.com,http://localhost:3000,https://preview.abhinnaadhikari.com",
             "STACK_METADATA_GSI": "UploadTimestampIndex",
             "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
             "STACK_METADATA_TABLE": "StackMetadataTable",
@@ -1019,7 +1019,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
             },
             "MEDIA_METADATA_GSI": "StackIdIndex",
             "MEDIA_METADATA_TABLE": "MediaMetadataTable",
-            "ORIGIN_ALLOWLIST": "https://api.abhinnaadhikari.com,https://abhinnaadhikari.com,http://localhost:3000",
+            "ORIGIN_ALLOWLIST": "https://abhinnaadhikari.com,http://localhost:3000,https://preview.abhinnaadhikari.com",
             "STACK_METADATA_GSI": "UploadTimestampIndex",
             "STACK_METADATA_GSI_PARTITION_KEY": "ALL_STACKS",
             "STACK_METADATA_TABLE": "StackMetadataTable",

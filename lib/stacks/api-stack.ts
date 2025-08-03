@@ -249,7 +249,7 @@ export class ApiStack extends Stack {
       this,
       `OriginReq_${safePathId}`,
       {
-        headerBehavior: OriginRequestHeaderBehavior.none(),
+        headerBehavior: OriginRequestHeaderBehavior.allowList('Origin'),
         cookieBehavior: OriginRequestCookieBehavior.none(),
         queryStringBehavior: queryStrings.length
           ? OriginRequestQueryStringBehavior.allowList(...queryStrings)

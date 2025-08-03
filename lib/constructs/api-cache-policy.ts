@@ -54,7 +54,7 @@ export class ApiCachePolicy extends Construct {
 
     this.cachePolicy = new CachePolicy(this, 'ApiCachePolicy', {
       queryStringBehavior,
-      headerBehavior: CacheHeaderBehavior.none(),
+      headerBehavior: CacheHeaderBehavior.allowList('Origin'),
       cookieBehavior: CacheCookieBehavior.none(),
       defaultTtl: Duration.seconds(props?.defaultTtlSeconds ?? 300),
       minTtl: Duration.seconds(props?.minTtlSeconds ?? 0),
