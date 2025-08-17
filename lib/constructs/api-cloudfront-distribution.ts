@@ -29,6 +29,18 @@ export interface ApiCloudFrontDistributionProps {
   readonly certificate: ICertificate;
 
   /**
+   * Origin Shield is an extra layer of centralized caching in front of your origin.
+   * - Recommended to set it to the same region as your API Gateway (usually where your
+   *   Lambda/API lives).
+   *
+   * With Origin Shield enabled, the first POP miss will be fetched once through the
+   * Shield, and subsequent POPs in other locations can reuse that cached response
+   * instead of each going back to the origin. This reduces origin load and improves
+   * global cache hit ratio.
+   */
+  originShieldRegion: string;
+
+  /**
    * Optional stage path for the API Gateway deployment (e.g., '/prod').
    */
   readonly stagePath?: string;
@@ -71,6 +83,7 @@ export class ApiCloudFrontDistribution extends Construct {
 
     this.origin = new HttpOrigin(props.apiGatewayRegionalDomain, {
       originPath: props.stagePath || '',
+      originShieldRegion: props.originShieldRegion,
     });
 
     this.distribution = new Distribution(this, 'ApiCloudFrontDistribution', {

@@ -142,6 +142,7 @@ export class ApiStack extends Stack {
         certificate: cacheCertificate,
         publicApiDomains: ['api.abhinnaadhikari.com'],
         stagePath: '/prod',
+        originShieldRegion: 'us-east-1',
       },
     );
 
