@@ -1,7 +1,6 @@
 import { StackProps, Stack, Aws } from 'aws-cdk-lib';
 import {
   AuthorizationType,
-  BasePathMapping,
   CognitoUserPoolsAuthorizer,
   Cors,
   DomainName,
@@ -88,24 +87,6 @@ export class ApiStack extends Stack {
       },
     });
 
-    // Setup custom domain for api
-    this.certificate = Certificate.fromCertificateArn(
-      this,
-      'ApiCert',
-      'arn:aws:acm:us-east-1:509399600387:certificate/d3fa4275-808f-433d-a78c-be107c519407',
-    );
-
-    this.customDomain = new DomainName(this, 'CustomDomain', {
-      domainName: 'api.abhinnaadhikari.com',
-      certificate: this.certificate,
-    });
-
-    new BasePathMapping(this, 'BasePathMapping', {
-      domainName: this.customDomain,
-      restApi: this.restApi.restApi,
-      basePath: '',
-    });
-
     // Configure authorizer for authentication
     this.authorizer = new CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
       cognitoUserPools: [props.adminPool.userPool],
@@ -146,11 +127,11 @@ export class ApiStack extends Stack {
     // CloudFront
     const apiGatewayRegionalDomain = `${this.restApi.restApi.restApiId}.execute-api.${Stack.of(this).region}.${Aws.URL_SUFFIX}`;
 
-    // Setup custom domain for cloudfront cache
+    // Setup custom domain for cloudfront cache that sits in front of api
     const cacheCertificate = Certificate.fromCertificateArn(
       this,
       'ApiCloudFrontCacheCert',
-      'arn:aws:acm:us-east-1:509399600387:certificate/ee155ed3-9db8-4e21-b206-f2c97a40be47',
+      'arn:aws:acm:us-east-1:509399600387:certificate/d3fa4275-808f-433d-a78c-be107c519407',
     );
 
     const cacheDistribution = new ApiCloudFrontDistribution(
@@ -159,7 +140,7 @@ export class ApiStack extends Stack {
       {
         apiGatewayRegionalDomain,
         certificate: cacheCertificate,
-        publicApiDomain: 'api-cache.abhinnaadhikari.com',
+        publicApiDomains: ['api.abhinnaadhikari.com'],
         stagePath: '/prod',
       },
     );

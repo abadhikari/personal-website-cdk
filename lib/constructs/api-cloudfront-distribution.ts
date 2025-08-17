@@ -19,9 +19,9 @@ export interface ApiCloudFrontDistributionProps {
   readonly apiGatewayRegionalDomain: string;
 
   /**
-   * The public API domain name (e.g., api.abhinnaadhikari.com)
+   * The public API domain names (e.g., [api.abhinnaadhikari.com])
    */
-  readonly publicApiDomain: string;
+  readonly publicApiDomains: string[];
 
   /**
    * ACM certificate for the public API domain (must be in us-east-1 for CloudFront)
@@ -74,7 +74,7 @@ export class ApiCloudFrontDistribution extends Construct {
     });
 
     this.distribution = new Distribution(this, 'ApiCloudFrontDistribution', {
-      domainNames: [props.publicApiDomain],
+      domainNames: props.publicApiDomains,
       certificate: props.certificate,
       defaultBehavior: {
         origin: this.origin,

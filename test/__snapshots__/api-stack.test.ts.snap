@@ -143,7 +143,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
       "Properties": {
         "DistributionConfig": {
           "Aliases": [
-            "api-cache.abhinnaadhikari.com",
+            "api.abhinnaadhikari.com",
           ],
           "CacheBehaviors": [
             {
@@ -231,40 +231,13 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
             },
           ],
           "ViewerCertificate": {
-            "AcmCertificateArn": "arn:aws:acm:us-east-1:509399600387:certificate/ee155ed3-9db8-4e21-b206-f2c97a40be47",
+            "AcmCertificateArn": "arn:aws:acm:us-east-1:509399600387:certificate/d3fa4275-808f-433d-a78c-be107c519407",
             "MinimumProtocolVersion": "TLSv1.2_2021",
             "SslSupportMethod": "sni-only",
           },
         },
       },
       "Type": "AWS::CloudFront::Distribution",
-    },
-    "BasePathMappingF35F2767": {
-      "Properties": {
-        "BasePath": "",
-        "DomainName": {
-          "Ref": "CustomDomain21DD44B6",
-        },
-        "RestApiId": {
-          "Ref": "SiteApiApiGatewayRestApi2686602D",
-        },
-        "Stage": {
-          "Ref": "SiteApiApiGatewayRestApiDeploymentStageprodF55A297A",
-        },
-      },
-      "Type": "AWS::ApiGateway::BasePathMapping",
-    },
-    "CustomDomain21DD44B6": {
-      "Properties": {
-        "DomainName": "api.abhinnaadhikari.com",
-        "EndpointConfiguration": {
-          "Types": [
-            "REGIONAL",
-          ],
-        },
-        "RegionalCertificateArn": "arn:aws:acm:us-east-1:509399600387:certificate/d3fa4275-808f-433d-a78c-be107c519407",
-      },
-      "Type": "AWS::ApiGateway::DomainName",
     },
     "OriginReqv1reviews6FB04F1D": {
       "Properties": {
