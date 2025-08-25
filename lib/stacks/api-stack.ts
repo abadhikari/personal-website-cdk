@@ -147,7 +147,7 @@ export class ApiStack extends Stack {
     );
 
     // Setup Reviews path Cache
-    const reviewsQueryParams = ['search', 'limit', 'cursor'];
+    const reviewsQueryParams = ['search', 'limit', 'cursor', 'categoryIds'];
     this.addCachedGetBehavior(
       cacheDistribution,
       '/v1/reviews*',

@@ -5,7 +5,7 @@ import { handleInvalidOrigin, retrieveOrigin } from '@lambda/common/cors';
 import { createResponse } from '@lambda/common/createResponse';
 import { getDbClient, getDbCredentials } from '@lambda/common/db';
 import { ValidationError } from '@lambda/common/errors';
-import { QueryWithParams } from '@lambda/common/types';
+import { ContentCategoryType, QueryWithParams } from '@lambda/common/types';
 
 import { queryParamSchema } from './schemas';
 
@@ -17,11 +17,13 @@ const { DB_SECRET_ARN, ORIGIN_ALLOWLIST } = getConfig();
  * @property limit - Maximum number of results to return (validated upstream via Joi).
  * @property search - Optional case-insensitive substring to filter reviews by title.
  * @property cursor - Optional ISO 8601 timestamp string used for pagination. Filters reviews created before this timestamp.
+ * @property categoryIds - Optional array of ContentCategory IDs to filter results by. When omitted, all categories are returned.
  */
 export interface QueryParameters {
   limit: number;
   search?: string;
   cursor?: string;
+  categoryIds?: ContentCategoryType[];
 }
 
 /**
@@ -42,12 +44,12 @@ export const handler = async (
 
   try {
     queryParameters = parseQueryParameters(event);
-    const { search, limit, cursor } = queryParameters;
+    const { search, limit, cursor, categoryIds } = queryParameters;
 
     const credentials = await getDbCredentials(DB_SECRET_ARN);
     const db = await getDbClient(credentials);
 
-    const query = createReviewQuery(limit, search, cursor);
+    const query = createReviewQuery(limit, search, cursor, categoryIds);
     const result = await db.query(query.sql, query.values);
 
     const rows = result.rows;
@@ -85,12 +87,18 @@ function parseQueryParameters(event: APIGatewayProxyEvent): QueryParameters {
 
   const { error, value } = queryParamSchema.validate(
     event.queryStringParameters,
+    { abortEarly: false, stripUnknown: true, convert: true },
   );
   if (error) {
     throw new ValidationError('Invalid request: ' + error.details[0].message);
   }
 
-  return value;
+  return {
+    limit: value.limit,
+    search: value.search,
+    cursor: value.cursor,
+    categoryIds: value.categoryIds as ContentCategoryType[],
+  };
 }
 
 /**
@@ -102,15 +110,28 @@ function parseQueryParameters(event: APIGatewayProxyEvent): QueryParameters {
  * @param limit  The number of reviews to return (max 1000)
  * @param search Optional full-text search query
  * @param cursor Optional ISO timestamp string for pagination (reviews created before this)
+ * @param categoryIds Optional list of ContentCategory IDs to include (e.g., [1,3]). If undefined, no category filter is applied.
  * @returns QueryWithParams object with:
  * - `sql`: the generated SQL string
- * - `values`: [search, cursor, limit] parameter bindings
+ * - `values`: [search, cursor, limit, categoryIds] parameter bindings
  */
 export function createReviewQuery(
   limit: number,
   search?: string,
   cursor?: string,
+  categoryIds?: ContentCategoryType[],
 ): QueryWithParams {
+  const values: any[] = [];
+  const add = (v: any) => {
+    values.push(v);
+    return values.length;
+  };
+
+  const searchIndex = add(search ?? null);
+  const cursorIndex = add(cursor ?? null);
+  const limitIndex = add(limit);
+  const categoryIdsIndex = add(categoryIds ?? null);
+
   const sql = `
 WITH base AS (
     SELECT
@@ -123,11 +144,12 @@ WITH base AS (
         c.title
     FROM reviews r
     JOIN contents c USING (content_id)
-    WHERE ($1::text        IS NULL OR LOWER(r.review_text) LIKE '%'||LOWER($1)||'%'
-           OR LOWER(c.title) LIKE '%'||LOWER($1)||'%')
-      AND ($2::timestamptz IS NULL OR r.created_at < $2)
+    WHERE ($${searchIndex}::text        IS NULL OR LOWER(r.review_text) LIKE '%'||LOWER($${searchIndex})||'%'
+           OR LOWER(c.title) LIKE '%'||LOWER($${searchIndex})||'%')
+      AND ($${cursorIndex}::timestamptz IS NULL OR r.created_at < $${cursorIndex})
+      AND ($${categoryIdsIndex}::int[]  IS NULL OR c.category_id = ANY($${categoryIdsIndex}))
     ORDER BY r.created_at DESC
-    LIMIT $3
+    LIMIT $${limitIndex}
 ),
 
 entertainment_rows AS (
@@ -275,6 +297,6 @@ ORDER BY b.created_at DESC;
 
   return {
     sql,
-    values: [search ?? null, cursor ?? null, limit],
+    values,
   };
 }

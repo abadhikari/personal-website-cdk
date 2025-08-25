@@ -38,7 +38,7 @@ export interface ApiCloudFrontDistributionProps {
    * instead of each going back to the origin. This reduces origin load and improves
    * global cache hit ratio.
    */
-  originShieldRegion: string;
+  readonly originShieldRegion: string;
 
   /**
    * Optional stage path for the API Gateway deployment (e.g., '/prod').

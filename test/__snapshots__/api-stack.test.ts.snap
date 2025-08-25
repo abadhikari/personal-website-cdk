@@ -89,6 +89,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
                 "search",
                 "limit",
                 "cursor",
+                "categoryIds",
               ],
             },
           },
@@ -228,6 +229,10 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
               },
               "Id": "ApiApiGatewayCacheApiCloudFrontDistributionOrigin1C1F85D2E",
               "OriginPath": "/prod",
+              "OriginShield": {
+                "Enabled": true,
+                "OriginShieldRegion": "us-east-1",
+              },
             },
           ],
           "ViewerCertificate": {
@@ -258,6 +263,7 @@ exports[`ApiStack – single snapshot + invariants matches snapshot and enforces
               "search",
               "limit",
               "cursor",
+              "categoryIds",
             ],
           },
         },

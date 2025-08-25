@@ -43,7 +43,7 @@ describe('reviews read handler', () => {
     expect(queryMock).toHaveBeenCalledTimes(1);
     const [sql, params] = queryMock.mock.calls[0];
     expect(sql).toMatch(/review_id/i);
-    expect(params).toEqual(['Sushi', null, 10]);
+    expect(params).toEqual(['Sushi', null, 10, null]);
   });
 
   it('200 + expected SQL (no search)', async () => {
@@ -65,7 +65,7 @@ describe('reviews read handler', () => {
 
     const [sql, params] = queryMock.mock.calls[0];
     expect(sql).toMatch(/review_id/i);
-    expect(params).toEqual([null, null, 5]);
+    expect(params).toEqual([null, null, 5, null]);
   });
 
   it('200 + expected SQL (search + cursor)', async () => {
@@ -95,7 +95,7 @@ describe('reviews read handler', () => {
 
     const [sql, params] = queryMock.mock.calls[0];
     expect(sql).toMatch(/review_id/i);
-    expect(params).toEqual(['Jazz', '2025-01-01T00:00:00.000Z', 7]);
+    expect(params).toEqual(['Jazz', '2025-01-01T00:00:00.000Z', 7, null]);
   });
 
   it('200 + nextCursor null when no results', async () => {
@@ -114,6 +114,25 @@ describe('reviews read handler', () => {
     expect(body.nextCursor).toBe(null);
     expect(Array.isArray(body.results)).toBe(true);
     expect(body.results.length).toBe(0);
+  });
+
+  it('200 + expected SQL (with categoryIds CSV)', async () => {
+    queryMock.mockResolvedValueOnce({
+      rows: [{ created_at: '2024-02-02T00:00:00.000Z' }],
+    });
+
+    const res = await handler(
+      createMockEvent({
+        httpMethod: 'GET',
+        queryStringParameters: { limit: '10', categoryIds: '5,4' },
+        headers: { origin: VALID_ORIGIN },
+      }),
+    );
+
+    expect(res.statusCode).toBe(200);
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).toMatch(/category_id\s*=\s*ANY\(\$\d+\)/i);
+    expect(params).toEqual([null, null, 10, [5, 4]]);
   });
 
   it('403 when origin not allow-listed', async () => {
