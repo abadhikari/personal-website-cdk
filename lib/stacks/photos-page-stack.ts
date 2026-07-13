@@ -1,4 +1,4 @@
-import { RemovalPolicy, StackProps, Stack } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, StackProps, Stack } from 'aws-cdk-lib';
 import {
   AttributeType,
   BillingMode,
@@ -155,6 +155,7 @@ export class PhotosPageStack extends Stack {
       runtime: Runtime.NODEJS_20_X,
       entry: 'lambda/stacks/read/index.ts',
       handler: 'handler',
+      timeout: Duration.seconds(5),
       environment: {
         ...PhotosPageDynamoDbTables,
         ORIGIN_ALLOWLIST: serializedOriginAllowList,
