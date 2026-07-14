@@ -152,7 +152,7 @@ export class PhotosPageStack extends Stack {
 
     this.readStacksLambda = new LambdaNodeFunction(this, 'ReadStacksLambda', {
       functionName: 'photos_page_read_stacks_v1',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/stacks/read/index.ts',
       handler: 'handler',
       timeout: Duration.seconds(5),
@@ -168,7 +168,7 @@ export class PhotosPageStack extends Stack {
 
     this.readStackLambda = new LambdaNodeFunction(this, 'ReadStackLambda', {
       functionName: 'photos_page_read_stack_v1',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/stack/read/index.ts',
       handler: 'handler',
       environment: {
@@ -183,7 +183,7 @@ export class PhotosPageStack extends Stack {
 
     this.writeStackLambda = new LambdaNodeFunction(this, 'WriteStackLambda', {
       functionName: 'photos_page_write_stack_v1',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/stack/write/index.ts',
       handler: 'handler',
       environment: {
@@ -203,7 +203,7 @@ export class PhotosPageStack extends Stack {
 
     this.deleteMediaLambda = new LambdaNodeFunction(this, 'DeleteMediaLambda', {
       functionName: 'DeleteMediaLambdaFunction',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/media/delete/index.ts',
       handler: 'handler',
       environment: {
@@ -227,7 +227,7 @@ export class PhotosPageStack extends Stack {
       'EditStackMetadataLambda',
       {
         functionName: 'EditStackMetadataLambdaFunction',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_22_X,
         entry: 'lambda/stack/edit/index.ts',
         handler: 'handler',
         environment: {
@@ -247,7 +247,7 @@ export class PhotosPageStack extends Stack {
       'GenerateSignedMediaUrlLambda',
       {
         functionName: 'GenerateSignedMediaUrlLambdaFunction',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_22_X,
         entry: 'lambda/media/generate-signed-urls/index.ts',
         handler: 'handler',
         environment: {

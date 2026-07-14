@@ -40,7 +40,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -222,7 +222,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -388,7 +388,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -554,7 +554,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -1072,7 +1072,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -1238,7 +1238,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [
@@ -1404,7 +1404,7 @@ exports[`ReviewsPageStack Tests matches snapshot 1`] = `
             "Arn",
           ],
         },
-        "Runtime": "nodejs20.x",
+        "Runtime": "nodejs22.x",
         "Timeout": 3,
         "VpcConfig": {
           "SecurityGroupIds": [

@@ -141,7 +141,7 @@ export class ReviewsPageStack extends Stack {
         functionName: 'reviews_page_database_admin_query_v1',
         description:
           'Internal admin query Lambda for manual RDS inspection and alterations',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_22_X,
         entry: 'lambda/admin/query/index.ts',
         handler: 'handler',
         securityGroups: [lambdaToRdsSecurityGroup],
@@ -159,7 +159,7 @@ export class ReviewsPageStack extends Stack {
       'WriteContentLambda',
       {
         functionName: 'reviews_page_write_content_v1',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_22_X,
         entry: 'lambda/content/write/index.ts',
         handler: 'handler',
         securityGroups: [lambdaToRdsSecurityGroup],
@@ -178,7 +178,7 @@ export class ReviewsPageStack extends Stack {
       'ReadContentsLambda',
       {
         functionName: 'reviews_page_read_contents_v1',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_22_X,
         entry: 'lambda/contents/read/index.ts',
         handler: 'handler',
         securityGroups: [lambdaToRdsSecurityGroup],
@@ -194,7 +194,7 @@ export class ReviewsPageStack extends Stack {
 
     this.writeReviewLambda = new LambdaNodeFunction(this, 'WriteReviewLambda', {
       functionName: 'reviews_page_write_review_v1',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/review/write/index.ts',
       handler: 'handler',
       securityGroups: [lambdaToRdsSecurityGroup],
@@ -209,7 +209,7 @@ export class ReviewsPageStack extends Stack {
 
     this.readReviewsLambda = new LambdaNodeFunction(this, 'ReadReviewsLambda', {
       functionName: 'reviews_page_read_reviews_v1',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/reviews/read/index.ts',
       handler: 'handler',
       securityGroups: [lambdaToRdsSecurityGroup],
@@ -227,7 +227,7 @@ export class ReviewsPageStack extends Stack {
       'WriteLookupsLambda',
       {
         functionName: 'reviews_page_write_lookups_v1',
-        runtime: Runtime.NODEJS_20_X,
+        runtime: Runtime.NODEJS_22_X,
         entry: 'lambda/lookups/write/index.ts',
         handler: 'handler',
         securityGroups: [lambdaToRdsSecurityGroup],
@@ -243,7 +243,7 @@ export class ReviewsPageStack extends Stack {
 
     this.readLookupsLambda = new LambdaNodeFunction(this, 'ReadLookupsLambda', {
       functionName: 'reviews_page_read_lookups_v1',
-      runtime: Runtime.NODEJS_20_X,
+      runtime: Runtime.NODEJS_22_X,
       entry: 'lambda/lookups/read/index.ts',
       handler: 'handler',
       securityGroups: [lambdaToRdsSecurityGroup],
