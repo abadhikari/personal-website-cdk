@@ -101,7 +101,7 @@ describe('Delete Lambda Handler Tests', () => {
     expect(s3SendMock).not.toHaveBeenCalled();
   });
 
-  test('validation error – missing stackId', async () => {
+  test('validation error – invalid query parameters schema', async () => {
     const res = await handler(
       createMockEvent({
         httpMethod: 'PATCH',

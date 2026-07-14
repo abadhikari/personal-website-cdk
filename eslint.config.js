@@ -3,6 +3,7 @@ const tseslint = require('@typescript-eslint/eslint-plugin');
 const parser = require('@typescript-eslint/parser');
 const prettier = require('eslint-config-prettier');
 const importPlug = require('eslint-plugin-import');
+const jestPlugin = require('eslint-plugin-jest');
 
 module.exports = [
   {
@@ -84,8 +85,18 @@ module.exports = [
         jest: 'readonly',
       },
     },
+    plugins: {
+      jest: jestPlugin,
+    },
     rules: {
+      ...jestPlugin.configs.recommended.rules,
       '@typescript-eslint/no-require-imports': 'off',
+      'jest/expect-expect': [
+        'warn',
+        {
+          assertFunctionNames: ['expect', 'template.**'],
+        },
+      ],
     },
   },
 ];

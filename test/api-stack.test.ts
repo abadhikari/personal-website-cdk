@@ -53,11 +53,9 @@ describe('ApiStack – single snapshot + invariants', () => {
       const http = methodRes.Properties.HttpMethod as HttpMethod;
       const authType = methodRes.Properties.AuthorizationType;
 
-      if (mutating.includes(http)) {
-        expect(authType).toBe('COGNITO_USER_POOLS');
-      } else {
-        expect(authType).not.toBe('COGNITO_USER_POOLS');
-      }
+      const requiresCognitoAuth = mutating.includes(http);
+      const hasCognitoAuth = authType === 'COGNITO_USER_POOLS';
+      expect(hasCognitoAuth).toBe(requiresCognitoAuth);
     }
   });
 });

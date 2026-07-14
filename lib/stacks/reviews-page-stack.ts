@@ -4,8 +4,6 @@ import {
   InstanceSize,
   InstanceType,
   SubnetType,
-} from 'aws-cdk-lib/aws-ec2';
-import {
   InterfaceVpcEndpointAwsService,
   Port,
   SecurityGroup,

@@ -829,7 +829,7 @@ exports[`PhotosPageStack Tests matches snapshot 1`] = `
           ],
         },
         "Runtime": "nodejs20.x",
-        "Timeout": 3,
+        "Timeout": 5,
       },
       "Type": "AWS::Lambda::Function",
     },
