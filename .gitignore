@@ -1,5 +1,7 @@
 *.js
 !jest.config.js
+!jest.zip-serializer.js
+!eslint.config.js
 *.d.ts
 node_modules
 build
